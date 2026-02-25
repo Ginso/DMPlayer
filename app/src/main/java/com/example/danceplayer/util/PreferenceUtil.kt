@@ -76,7 +76,7 @@ object PreferenceUtil {
     /**
      * Speichert die Änderungen im aktuellen Profil persistent.
      */
-    fun save() {
+    fun saveProfile() {
         if (currentProfileKey.isNotEmpty()) {
             saveProfilToPreferences(currentProfileKey, currentProfile)
         }

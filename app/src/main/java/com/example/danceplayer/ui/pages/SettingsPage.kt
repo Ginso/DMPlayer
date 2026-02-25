@@ -1,6 +1,5 @@
 package com.example.danceplayer.ui.pages
 
-import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -35,7 +34,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import com.example.danceplayer.util.PreferenceUtil
 import java.io.File
 
@@ -54,11 +52,13 @@ fun SettingsPage() {
     val showFileTree = remember { mutableStateOf(false) }
     val currentPath = remember { mutableStateOf(if (profile.folder.isBlank()) "/storage" else profile.folder) }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            showFileTree.value = true
+    val treeLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        if (uri != null) {
+            // URI persistieren / in PreferenceUtil speichern …
+            profile.folder = uri.toString()
+            PreferenceUtil.saveProfile()
         }
     }
 
@@ -146,6 +146,7 @@ fun SettingsPage() {
             }
         }
         Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
@@ -154,16 +155,7 @@ fun SettingsPage() {
             Text(profile.folder, modifier = Modifier.padding(start=16.dp))
             Button (
                 onClick = {
-                    val hasPermission = ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-                    
-                    if (hasPermission) {
-                        showFileTree.value = true
-                    } else {
-                        permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    }
+                    treeLauncher.launch(null)
                 }
             ) { Text("change")}
         }
@@ -243,16 +235,18 @@ fun SettingsPage() {
                             .fillMaxWidth()
                             .padding(top = 8.dp)
                     ) {
-                        if(currentPath.value != "/storage") {
-                            Text(
-                                text = ".."
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        //currentPath.value = folder.absolutePath
-                                    }
-                                    .padding(vertical = 12.dp, horizontal = 8.dp)
-                            )
+                        if (currentPath.value != "/storage") {
+                            item {
+                                Text(
+                                    text = "..",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            currentPath.value = currentPath.value.substringBeforeLast("/")
+                                        }
+                                        .padding(vertical = 12.dp, horizontal = 8.dp)
+                                )
+                            }
                         }
                         items(subfolders) { folder ->
                             Text(
