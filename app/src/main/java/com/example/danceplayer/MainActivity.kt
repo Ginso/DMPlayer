@@ -34,12 +34,20 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import com.example.danceplayer.ui.theme.DancePlayerTheme
+import com.example.danceplayer.ui.pages.DancesPage
+import com.example.danceplayer.ui.pages.PlaylistsPage
+import com.example.danceplayer.ui.pages.SettingsPage
+import com.example.danceplayer.util.PreferenceUtil
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        PreferenceUtil.initialize(this)
         enableEdgeToEdge()
         setContent {
             DancePlayerTheme {
@@ -73,7 +81,7 @@ fun MainScreen() {
             modifier = Modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = { Text("DancePlayer") },
+                    title = { Text("Dance Player") },
                     navigationIcon = {
                         IconButton(onClick = {
                             scope.launch {
@@ -95,9 +103,9 @@ fun MainScreen() {
                     .padding(innerPadding)
             ) {
                 when (selectedPage.value) {
-                    0 -> PageOne()
-                    1 -> PageTwo()
-                    2 -> PageThree()
+                    0 -> DancesPage()
+                    1 -> PlaylistsPage()
+                    2 -> SettingsPage()
                 }
             }
         }
@@ -113,19 +121,19 @@ fun NavigationDrawerContent(onPageSelected: (Int) -> Unit) {
             .padding(16.dp)
     ) {
         Text(
-            "Seite 1",
+            "Dances",
             modifier = Modifier
                 .padding(16.dp)
                 .clickable { onPageSelected(0) }
         )
         Text(
-            "Seite 2",
+            "Playlists",
             modifier = Modifier
                 .padding(16.dp)
                 .clickable { onPageSelected(1) }
         )
         Text(
-            "Seite 3",
+            "Settings",
             modifier = Modifier
                 .padding(16.dp)
                 .clickable { onPageSelected(2) }
@@ -135,14 +143,14 @@ fun NavigationDrawerContent(onPageSelected: (Int) -> Unit) {
 
 @Composable
 fun BottomBar() {
-    Box(
+    BottomAppBar(
         modifier = Modifier
             .fillMaxWidth()
-            .height(62.dp)
-            .background(Color.LightGray)
-            .padding(8.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
-        Column {
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
             Text("Zeile 1", style = TextStyle(fontSize = 12.sp))
             Text("Zeile 2", style = TextStyle(fontSize = 12.sp))
             Text("Zeile 3", style = TextStyle(fontSize = 12.sp))
@@ -150,26 +158,7 @@ fun BottomBar() {
     }
 }
 
-@Composable
-fun PageOne() {
-    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
-        Text("Seite 1 - wird noch befüllt", modifier = Modifier.padding(16.dp))
-    }
-}
 
-@Composable
-fun PageTwo() {
-    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
-        Text("Seite 2 - wird noch befüllt", modifier = Modifier.padding(16.dp))
-    }
-}
-
-@Composable
-fun PageThree() {
-    Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
-        Text("Seite 3 - wird noch befüllt", modifier = Modifier.padding(16.dp))
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
