@@ -19,7 +19,7 @@ object PreferenceUtil {
         sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         
         // Lade das zuletzt verwendete Profil
-        val savedKey = sharedPreferences.getString(CURRENT_PROFILE_KEY, null)
+        val savedKey = sharedPreferences.getString(CURRENT_PROFILE_KEY, "default")
         if (savedKey != null) {
             currentProfileKey = savedKey
             val profileJson = sharedPreferences.getString(savedKey, null)
@@ -33,6 +33,7 @@ object PreferenceUtil {
      * Gibt das aktuell ausgewählte Profil zurück.
      */
     fun getCurrentProfile(): Profile = currentProfile
+    fun getCurrentProfileKey(): String = currentProfileKey
 
     /**
      * Kopiert das aktuelle Profil und speichert es unter einem neuen Key.
@@ -63,7 +64,7 @@ object PreferenceUtil {
     }
 
     fun renameProfile(key:String) {
-        val json = profile.serialize()
+        val json = currentProfile.serialize()
         sharedPreferences.edit()
             .remove(currentProfileKey)
             .putString(CURRENT_PROFILE_KEY, key)

@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val selectedPage = remember { mutableStateOf(0) }
+    val selectedPage = remember { mutableStateOf(2) }
 
     ModalNavigationDrawer(
         drawerState = drawerState,

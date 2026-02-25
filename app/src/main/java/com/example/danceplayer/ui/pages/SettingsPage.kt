@@ -22,6 +22,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -29,12 +30,18 @@ import com.example.danceplayer.util.PreferenceUtil
 
 @Composable
 fun SettingsPage() {
+    val profile = PreferenceUtil.getCurrentProfile()
+
     val profileKeys = remember { mutableStateOf(PreferenceUtil.getProfileKeys()) }
-    val selectedProfile = remember { mutableStateOf(PreferenceUtil.getProfileKeys().firstOrNull() ?: "Default") }
+    val selectedProfile = remember { mutableStateOf(PreferenceUtil.getCurrentProfileKey()) }
     val isDropdownOpen = remember { mutableStateOf(false) }
-    val showRenameDialog = remember { mutableStateOf(false) }
-    val showCreateDialog = remember { mutableStateOf(false) }
+    val showDialog = remember { mutableStateOf(false) }
+    val dialogTitle = remember { mutableStateOf("") }
     val dialogText = remember { mutableStateOf("") }
+    val action = remember { mutableStateOf(PreferenceUtil::createNewProfile) }
+    val showFileTree = remember { mutableStateOf(false) }
+
+
 
     Column(
         modifier = Modifier
@@ -43,17 +50,21 @@ fun SettingsPage() {
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text("Profil auswählen:", modifier = Modifier.padding(bottom = 8.dp))
 
         Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp)
+
+
         ) {
+            Text("Profile:")
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = 8.dp)
+                    .padding(start = 16.dp)
+
             ) {
                 OutlinedButton(
                     onClick = { isDropdownOpen.value = true },
@@ -88,27 +99,49 @@ fun SettingsPage() {
                 .padding(bottom = 16.dp)
         ) {
             Button(
-                onClick = { showRenameDialog.value = true },
+                onClick = {
+                    showDialog.value = true
+                    dialogTitle.value = "Rename Profile"
+                    dialogText.value = selectedProfile.value
+                    action.value = PreferenceUtil::renameProfile
+                },
                 modifier = Modifier
                     .weight(1f)
                     .padding(end = 8.dp)
             ) {
-                Text("Umbenennen")
+                Text("Rename")
             }
 
             Button(
-                onClick = { showCreateDialog.value = true },
+                onClick = {
+                    showDialog.value = true
+                    dialogTitle.value = "New Profile"
+                    dialogText.value = selectedProfile.value
+                    action.value = PreferenceUtil::createNewProfile
+                },
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Neues Profil")
+                Text("New Profile")
             }
         }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        ) {
+            Text("Music Folder:")
+            Text(profile.folder, modifier = Modifier.padding(start=16.dp))
+            Button (
+                onClick = { showFileTree.value=true }
+            ) { Text("change")}
+        }
+
     }
 
-    if (showRenameDialog.value) {
+    if (showDialog.value) {
         AlertDialog(
-            onDismissRequest = { showRenameDialog.value = false },
-            title = { Text("Profil umbenennen") },
+            onDismissRequest = { showDialog.value = false },
+            title = { Text(dialogTitle.value) },
             text = {
                 TextField(
                     value = dialogText.value,
@@ -121,11 +154,11 @@ fun SettingsPage() {
                 Button(
                     onClick = {
                         if (dialogText.value.isNotBlank()) {
-                            PreferenceUtil.renameProfile(dialogText.value)
+                            action.value(dialogText.value)
                             selectedProfile.value = dialogText.value
                             profileKeys.value = PreferenceUtil.getProfileKeys()
                             dialogText.value = ""
-                            showRenameDialog.value = false
+                            showDialog.value = false
                         }
                     }
                 ) {
@@ -136,48 +169,7 @@ fun SettingsPage() {
                 OutlinedButton(
                     onClick = {
                         dialogText.value = ""
-                        showRenameDialog.value = false
-                    }
-                ) {
-                    Text("Abbrechen")
-                }
-            }
-        )
-    }
-
-    if (showCreateDialog.value) {
-        AlertDialog(
-            onDismissRequest = { showCreateDialog.value = false },
-            title = { Text("Neues Profil erstellen") },
-            text = {
-                TextField(
-                    value = dialogText.value,
-                    onValueChange = { dialogText.value = it },
-                    placeholder = { Text("Profilname") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (dialogText.value.isNotBlank()) {
-                            PreferenceUtil.createNewProfile(dialogText.value)
-                            PreferenceUtil.changeProfile(dialogText.value)
-                            selectedProfile.value = dialogText.value
-                            profileKeys.value = PreferenceUtil.getProfileKeys()
-                            dialogText.value = ""
-                            showCreateDialog.value = false
-                        }
-                    }
-                ) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                OutlinedButton(
-                    onClick = {
-                        dialogText.value = ""
-                        showCreateDialog.value = false
+                        showDialog.value = false
                     }
                 ) {
                     Text("Abbrechen")
