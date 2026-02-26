@@ -3,18 +3,26 @@ package com.example.danceplayer.ui.subpages.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.RowScope
 @Composable
 fun CustomTagsPage(onBack: () -> Unit) {
     Column(
@@ -22,17 +30,17 @@ fun CustomTagsPage(onBack: () -> Unit) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        TopAppBar(
-            title = { Text("Custom Tags", color = MaterialTheme.colorScheme.onBackground) },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.Default.ArrowBack,
-                        contentDescription = "Back"
-                    )
-                }
-            }
-        )
+//        TopAppBar(
+//            title = { Text("Custom Tags", color = MaterialTheme.colorScheme.onBackground) },
+//            navigationIcon = {
+//                IconButton(onClick = onBack) {
+//                    Icon(
+//                        Icons.Default.ArrowBack,
+//                        contentDescription = "Back"
+//                    )
+//                }
+//            }
+//        )
 
         Box(
             modifier = Modifier
@@ -83,7 +91,7 @@ fun CustomTagsPage(onBack: () -> Unit) {
                     }
                 }
                 Text("TODO These tags are...", color = MaterialTheme.colorScheme.onBackground)
-                Divider()
+                HorizontalDivider()
                 Text("Custom Tags", style = MaterialTheme.typography.titleMedium)
             }
         }
@@ -91,7 +99,7 @@ fun CustomTagsPage(onBack: () -> Unit) {
 }
 
 @Composable
-fun Cell(
+fun RowScope.Cell(
     text: String,
     weight: Float
 ) {
