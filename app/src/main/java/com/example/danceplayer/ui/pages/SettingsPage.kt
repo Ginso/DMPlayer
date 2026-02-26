@@ -69,7 +69,7 @@ fun SettingsPage() {
     val action = remember { mutableStateOf(PreferenceUtil::createNewProfile) }
     val folder = remember { mutableStateOf(profile.folder.substringAfterLast("/")) }
     val showCustomTags = remember { mutableStateOf(false) }
-    val subPage = remember {mutableStateOf<(@Composable ((() -> Unit) -> Unit))?>(null)}
+    val subPage = remember {mutableStateOf<(@Composable (onBack: () -> Unit) -> Unit)?>(null)}
 
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
     
