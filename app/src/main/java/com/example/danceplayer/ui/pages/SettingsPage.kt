@@ -69,7 +69,7 @@ fun SettingsPage() {
     val action = remember { mutableStateOf(PreferenceUtil::createNewProfile) }
     val folder = remember { mutableStateOf(profile.folder.substringAfterLast("/")) }
     val showCustomTags = remember { mutableStateOf(false) }
-    val subPage = remember {mutableStateOf<(@Composable (onBack: () -> Unit) -> Unit)?>(null)}
+    val subPage = remember {mutableStateOf(0)}
 
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
     
@@ -104,94 +104,105 @@ fun SettingsPage() {
                 .verticalScroll(rememberScrollState())
         ) {
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-
-
-        ) {
-            Text("Profile:", color = MaterialTheme.colorScheme.onBackground)
-            Box(
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 16.dp)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+
 
             ) {
-                OutlinedButton(
-                    onClick = { isDropdownOpen.value = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(selectedProfile.value, color = MaterialTheme.colorScheme.onBackground)
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = "Dropdown")
-                }
+                Text("Profile:", color = MaterialTheme.colorScheme.onBackground)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 16.dp)
 
-                DropdownMenu(
-                    expanded = isDropdownOpen.value,
-                    onDismissRequest = { isDropdownOpen.value = false }
                 ) {
-                    profileKeys.value.forEach { profile ->
-                        DropdownMenuItem(
-                            text = { Text(profile, color = MaterialTheme.colorScheme.onBackground) },
-                            onClick = {
-                                selectedProfile.value = profile
-                                PreferenceUtil.changeProfile(profile)
-                                profileKeys.value = PreferenceUtil.getProfileKeys()
-                                isDropdownOpen.value = false
-                            }
-                        )
+                    OutlinedButton(
+                        onClick = { isDropdownOpen.value = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(selectedProfile.value, color = MaterialTheme.colorScheme.onBackground)
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Dropdown")
+                    }
+
+                    DropdownMenu(
+                        expanded = isDropdownOpen.value,
+                        onDismissRequest = { isDropdownOpen.value = false }
+                    ) {
+                        profileKeys.value.forEach { profile ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        profile,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                },
+                                onClick = {
+                                    selectedProfile.value = profile
+                                    PreferenceUtil.changeProfile(profile)
+                                    profileKeys.value = PreferenceUtil.getProfileKeys()
+                                    isDropdownOpen.value = false
+                                }
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        ) {
-            Button(
-                onClick = {
-                    showDialog.value = true
-                    dialogTitle.value = "Rename Profile"
-                    dialogText.value = selectedProfile.value
-                    action.value = PreferenceUtil::renameProfile
-                },
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
             ) {
-                Text("Rename", color = MaterialTheme.colorScheme.onBackground)
-            }
-
-            Button(
-                onClick = {
-                    showDialog.value = true
-                    dialogTitle.value = "New Profile"
-                    dialogText.value = selectedProfile.value
-                    action.value = PreferenceUtil::createNewProfile
-                },
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("New Profile", color = MaterialTheme.colorScheme.onBackground)
-            }
-        }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        ) {
-            Text("Music Folder:", color = MaterialTheme.colorScheme.onBackground)
-            Text(profile.folder, modifier = Modifier.padding(start=16.dp), color = MaterialTheme.colorScheme.onBackground)
-            Button (
-                onClick = {
-                    treeLauncher.launch(null)
+                Button(
+                    onClick = {
+                        showDialog.value = true
+                        dialogTitle.value = "Rename Profile"
+                        dialogText.value = selectedProfile.value
+                        action.value = PreferenceUtil::renameProfile
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
+                ) {
+                    Text("Rename", color = MaterialTheme.colorScheme.onBackground)
                 }
-            ) { Text("change", color = MaterialTheme.colorScheme.onBackground) }
+
+                Button(
+                    onClick = {
+                        showDialog.value = true
+                        dialogTitle.value = "New Profile"
+                        dialogText.value = selectedProfile.value
+                        action.value = PreferenceUtil::createNewProfile
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("New Profile", color = MaterialTheme.colorScheme.onBackground)
+                }
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                Text("Music Folder:", color = MaterialTheme.colorScheme.onBackground)
+                Text(
+                    profile.folder,
+                    modifier = Modifier.padding(start = 16.dp),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Button(
+                    onClick = {
+                        treeLauncher.launch(null)
+                    }
+                ) { Text("change", color = MaterialTheme.colorScheme.onBackground) }
+            }
+            SettingsRow(label = "Custom Tags") { subPage.value = 1 }
+            SettingsRow(label = "Import/Export Tag Info") { subPage.value = 2 }
         }
-        SettingsRow(label = "Custom Tags") {subPage.value = CustomTagsPage}
 
 
     }
@@ -236,8 +247,8 @@ fun SettingsPage() {
         )
     }
 
-    
-    subPage.value?.invoke { subPage.value = null }
+    if(subPage.value == 1) CustomTagsPage{ subPage.value = 0 }
+
     
 }
 
