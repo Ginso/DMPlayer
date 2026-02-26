@@ -23,6 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.material3.ExperimentalMaterial3Api
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomTagsPage(onBack: () -> Unit) {
     Column(
@@ -30,17 +33,17 @@ fun CustomTagsPage(onBack: () -> Unit) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-//        TopAppBar(
-//            title = { Text("Custom Tags", color = MaterialTheme.colorScheme.onBackground) },
-//            navigationIcon = {
-//                IconButton(onClick = onBack) {
-//                    Icon(
-//                        Icons.Default.ArrowBack,
-//                        contentDescription = "Back"
-//                    )
-//                }
-//            }
-//        )
+        TopAppBar(
+            title = { Text("Custom Tags", color = MaterialTheme.colorScheme.onBackground) },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
+            }
+        )
 
         Box(
             modifier = Modifier
