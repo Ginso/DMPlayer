@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             PreferenceUtil.initialize(this@MainActivity)
             Player.initialize(this@MainActivity)
-//            MusicLibrary.initialize(this@MainActivity)
+            MusicLibrary.initialize(this@MainActivity)
         }
 
         enableEdgeToEdge()
@@ -208,7 +209,9 @@ fun BottomBar() {
             ) {
                 Text(
                     text = currentSong?.let { "${it.getTitle()} - ${it.getArtist()}" } ?: "No song",
-                    style = TextStyle(fontSize = 12.sp)
+                    style = TextStyle(fontSize = 12.sp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 currentSong?.let { song ->
                     Box(
