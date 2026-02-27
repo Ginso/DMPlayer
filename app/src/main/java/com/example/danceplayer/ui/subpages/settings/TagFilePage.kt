@@ -54,8 +54,11 @@ fun TagFilePage(onBack: () -> Unit) {
         val exportLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.CreateDocument("application/json")
         ) { uri -> export(context, uri, errorText)}
+        // use OpenDocument instead of GetContent so we can take persistable
+        // URI permissions; GetContent only grants a one-time permission which
+        // causes a SecurityException when we try to persist it.
         val importLauncher = rememberLauncherForActivityResult(
-            ActivityResultContracts.GetContent()
+            ActivityResultContracts.OpenDocument()
         ) { uri ->
             coroutineScope.launch {
                 import(context, uri, errorText)
@@ -75,7 +78,8 @@ fun TagFilePage(onBack: () -> Unit) {
         Text("Choose an existing file to import tag information from. That file will be used from then on. Your current tag information will be lost.", color = MaterialTheme.colorScheme.onBackground)
         Button(
             onClick = {
-                importLauncher.launch("application/json")
+                // OpenDocument expects an array of MIME types
+                importLauncher.launch(arrayOf("application/json"))
             }
         ) {
             Text("Import / Choose File")
@@ -129,11 +133,16 @@ fun export(context: Context, uri: Uri?, errorText: MutableState<String>) {
             }
             Toast.makeText(context, "Datei erstellt und gespeichert", Toast.LENGTH_SHORT).show()
         }
-        // take persistable permission and store path
-        resolver.takePersistableUriPermission(
-            it,
-            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        )
+        // take persistable permission and store path (may throw if URI isn't
+        // persistable)
+        try {
+            resolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+        } catch (e: SecurityException) {
+            // permission not persistable; nothing to do
+        }
         PreferenceUtil.setTagFile(it.toString())
     }
 }
@@ -147,10 +156,16 @@ suspend fun import(context: Context, uri: Uri?, errorText: MutableState<String>)
         }
         if (!success) return
 
-        resolver.takePersistableUriPermission(
-            it,
-            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-        )
+        // try to keep access to the chosen document. OpenDocument will usually
+        // grant a persistable permission, but wrap in a try/catch just in case.
+        try {
+            resolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+        } catch (e: SecurityException) {
+            // not persistable, ignore
+        }
         PreferenceUtil.setTagFile(it.toString())
     }
 }
