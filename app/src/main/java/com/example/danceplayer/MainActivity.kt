@@ -181,21 +181,29 @@ fun BottomBar() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { Player.previous() }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_previous),
-                    contentDescription = "Previous"
-                )
+            // left controls (fixed width)
+            Row(
+                modifier = Modifier.width(96.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = { Player.previous() }, modifier = Modifier.size(48.dp)) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_previous),
+                        contentDescription = "Previous",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+                Text("-", modifier = Modifier.clickable {
+                    if (speed >= 0.05f) Player.setSpeed(speed - 0.05f)
+                })
             }
-            Text("-", modifier = Modifier.clickable {
-                if (speed >= 0.05f)
-                    Player.setSpeed(speed - 0.05f)
 
-            })
+            // center song info with weight to take remaining space
             Column(
+                modifier = Modifier.weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -203,12 +211,13 @@ fun BottomBar() {
                     style = TextStyle(fontSize = 12.sp)
                 )
                 currentSong?.let { song ->
-                    Box(modifier = Modifier
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                        .background(
-                            color = Color.DarkGray,
-                            shape = RoundedCornerShape(10.dp)
-                        )
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                            .background(
+                                color = Color.DarkGray,
+                                shape = RoundedCornerShape(10.dp)
+                            )
                     ) {
                         Text(
                             text = song.getDance(),
@@ -223,9 +232,10 @@ fun BottomBar() {
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(modifier = Modifier
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
-                            .border(1.dp, Color.Gray, shape = RoundedCornerShape(10.dp))
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .border(1.dp, Color.Gray, shape = RoundedCornerShape(10.dp))
                         ) {
                             Text(
                                 text = "${DateTimeUtil.formatDuration(position)} | ${DateTimeUtil.formatDuration(song.getDuration())}",
@@ -242,24 +252,32 @@ fun BottomBar() {
                     }
                 }
             }
-            IconButton(onClick = {
-                if (isPlaying) Player.pause() else Player.play()
-            }) {
-                Icon(
-                    painter = painterResource(id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
-                    contentDescription = "Play/Pause"
-                )
-            }
-            Text("+", modifier = Modifier.clickable {
-                if (speed <= 3.95f)
-                    Player.setSpeed(speed + 0.05f)
 
-            })
-            IconButton(onClick = { Player.next() }) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_next),
-                    contentDescription = "Next"
-                )
+            // right controls (fixed width)
+            Row(
+                modifier = Modifier.width(96.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = {
+                    if (isPlaying) Player.pause() else Player.play()
+                }, modifier = Modifier.size(56.dp)) {
+                    Icon(
+                        painter = painterResource(id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
+                        contentDescription = "Play/Pause",
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+                Text("+", modifier = Modifier.clickable {
+                    if (speed <= 3.95f) Player.setSpeed(speed + 0.05f)
+                })
+                IconButton(onClick = { Player.next() }, modifier = Modifier.size(48.dp)) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_next),
+                        contentDescription = "Next",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         }
     }
