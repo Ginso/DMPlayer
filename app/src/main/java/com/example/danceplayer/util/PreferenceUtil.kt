@@ -3,6 +3,7 @@ package com.example.danceplayer.util
 import android.content.Context
 import android.content.SharedPreferences
 import org.json.JSONObject
+import androidx.core.content.edit
 
 object PreferenceUtil {
     private const val PREFS_NAME = "dm_player_profiles"
@@ -24,7 +25,7 @@ object PreferenceUtil {
         val savedKey = sharedPreferences.getString(CURRENT_PROFILE_KEY, "default")
         if (savedKey != null) {
             currentProfileKey = savedKey
-            val profileJson = sharedPreferences.getString("profile_" + savedKey, null)
+            val profileJson = sharedPreferences.getString("profile_$savedKey", null)
             if (profileJson != null) {
                 currentProfile = Profile.deserialize(profileJson)
             }
@@ -38,13 +39,11 @@ object PreferenceUtil {
     fun getCurrentProfileKey(): String = currentProfileKey
 
     fun getTagFile(): String {
-        var path = sharedPreferences.getString(TAG_FILE)
-
-        return path
+        return sharedPreferences.getString(TAG_FILE, "")!!
     }
 
     fun setTagFile(path: String) {
-        sharedPreferences.edit().putString(TAG_FILE, path).apply()
+        sharedPreferences.edit { putString(TAG_FILE, path) }
     }
 
     /**
@@ -67,21 +66,21 @@ object PreferenceUtil {
      * Lädt das Profil mit dem gegebenen Key und setzt es als aktuelles Profil.
      */
     fun changeProfile(key: String) {
-        val profileJson = sharedPreferences.getString("profile_" + key, null)
+        val profileJson = sharedPreferences.getString("profile_$key", null)
         if (profileJson != null) {
             currentProfile = Profile.deserialize(profileJson)
             currentProfileKey = key
-            sharedPreferences.edit().putString(CURRENT_PROFILE_KEY, key).apply()
+            sharedPreferences.edit { putString(CURRENT_PROFILE_KEY, key) }
         }
     }
 
     fun renameProfile(key:String) {
         val json = currentProfile.serialize()
-        sharedPreferences.edit()
-            .remove("profile_" + currentProfileKey)
-            .putString(CURRENT_PROFILE_KEY, key)
-            .putString("profile_" + key, json)
-            .apply()
+        sharedPreferences.edit {
+            remove("profile_$currentProfileKey")
+                .putString(CURRENT_PROFILE_KEY, key)
+                .putString("profile_$key", json)
+        }
         currentProfileKey = key
     }
 
@@ -96,7 +95,7 @@ object PreferenceUtil {
 
     private fun saveProfilToPreferences(key: String, profile: Profile) {
         val json = profile.serialize()
-        sharedPreferences.edit().putString("profile_" + key, json).apply()
+        sharedPreferences.edit { putString("profile_$key", json) }
     }
 
     
@@ -115,7 +114,7 @@ data class Profile(
                     folder = json.getString("folder"),
                     keepScreenOn = json.getBoolean("keepScreenOn")
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 Profile()
             }
         }

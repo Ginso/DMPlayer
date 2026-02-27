@@ -27,10 +27,15 @@ import android.content.Intent
 import android.content.Context
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.ui.Fragment
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,13 +119,13 @@ fun export(context: Context, uri: Uri?, errorText: MutableState<String>) {
             }
         }
         if (existed) {
-            errorText.value = "File already exists." 
-            + "If you want to use that file(and overwrite the current tags), use Import. "
-            + "If you want to overwrite this file, please delete it first and then export again."
+            errorText.value = "File already exists. " +
+                "If you want to use that file(and overwrite the current tags), use Import. " +
+                "If you want to overwrite this file, please delete it first and then export again."
         } else {
             // write JSON data to new file
             resolver.openOutputStream(it)?.use { out ->
-                out.write(MusicLibrary.allInfo.asJSON().toString().toByteArray())
+                out.write(MusicLibrary.asJSON().toString().toByteArray())
             }
             Toast.makeText(context, "Datei erstellt und gespeichert", Toast.LENGTH_SHORT).show()
         }
@@ -137,7 +142,9 @@ suspend fun import(context: Context, uri: Uri?, errorText: MutableState<String>)
     uri?.let {
         val resolver = context.contentResolver
 
-        val success = MusicLibrary.loadTagFile(context, it, msg -> errorText.value = msg)
+        val success = MusicLibrary.loadTagFile(context, it) { msg ->
+            errorText.value = msg
+        }
         if (!success) return
 
         resolver.takePersistableUriPermission(

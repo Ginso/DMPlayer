@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.ui.subpages.settings.CustomTagsPage
+import com.example.danceplayer.ui.subpages.settings.TagFilePage
 import kotlinx.coroutines.launch
 
 
@@ -87,8 +88,7 @@ fun SettingsPage() {
             PreferenceUtil.saveProfile()
             folder.value = profile.folder.substringAfterLast("/")
             coroutineScope.launch {
-                val musicFiles = MusicLibrary.getMusicFiles(context)
-                println("Gefundene Musikdateien: ${musicFiles.size}")
+                MusicLibrary.getMusicFiles(context)
             }
         }
     }
@@ -248,6 +248,7 @@ fun SettingsPage() {
     }
 
     if(subPage.value == 1) CustomTagsPage{ subPage.value = 0 }
+    if(subPage.value == 2) TagFilePage { subPage.value = 0 }
 
     
 }
