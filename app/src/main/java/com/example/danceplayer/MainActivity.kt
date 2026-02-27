@@ -1,17 +1,13 @@
 package com.example.danceplayer
 
 import android.os.Bundle
-import android.widget.ImageButton
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,30 +37,34 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+
+// additional layout/imports used in BottomBar
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material3.Button
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.getValue
 import com.example.danceplayer.ui.theme.DancePlayerTheme
 import com.example.danceplayer.ui.pages.DancesPage
 import com.example.danceplayer.ui.pages.PlaylistsPage
 import com.example.danceplayer.ui.pages.SettingsPage
+import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.Player
-import com.example.danceplayer.util.PreferenceUtil
+import com.example.danceplayer.util.DateTimeUtil
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import kotlin.coroutines.coroutineContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // suspend initialization: runs asynchronously
         lifecycleScope.launch {
-            PreferenceUtil.initialize(this@MainActivity)
-            Player.initialize(this@MainActivity)
+            PreferenceUtil.initialize(this)
+            Player.initialize(this)
             MusicLibrary.initialize(this@MainActivity)
         }
 
@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-        
+
     override fun onDestroy() {
         super.onDestroy()
         Player.release()
@@ -168,7 +168,11 @@ fun NavigationDrawerContent(onPageSelected: (Int) -> Unit) {
 
 @Composable
 fun BottomBar() {
-    val song = Player.getCurrentSong()
+    val currentSong by Player.currentSongState
+    val isPlaying by Player.isPlayingState
+    val speed by Player.speedState
+    val position by Player.positionState
+
     BottomAppBar(
         modifier = Modifier
             .fillMaxWidth()
@@ -196,65 +200,63 @@ fun BottomBar() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "${song?.getTitle()} - ${song?.getArtist()}",
+                    text = currentSong?.let { "${it.getTitle()} - ${it.getArtist()}" } ?: "No song",
                     style = TextStyle(fontSize = 12.sp)
                 )
-                Box(modifier = Modifier
-                    .padding(horizontal = 4.dp, vertical = 2.dp)
-                    .background(
-                        color = Color.DarkGray,
-                        shape = RoundedCornerShape(10.dp)
-                    )
-                ) {
-                    Text(
-                        text = "${song?.getDance()}",
-                        style = TextStyle(fontSize = 12.sp, fontStyle = FontStyle.Italic),
-                        modifier = Modifier
-                            .padding(horizontal = 8.dp, vertical = 2.dp),
-                        color = Color.LightGray
-                    )
-                }
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                currentSong?.let { song ->
                     Box(modifier = Modifier
                         .padding(horizontal = 4.dp, vertical = 2.dp)
-                        .border(1.dp, Color.Gray, shape = RoundedCornerShape(10.dp))
+                        .background(
+                            color = Color.DarkGray,
+                            shape = RoundedCornerShape(10.dp)
+                        )
                     ) {
                         Text(
-                            text = "${DateTimeUtil.formatDuration(Player.position)} | ${
-                                DateTimeUtil.formatDuration(
-                                    song?.getDuration() ?: 0L
-                                )
-                            }",
+                            text = song.getDance(),
                             style = TextStyle(fontSize = 12.sp),
+                            background = Color.LightGray,
                             modifier = Modifier
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .padding(horizontal = 8.dp, vertical = 2.dp),
+                            color = Color.LightGray
+
                         )
                     }
-                    Text(
-                        text = "${"%d".format((Player.speed*100).toInt())}%",
-                        style = TextStyle(fontSize = 12.sp),
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                    
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(modifier = Modifier
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                            .border(1.dp, Color.Gray, shape = RoundedCornerShape(10.dp))
+                        ) {
+                            Text(
+                                text = "${DateTimeUtil.formatDuration(position)} | ${DateTimeUtil.formatDuration(song.getDuration())}",
+                                style = TextStyle(fontSize = 12.sp),
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
+                        }
+                        Text(
+                            text = "Speed: ${"%d".format((speed * 100).toInt())}%",
+                            style = TextStyle(fontSize = 12.sp),
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
                 }
-
-            }
-            IconButton(onClick = {
-                    if (Player.isPlaying) Player.pause() else Player.play()
-                }) {
-                Icon(
-                    painter = painterResource(id = if (Player.isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
-                    contentDescription = "Play/Pause"
-                )
             }
             Text("+", modifier = Modifier.clickable {
                 if (Player.speed <= 3.95f)
                     Player.setSpeed(Player.speed + 0.05f)
 
             })
+            Button(
+                onClick = {
+                    if (speed > 4.0f) return@Button
+                    Player.setSpeed(speed + 0.05f)
+                }
+            ) {
+                Text("+")
+            }
             IconButton(onClick = { Player.next() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_next),

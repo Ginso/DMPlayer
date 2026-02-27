@@ -6,45 +6,90 @@ import androidx.media3.common.PlaybackParameters
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.danceplayer.model.Song
 
+import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 object Player {
     private var exoPlayer: ExoPlayer? = null
-    
-    var isPlaying: Boolean = false
-        private set
-    var position: Long = 0L
-        private set
-    var speed: Float = 1.0f
-        private set
-    var playlist: List<Song> = emptyList()
-        private set
-    var currentIndex: Int = 0
-        private set
+
+    // expose compose-friendly state holders
+    val isPlayingState = mutableStateOf(false)
+    val positionState = mutableStateOf(0L)
+    val speedState = mutableStateOf(1.0f)
+    val currentSongState = mutableStateOf<Song?>(null)
+
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var positionJob: Job? = null
+
+    // internal backing fields for playlist and index (no state needed)
+    private var playlist: List<Song> = emptyList()
+    private var currentIndex: Int = 0
+
 
     fun initialize(context: Context) {
         if (exoPlayer == null) {
             exoPlayer = ExoPlayer.Builder(context).build()
+            exoPlayer?.addListener(object : com.google.android.exoplayer2.Player.Listener {
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    isPlayingState.value = isPlaying
+                    if (isPlaying) startPositionUpdater() else stopPositionUpdater()
+                }
+
+                override fun onPlaybackStateChanged(state: Int) {
+                    // keep the position up to date whenever state changes
+                    positionState.value = exoPlayer?.currentPosition ?: 0L
+                }
+
+                override fun onPositionDiscontinuity(reason: Int) {
+                    positionState.value = exoPlayer?.currentPosition ?: 0L
+                }
+            })
         }
     }
 
     fun release() {
+        positionJob?.cancel()
+        scope.cancel()
         exoPlayer?.release()
         exoPlayer = null
     }
 
-    fun getCurrentSong(): Song? {
-        return if (currentIndex in playlist.indices) {
-            playlist[currentIndex]
-        } else null
+    private fun startPositionUpdater() {
+        positionJob?.cancel()
+        positionJob = scope.launch {
+            while (isPlayingState.value) {
+                positionState.value = exoPlayer?.currentPosition ?: 0L
+                delay(1000)
+            }
+        }
     }
 
+    private fun stopPositionUpdater() {
+        positionJob?.cancel()
+    }
+
+    private fun updateCurrentSong() {
+        currentSongState.value = if (currentIndex in playlist.indices) playlist[currentIndex] else null
+    }
+
+    fun getCurrentSong(): Song? = currentSongState.value
+
     fun play() {
-        isPlaying = true
         exoPlayer?.play()
+        isPlayingState.value = true
+        startPositionUpdater()
     }
 
     fun pause() {
-        isPlaying = false
         exoPlayer?.pause()
+        isPlayingState.value = false
+        stopPositionUpdater()
     }
 
     fun load(songs: List<Song>, index: Int = 0) {
@@ -55,37 +100,40 @@ object Player {
         }
         exoPlayer?.setMediaItems(mediaItems, index, 0L)
         seekTo(0L)
+        updateCurrentSong()
     }
 
     fun seekTo(newPosition: Long) {
-        position = newPosition
         exoPlayer?.seekTo(newPosition)
+        positionState.value = newPosition
     }
 
     fun setSpeed(newSpeed: Float) {
-        speed = newSpeed
+        speedState.value = newSpeed
         exoPlayer?.setPlaybackParameters(PlaybackParameters(newSpeed))
     }
 
     fun next() {
         if (currentIndex < playlist.size - 1) {
             currentIndex++
-            position = 0L
+            positionState.value = 0L
             exoPlayer?.seekToNextMediaItem()
+            updateCurrentSong()
         }
     }
 
     fun previous() {
-        if (position > 3000) {
-            position = 0L
-            exoPlayer?.seekTo(0L)
+        val currentPos = positionState.value
+        if (currentPos > 3000) {
+            seekTo(0L)
         } else if (currentIndex > 0) {
             currentIndex--
-            position = 0L
+            positionState.value = 0L
             exoPlayer?.seekToPreviousMediaItem()
+            updateCurrentSong()
         }
     }
-    
+
     fun removeFromPlaylist(index: Int) {
         if (index in playlist.indices) {
             val mutableList = playlist.toMutableList()
@@ -99,6 +147,7 @@ object Player {
                 currentIndex = maxOf(0, currentIndex - 1)
             }
             exoPlayer?.removeMediaItem(index)
+            updateCurrentSong()
         }
     }
 }
