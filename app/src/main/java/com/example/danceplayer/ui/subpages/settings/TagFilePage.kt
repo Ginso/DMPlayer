@@ -42,6 +42,7 @@ import kotlinx.coroutines.launch
 fun TagFilePage(onBack: () -> Unit) {
     val errorText = remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
+    val isLoading = remember { mutableStateOf(false) }
 
     Fragment("Import/Export Tag Info", onBack) {
     
@@ -110,10 +111,24 @@ fun TagFilePage(onBack: () -> Unit) {
             }
         )
     }
+    if (isLoading.value) {
+        AlertDialog(
+            onDismissRequest = { /* do nothing */ },
+            title = { Text("Loading...") },
+            text = {
+                Text(
+                    "Please wait...",
+                    modifier = Modifier.fillMaxWidth().centerHorizontally(),
+                )
+            },
+            confirmButton = { /* no buttons */ }
+        )
+    }
 }
 
-fun export(context: Context, uri: Uri?, errorText: MutableState<String>) {
+fun export(context: Context, uri: Uri?, isLoading: MutableState<Boolean>, errorText: MutableState<String>) {
     uri?.let {
+        isLoading.value = true
         val resolver = context.contentResolver
         var existed = false
         // check if file already has content
@@ -144,17 +159,23 @@ fun export(context: Context, uri: Uri?, errorText: MutableState<String>) {
             // permission not persistable; nothing to do
         }
         PreferenceUtil.setTagFile(it.toString())
+        MusicLibrary.getMusicFiles(context) // reload music files to update tags
+        isLoading.value = false
     }
 }
 
-suspend fun import(context: Context, uri: Uri?, errorText: MutableState<String>) {
+suspend fun import(context: Context, uri: Uri?, isLoading: MutableState<Boolean>, errorText: MutableState<String>) {
     uri?.let {
         val resolver = context.contentResolver
+        isLoading.value = true
 
         val success = MusicLibrary.loadTagFile(context, it) { msg ->
             errorText.value = msg
         }
-        if (!success) return
+        if (!success) {
+            isLoading.value = false
+            return
+        }
 
         // try to keep access to the chosen document. OpenDocument will usually
         // grant a persistable permission, but wrap in a try/catch just in case.
@@ -167,5 +188,7 @@ suspend fun import(context: Context, uri: Uri?, errorText: MutableState<String>)
             // not persistable, ignore
         }
         PreferenceUtil.setTagFile(it.toString())
+        MusicLibrary.getMusicFiles(context) // reload music files to update tags
+        isLoading.value = false
     }
 }
