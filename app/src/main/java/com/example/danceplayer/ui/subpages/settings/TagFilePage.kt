@@ -54,7 +54,7 @@ fun TagFilePage(onBack: () -> Unit) {
         val context = LocalContext.current
         val exportLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.CreateDocument("application/json")
-        ) { uri -> export(context, uri, errorText)}
+        ) { uri -> export(context, uri, isLoading, errorText)}
         // use OpenDocument instead of GetContent so we can take persistable
         // URI permissions; GetContent only grants a one-time permission which
         // causes a SecurityException when we try to persist it.
@@ -62,7 +62,7 @@ fun TagFilePage(onBack: () -> Unit) {
             ActivityResultContracts.OpenDocument()
         ) { uri ->
             coroutineScope.launch {
-                import(context, uri, errorText)
+                import(context, uri, isLoading, errorText)
             }
         }
 
@@ -118,7 +118,7 @@ fun TagFilePage(onBack: () -> Unit) {
             text = {
                 Text(
                     "Please wait...",
-                    modifier = Modifier.fillMaxWidth().centerHorizontally(),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             },
             confirmButton = { /* no buttons */ }

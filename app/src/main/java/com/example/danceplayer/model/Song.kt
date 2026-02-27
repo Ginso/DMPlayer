@@ -4,7 +4,7 @@ import androidx.documentfile.provider.DocumentFile
 import org.json.JSONObject
 import kotlin.collections.iterator
 
-data class SongInfo(
+data class Song(
     var file:DocumentFile? = null,
     var tags: Map<String,Any>
 ) {
@@ -22,7 +22,7 @@ data class SongInfo(
         const val _DURATION: String = "duration"
         const val _PLAYING_AFTER: String = "playing_after"
 
-        fun fromJSON(json: JSONObject, tags: Map<String, TagInfo>, onError: (String) -> Unit): SongInfo? {
+        fun fromJSON(json: JSONObject, tags: Map<String, Tag>, onError: (String) -> Unit): Song? {
             val map = LinkedHashMap<String, Any>()
             val path = json.getString(_PATH)
             if (path == null) {
@@ -34,12 +34,12 @@ data class SongInfo(
                 if (tagInfo == null) continue
                 try {
                     when (tagInfo.type) {
-                        TagInfo.Type.STRING -> map.put(key, json.getString(key))
-                        TagInfo.Type.INT -> map.put(key, json.getInt(key))
-                        TagInfo.Type.FLOAT -> map.put(key, json.getDouble(key))
-                        TagInfo.Type.RATING -> map.put(key, json.getInt(key))
-                        TagInfo.Type.BOOL -> map.put(key, json.getBoolean(key))
-                        TagInfo.Type.DATETIME -> map.put(key, json.getLong(key))
+                        Tag.Type.STRING -> map.put(key, json.getString(key))
+                        Tag.Type.INT -> map.put(key, json.getInt(key))
+                        Tag.Type.FLOAT -> map.put(key, json.getDouble(key))
+                        Tag.Type.RATING -> map.put(key, json.getInt(key))
+                        Tag.Type.BOOL -> map.put(key, json.getBoolean(key))
+                        Tag.Type.DATETIME -> map.put(key, json.getLong(key))
                         else -> {}
                     }
                 } catch (e: Exception) {
@@ -47,7 +47,7 @@ data class SongInfo(
                     return null
                 }
             }
-            return SongInfo(tags = map)
+            return Song(tags = map)
         }
     }
 

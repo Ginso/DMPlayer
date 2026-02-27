@@ -5,8 +5,8 @@ package com.example.danceplayer.util
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import com.example.danceplayer.model.SongInfo
-import com.example.danceplayer.model.TagInfo
+import com.example.danceplayer.model.Song
+import com.example.danceplayer.model.Tag
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -16,10 +16,10 @@ import androidx.core.net.toUri
 object MusicLibrary {
     private val MUSIC_EXTENSIONS = setOf("mp3", "flac", "wav", "ogg", "aac", "m4a", "opus")
 
-    var tags: List<TagInfo> = emptyList()
-    var songs: List<SongInfo> = emptyList()
-    var tagMap: Map<String, TagInfo> = LinkedHashMap()
-    var songMap: Map<String, SongInfo> = LinkedHashMap()
+    var tags: MutableList<Tag> = mutableListOf()
+    var songs: MutableList<Song> = mutableListOf()
+    var tagMap: MutableMap<String, Tag> = LinkedHashMap()
+    var songMap: MutableMap<String, Song> = LinkedHashMap()
 
 
     suspend fun initialize(context: Context) {
@@ -60,11 +60,12 @@ object MusicLibrary {
 
     private fun searchMusicFiles(folder: DocumentFile, pathPrefix: String) {
         folder.listFiles().forEach { file ->
-            if(file.isDirectory) searchMusicFiles(file,pathPrefix + file.name + "/") // Rekursiv in Unterordner
+            val path = pathPrefix + file.name.lowercase()
+            if(file.isDirectory) searchMusicFiles(file, path + "/") // Rekursiv in Unterordner
             if (file.isFile && isAudioFile(file.name)) {
-                var songInfo = songMap[pathPrefix + file.name]
+                var songInfo = songMap[path]
                 if (songInfo == null) {
-                    songInfo = SongInfo(tags = mapOf(SongInfo._PATH to pathPrefix + file.name))
+                    songInfo = Song(tags = mapOf(Song._PATH to path))
                     addSong(songInfo)
                 }
                 songInfo.file = file
@@ -88,39 +89,37 @@ object MusicLibrary {
         }
     }
 
-    fun addTag(tag: TagInfo) {
-        tags = tags + tag
-        tagMap = tagMap + (tag.name to tag)
+    fun addTag(tag: Tag) {
+        tags.add(tag)
+        tagMap.put(tag.name, tag)
     }
 
-    fun addSong(song: SongInfo) {
-        songs = songs + song
+    fun addSong(song: Song) {
+        songs.add(song)
         val path = song.getPath()
         if (path.isNotBlank())
-            songMap = songMap + (path to song)
+            songMap.put(path, song)
     }
 
     fun filterSongs() {
-        songs = songs.filter { it.getPath().isNotBlank() }
-        songMap = songMap.filter { (_, song) -> song.getPath().isNotBlank() }
     }
 
     fun loadJSON(jsonString: String, onError: (String) -> Unit): Boolean {
-        val tags = ArrayList<TagInfo>()
-        val songs = ArrayList<SongInfo>()
+        tags = ArrayList<Tag>()
+        songs = ArrayList<Song>()
         try {
             val json = JSONObject(jsonString)
             var arr = json.getJSONArray("tags")
             for (i in 0..arr.length() - 1) {
-                tags.add(TagInfo.fromJSON(arr.getJSONObject(i), onError) ?: return false)
+                addTag(Tag.fromJSON(arr.getJSONObject(i), onError) ?: return false)
             }
             arr = json.getJSONArray("songs")
             for (i in 0..arr.length() - 1) {
-                val song = SongInfo.fromJSON(arr.getJSONObject(i), tagMap, onError)
+                val song = Song.fromJSON(arr.getJSONObject(i), tagMap, onError)
                 if(song == null) {
                     return false
                 }
-                songs.add(song)
+                addSong(song)
             }
         } catch (_: Exception) {
             onError("Error parsing content")

@@ -2,7 +2,7 @@ package com.example.danceplayer.model
 
 import org.json.JSONObject
 
-data class TagInfo(
+data class Tag(
     var name:String = "",
     var type:Type = Type.STRING,
     var arg:Int = 0
@@ -40,11 +40,11 @@ data class TagInfo(
     }
     companion object {
 
-        fun fromJSON(json: JSONObject, onError: (String) -> Unit): TagInfo? {
+        fun fromJSON(json: JSONObject, onError: (String) -> Unit): Tag? {
             return try {
-                TagInfo(
+                Tag(
                     name = json.getString("name"),
-                    type = TagInfo.Type.fromInteger(json.getInt("type")),
+                    type = Tag.Type.fromInteger(json.getInt("type")),
                     arg = json.optInt("arg", 0)
                 )
             } catch (e: Exception) {

@@ -50,9 +50,9 @@ fun SettingsRow(label: String, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(bottom = 16.dp)
     ) {
-        Text(label, color = MaterialTheme.colorScheme.onBackground)
+        Text(label, color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
         Spacer(Modifier.weight(1f))
-        Text("›", color = MaterialTheme.colorScheme.onBackground)
+        Text("›", color = MaterialTheme.colorScheme.onBackground, fontSize = 26.sp)
     }
 }
 
@@ -68,12 +68,12 @@ fun SettingsPage() {
     val dialogTitle = remember { mutableStateOf("") }
     val dialogText = remember { mutableStateOf("") }
     val action = remember { mutableStateOf(PreferenceUtil::createNewProfile) }
-    val folder = remember { mutableStateOf(profile.folder.substringAfterLast("/")) }
+    val folder = remember { mutableStateOf(profile.folder.substringAfterLast("/").substringAfterLast("%3A").replace("%2F", "/")) }
     val showCustomTags = remember { mutableStateOf(false) }
     val subPage = remember {mutableStateOf(0)}
 
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
-    
+
     val treeLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
@@ -86,7 +86,7 @@ fun SettingsPage() {
             )
             profile.folder = it.toString()
             PreferenceUtil.saveProfile()
-            folder.value = profile.folder.substringAfterLast("/")
+            folder.value = profile.folder.substringAfterLast("/").substringAfterLast("%3A").replace("%2F", "/")
             coroutineScope.launch {
                 MusicLibrary.getMusicFiles(context)
             }
@@ -188,11 +188,10 @@ fun SettingsPage() {
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             ) {
-                Text("Music Folder:", color = MaterialTheme.colorScheme.onBackground)
-                Text(
-                    profile.folder,
-                    modifier = Modifier.padding(start = 16.dp),
-                    color = MaterialTheme.colorScheme.onBackground
+                Text("Music Folder: ${folder.value}",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f),
+                    softWrap = true
                 )
                 Button(
                     onClick = {
@@ -250,6 +249,6 @@ fun SettingsPage() {
     if(subPage.value == 1) CustomTagsPage{ subPage.value = 0 }
     if(subPage.value == 2) TagFilePage { subPage.value = 0 }
 
-    
+
 }
 
