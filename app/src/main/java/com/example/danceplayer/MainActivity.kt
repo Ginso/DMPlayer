@@ -51,15 +51,20 @@ import com.example.danceplayer.ui.theme.DancePlayerTheme
 import com.example.danceplayer.ui.pages.DancesPage
 import com.example.danceplayer.ui.pages.PlaylistsPage
 import com.example.danceplayer.ui.pages.SettingsPage
+import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.Player
 import com.example.danceplayer.util.PreferenceUtil
 import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         PreferenceUtil.initialize(this)
         Player.initialize(this)
+        
+
+
         MusicLibrary.initialize(this)
         enableEdgeToEdge()
         setContent {
@@ -210,7 +215,7 @@ fun BottomBar() {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${DateTimeUtil.formatDuration(Player.position)} | ${DateTimeUtil.formatDuration(song.getDuration())}",
+                        text = "${DateTimeUtil.formatDuration(Player.position)} | ${DateTimeUtil.formatDuration(song?.getDuration() ?: 0L)}",
                         style = TextStyle(fontSize = 12.sp),
                         modifier = Modifier.border(1.dp, Color.Gray, shape = RoundedCornerShape(4.dp))
                     )
