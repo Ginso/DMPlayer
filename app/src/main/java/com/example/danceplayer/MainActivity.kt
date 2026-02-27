@@ -162,11 +162,12 @@ fun BottomBar() {
                 .padding(8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            ImageButton(
-                painter = painterResource(id = R.drawable.ic_previous),
-                contentDescription = "Previous",
-                onClick = { Player.previous() }
-            )
+            IconButton(onClick = { Player.previous() }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_previous),
+                    contentDescription = "Previous"
+                )
+            }
             Button(
                 onClick = {
                     if (Player.speed < 0.05f) return
@@ -179,12 +180,12 @@ fun BottomBar() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "${song.getTitle()} - ${song.getArtist()}",
+                    text = "${currentSong.getTitle()} - ${currentSong.getArtist()}",
                     style = TextStyle(fontSize = 12.sp)
                 )
                 Text(
                     text = "${song.getDance()}",
-                    style = TextStyle(fontSize = 12.sp, italic = true),
+                    style = TextStyle(fontSize = 12.sp, font),
                     background = Color.LightGray,
                     modifier = Modifier
                         .padding(horizontal = 4.dp, vertical = 2.dp)
@@ -208,13 +209,14 @@ fun BottomBar() {
                 }
 
             }
-            ImageButton(
-                painter = painterResource(id = if (Player.isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
-                contentDescription = "Play/Pause",
-                onClick = {
+            IconButton(onClick = {
                     if (Player.isPlaying) Player.pause() else Player.play()
-                }
-            )
+                }) {
+                Icon(
+                    painter = painterResource(id = if (Player.isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
+                    contentDescription = "Play/Pause"
+                )
+            }
             Button(
                 onClick = {
                     if (Player.speed > 4.0f) return
@@ -223,11 +225,12 @@ fun BottomBar() {
             ) {
                 Text("+")
             }
-            ImageButton(
-                painter = painterResource(id = R.drawable.ic_next),
-                contentDescription = "Next",
-                onClick = { Player.next() }
-            )
+            IconButton(onClick = { Player.next() }) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_next),
+                    contentDescription = "Next"
+                )
+            }
         }
     }
 }
