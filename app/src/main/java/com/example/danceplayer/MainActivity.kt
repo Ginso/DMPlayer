@@ -61,10 +61,10 @@ import kotlin.coroutines.coroutineContext
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        PreferenceUtil.initialize(this)
-        Player.initialize(this)
         // suspend initialization: runs asynchronously
         lifecycleScope.launch {
+            PreferenceUtil.initialize(this@MainActivity)
+            Player.initialize(this@MainActivity)
             MusicLibrary.initialize(this@MainActivity)
         }
 
@@ -169,7 +169,6 @@ fun NavigationDrawerContent(onPageSelected: (Int) -> Unit) {
 @Composable
 fun BottomBar() {
     val song = Player.getCurrentSong()
-    val context = LocalContext.current
     BottomAppBar(
         modifier = Modifier
             .fillMaxWidth()
@@ -179,7 +178,8 @@ fun BottomBar() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { Player.previous() }) {
                 Icon(
@@ -187,14 +187,11 @@ fun BottomBar() {
                     contentDescription = "Previous"
                 )
             }
-            Button(
-                onClick = {
-                    if (Player.speed >= 0.05f)
-                        Player.setSpeed(Player.speed - 0.05f)
-                }
-            ) {
-                Text("-")
-            }
+            Text("-", modifier = Modifier.clickable {
+                if (Player.speed >= 0.05f)
+                    Player.setSpeed(Player.speed - 0.05f)
+
+            })
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -202,27 +199,42 @@ fun BottomBar() {
                     text = "${song?.getTitle()} - ${song?.getArtist()}",
                     style = TextStyle(fontSize = 12.sp)
                 )
-                Text(
-                    text = "${song?.getDance()}",
-                    style = TextStyle(fontSize = 12.sp, fontStyle = FontStyle.Italic),
-                    modifier = Modifier
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                        .background(
-                            color = Color.LightGray,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                )
+                Box(modifier = Modifier
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                    .background(
+                        color = Color.DarkGray,
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                ) {
+                    Text(
+                        text = "${song?.getDance()}",
+                        style = TextStyle(fontSize = 12.sp, fontStyle = FontStyle.Italic),
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                        color = Color.LightGray
+                    )
+                }
                 Row(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Box(modifier = Modifier
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                        .border(1.dp, Color.Gray, shape = RoundedCornerShape(10.dp))
+                    ) {
+                        Text(
+                            text = "${DateTimeUtil.formatDuration(Player.position)} | ${
+                                DateTimeUtil.formatDuration(
+                                    song?.getDuration() ?: 0L
+                                )
+                            }",
+                            style = TextStyle(fontSize = 12.sp),
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
                     Text(
-                        text = "${DateTimeUtil.formatDuration(Player.position)} | ${DateTimeUtil.formatDuration(song?.getDuration() ?: 0L)}",
-                        style = TextStyle(fontSize = 12.sp),
-                        modifier = Modifier.border(1.dp, Color.Gray, shape = RoundedCornerShape(4.dp))
-                    )
-                    Text(
-                        text = "Speed: ${"%d".format(Player.speed*100)}%",
+                        text = "${"%d".format((Player.speed*100).toInt())}%",
                         style = TextStyle(fontSize = 12.sp),
                         modifier = Modifier.padding(start = 8.dp)
                     )
@@ -238,14 +250,11 @@ fun BottomBar() {
                     contentDescription = "Play/Pause"
                 )
             }
-            Button(
-                onClick = {
-                    if (Player.speed <= 3.95f)
-                        Player.setSpeed(Player.speed + 0.05f)
-                }
-            ) {
-                Text("+")
-            }
+            Text("+", modifier = Modifier.clickable {
+                if (Player.speed <= 3.95f)
+                    Player.setSpeed(Player.speed + 0.05f)
+
+            })
             IconButton(onClick = { Player.next() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_next),

@@ -51,7 +51,7 @@ object Player {
         playlist = songs
         currentIndex = index
         val mediaItems = songs.map { song ->
-            MediaItem.fromUri(song.file)
+            MediaItem.fromUri(song.file!!)
         }
         exoPlayer?.setMediaItems(mediaItems, index, 0L)
         seekTo(0L)

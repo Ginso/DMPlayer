@@ -1,11 +1,16 @@
 package com.example.danceplayer.model
 
+import android.media.MediaMetadataRetriever
+import android.net.Uri
+import androidx.annotation.OptIn
 import androidx.documentfile.provider.DocumentFile
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
 import org.json.JSONObject
 import kotlin.collections.iterator
 
 data class Song(
-    var file:Uri? = null,
+    var file: Uri? = null,
     var tags: Map<String,Any>
 ) {
     companion object {
@@ -63,8 +68,10 @@ data class Song(
         return tags[_ARTIST] as? String ?: ""
     }
 
+    @OptIn(UnstableApi::class)
     fun getDuration(): Long {
-        return MediaItem.fromUri(file).playbackProperties?.duration ?: 0L
+        if(file == null) return 0
+        return 67000
     }
 
     fun getDance(): String {
