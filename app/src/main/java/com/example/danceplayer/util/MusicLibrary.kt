@@ -4,6 +4,7 @@ package com.example.danceplayer.util
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.MutableState
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,22 +14,56 @@ import org.json.JSONObject
 object MusicLibrary {
     private val MUSIC_EXTENSIONS = setOf("mp3", "flac", "wav", "ogg", "aac", "m4a", "opus")
 
-    suspend fun getMusicFiles(context: Context): List<DocumentFile> = withContext(Dispatchers.IO) {
+    public var allInfo: AllInfo = getDefaultInfo()
+
+    suspend fun initialize(context: Context) {
+        val path = PreferenceUtil.getTagFile()
+        if (path != null) {
+            val uri = Uri.parse(path)
+            loadTagFile(context, uri) { /* ignore error */ }
+        }
+        getMusicFiles(context)
+    }
+
+    suspend fun loadTagFile(context: Context, uri: Uri, onError: (String) -> Unit): Boolean {
+        return withContext(Dispatchers.IO) {
+            val resolver = context.contentResolver
+            val jsonString = resolver.openInputStream(uri)?.bufferedReader().use { it?.readText() }
+            if (jsonString == null) {
+                onError("Could not read file.")
+                return@withContext false
+            }
+
+            val info = AllInfo.fromJSON(jsonString, onError)
+            if (info == null) {
+                return@withContext false
+            }
+            allInfo = info
+            true
+        }
+    }
+
+    suspend fun getMusicFiles(context: Context) {
         val folderUri = PreferenceUtil.getCurrentProfile().folder
-        if (folderUri == null) return@withContext emptyList()
+        if (folderUri == null) return
         val uri = Uri.parse(folderUri)
-        val rootFolder = DocumentFile.fromTreeUri(context, uri) ?: return@withContext emptyList()
-        val files = mutableListOf<DocumentFile>()
-        searchMusicFiles(rootFolder, files)
-        files
+        val rootFolder = DocumentFile.fromTreeUri(context, uri) ?: return
+        searchMusicFiles(rootFolder, "")
+        allInfo.filterSongs()
     }
 
     
-    private fun searchMusicFiles(folder: DocumentFile, result: MutableList<DocumentFile>) {
+    private fun searchMusicFiles(folder: DocumentFile, pathPrefix: String) {
         folder.listFiles().forEach { file ->
             when {
-                file.isDirectory -> searchMusicFiles(file, result) // Rekursiv in Unterordner
-                file.isFile && isAudioFile(file.name) -> result.add(file)
+                file.isDirectory -> searchMusicFiles(file, result, pathPrefix + file.name + "/") // Rekursiv in Unterordner
+                if(file.isFile && isAudioFile(file.name)) {
+                    var songInfo = allInfo.songMap[pathPrefix + file.name]
+                    if (songInfo == null) {
+                        songInfo = SongInfo(tags = mapOf(SongInfo._PATH to pathPrefix + file.name))
+                        allInfo.addSong(songInfo)
+                    }
+                    songInfo.file = file
             }
         }
     }
@@ -56,7 +91,17 @@ object MusicLibrary {
 
         return AllInfo(tags, songs)
     }
-}
+
+    private fun save(context: Context) {
+        val content = allInfo.asJSON().toString()
+        val path = PreferenceUtil.getTagFile()
+        val uri = Uri.parse(path)
+        context.contentResolver.openOutputStream(uri)?.use { out ->
+            out.write(content.toByteArray())
+        }
+    }
+
+    
 
 
 
@@ -98,7 +143,7 @@ data class TagInfo(
     }
     companion object {
 
-        fun fromJSON(json: JSONObject): TagInfo {
+        fun fromJSON(json: JSONObject, onError: (String) -> Unit): TagInfo? {
             return try {
                 TagInfo(
                     name = json.getString("name"),
@@ -106,7 +151,8 @@ data class TagInfo(
                     arg = json.getInt("arg")
                 )
             } catch (e: Exception) {
-                TagInfo()
+                onError("Error parsing tag info: ${json.toString()}")
+                return null
             }
         }
     }
@@ -121,13 +167,13 @@ data class TagInfo(
 }
 
 data class SongInfo(
+    var file:DocumentFile? = null,
     var tags: Map<String,Any>
 ) {
     companion object {
 
+        const val _PATH: String = "path"
         const val _DATE: String = "last_modified"
-        const val _DURATION: String = "duration"
-        const val _PLAYING_AFTER: String = "playing_after"
         const val _TITLE: String = "title"
         const val _YEAR: String = "year"
         const val _ALBUM: String = "album"
@@ -135,17 +181,40 @@ data class SongInfo(
         const val _DANCE: String = "dance"
         const val _RATING: String = "rating"
         const val _TPM: String = "tpm"
-        fun fromJSON(json: JSONObject): SongInfo {
+        const val _DURATION: String = "duration"
+        const val _PLAYING_AFTER: String = "playing_after"
+
+        fun fromJSON(json: JSONObject, tags: Map<String, TagInfo>, onError: (String) -> Unit): SongInfo? {
             val map = LinkedHashMap<String, Any>()
-            return try {
-                for (key in json.keys()) {
-                    map.put(key, json.get(key))
-                }
-                SongInfo(map)
-            } catch (e: Exception) {
-                SongInfo(map)
+            var path = json.optString(_PATH, null)
+            if (path == null) {
+                onError("Song is missing path")
+                return null
             }
+            for (key in json.keys()) {
+                val tagInfo = tags[key]
+                if (tagInfo == null) continue
+                try {
+                    when (tagInfo.type) {
+                        TagInfo.Type.STRING -> map.put(key, json.getString(key))
+                        TagInfo.Type.INT -> map.put(key, json.getInt(key))
+                        TagInfo.Type.FLOAT -> map.put(key, json.getDouble(key))
+                        TagInfo.Type.RATING -> map.put(key, json.getInt(key))
+                        TagInfo.Type.BOOL -> map.put(key, json.getBoolean(key))
+                        TagInfo.Type.DATETIME -> map.put(key, json.getLong(key))
+                        else -> {}
+                    }
+                } catch (e: Exception) {
+                    onError("Invalid value in song $path for tag ${tagInfo.name}")
+                    return null
+                }
+            }
+            return SongInfo(map)
         }
+    }
+
+    fun getPath(): String {
+        return tags[_PATH] as? String ?: ""
     }
 
 
@@ -160,28 +229,48 @@ data class SongInfo(
 
 data class AllInfo(
     var tags: List<TagInfo>,
-    var songs: List<SongInfo>
+    var songs: List<SongInfo>,
+    var tagMap: Map<String, TagInfo> = LinkedHashMap()
+    var songMap: Map<String, SongInfo> = LinkedHashMap()
 ) {
     companion object {
 
-        fun fromJSON(json: JSONObject): AllInfo? {
+        fun fromJSON(jsonString: String, onError: (String) -> Unit): AllInfo? {
             val tags = ArrayList<TagInfo>()
             val songs = ArrayList<SongInfo>()
             try {
+                val json = JSONObject(jsonString)
                 var arr = json.getJSONArray("tags")
                 for(i in 0.. arr.length()-1) {
-                    tags.add(TagInfo.fromJSON(arr.getJSONObject(i)))
+                    tags.add(TagInfo.fromJSON(arr.getJSONObject(i), onError) ?: return null)
                 }
                 arr = json.getJSONArray("songs")
                 for(i in 0.. arr.length()-1) {
-                    songs.add(SongInfo.fromJSON(arr.getJSONObject(i)))
+                    songs.add(SongInfo.fromJSON(arr.getJSONObject(i), tagMap, onError) ?: return null)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                onError("Error parsing content")
                 return null
             }
             return AllInfo(tags = tags, songs = songs)
         }
+    }
+
+    fun addTag(tag: TagInfo) {
+        tags = tags + tag
+        tagMap = tagMap + (tag.name to tag)
+    }
+
+    fun addSong(song: SongInfo) {
+        songs = songs + song
+        val path = song.getPath()
+        if (path.isNotBlank())
+            songMap = songMap + (path to song)
+    }
+
+    fun filterSongs() {
+        songs = songs.filter { it.getPath().isNotBlank() }
+        songMap = songMap.filter { (_, song) -> song.getPath().isNotBlank() }
     }
 
     fun asJSON(): JSONObject {

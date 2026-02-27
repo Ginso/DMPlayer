@@ -21,6 +21,7 @@ import com.example.danceplayer.ui.Fragment
 
 @Composable
 fun CustomTagsPage(onBack: () -> Unit) {
+
     Fragment("Custom Tags", onBack) {
         Text("Here you can define your custom tags", color = MaterialTheme.colorScheme.onBackground)
         HorizontalDivider()

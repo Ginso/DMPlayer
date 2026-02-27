@@ -14,25 +14,136 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Intent
+import android.content.Context
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.runtime.MutableState
+import com.example.danceplayer.util.MusicLibrary
+import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.ui.Fragment
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagFilePage(onBack: () -> Unit) {
+    val errorText = remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+
     Fragment("Import/Export Tag Info", onBack) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Text("The tags that you defined and the values for every song are being stored in a file. Here you can set the location of that file(to export it) or choose an existing file to import.", color = MaterialTheme.colorScheme.onBackground)
-            Text("Export", style = MaterialTheme.typography.titleLarge)
-
-
+    
+        Text("The tags that you defined and the values for every song are being stored in a file. Here you can set the location of that file(to export it) or choose an existing file to import.", color = MaterialTheme.colorScheme.onBackground)
+        HorizontalDivider()
+        Text("Export", style = MaterialTheme.typography.titleLarge)
+        Text("Specify the location where the file should be saved at. This file will be used from then on.", color = MaterialTheme.colorScheme.onBackground)
+        // launcher for creating or choosing a file location
+        val context = LocalContext.current
+        val exportLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.CreateDocument("application/json")
+        ) { uri -> export(context, uri, errorText)}
+        val importLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.GetContent()
+        ) { uri ->
+            coroutineScope.launch {
+                import(context, uri, errorText)
+            }
         }
+
+        Button(
+            onClick = {
+                // launch with a suggested filename
+                exportLauncher.launch("DancePlayerTags.json")
+            }
+        ) {
+            Text("Export / Choose Location")
+        }
+        HorizontalDivider()
+        Text("Import", style = MaterialTheme.typography.titleLarge)
+        Text("Choose an existing file to import tag information from. That file will be used from then on. Your current tag information will be lost.", color = MaterialTheme.colorScheme.onBackground)
+        Button(
+            onClick = {
+                importLauncher.launch("application/json")
+            }
+        ) {
+            Text("Import / Choose File")
+        }
+
+    }
+
+    
+    if (errorText.value.isNotBlank()) {
+        AlertDialog(
+            onDismissRequest = { errorText.value = "" },
+            title = { Text("Error") },
+            text = {
+                Text(
+                    errorText.value,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color.Red
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        errorText.value = ""
+                    }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+}
+
+fun export(context: Context, uri: Uri?, errorText: MutableState<String>) {
+    uri?.let {
+        val resolver = context.contentResolver
+        var existed = false
+        // check if file already has content
+        resolver.openFileDescriptor(it, "r")?.use { pfd ->
+            if (pfd.statSize > 0) {
+                existed = true
+            }
+        }
+        if (existed) {
+            errorText.value = "File already exists." 
+            + "If you want to use that file(and overwrite the current tags), use Import. "
+            + "If you want to overwrite this file, please delete it first and then export again."
+        } else {
+            // write JSON data to new file
+            resolver.openOutputStream(it)?.use { out ->
+                out.write(MusicLibrary.allInfo.asJSON().toString().toByteArray())
+            }
+            Toast.makeText(context, "Datei erstellt und gespeichert", Toast.LENGTH_SHORT).show()
+        }
+        // take persistable permission and store path
+        resolver.takePersistableUriPermission(
+            it,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        )
+        PreferenceUtil.setTagFile(it.toString())
+    }
+}
+
+suspend fun import(context: Context, uri: Uri?, errorText: MutableState<String>) {
+    uri?.let {
+        val resolver = context.contentResolver
+
+        val success = MusicLibrary.loadTagFile(context, it, msg -> errorText.value = msg)
+        if (!success) return
+
+        resolver.takePersistableUriPermission(
+            it,
+            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+        )
+        PreferenceUtil.setTagFile(it.toString())
     }
 }

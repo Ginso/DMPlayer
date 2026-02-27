@@ -5,11 +5,13 @@ import android.content.SharedPreferences
 import org.json.JSONObject
 
 object PreferenceUtil {
+    private const val PREFS_NAME = "dm_player_profiles"
+    private const val CURRENT_PROFILE_KEY = "current_profile_key"
+    private const val TAG_FILE = "TAG_FILE"
+
     private lateinit var sharedPreferences: SharedPreferences
     private var currentProfile: Profile = Profile()
     private var currentProfileKey: String = "Default"
-    private const val PREFS_NAME = "dm_player_profiles"
-    private const val CURRENT_PROFILE_KEY = "current_profile_key"
 
     /**
      * Initialisiert den PreferenceUtil mit dem Application Context.
@@ -22,7 +24,7 @@ object PreferenceUtil {
         val savedKey = sharedPreferences.getString(CURRENT_PROFILE_KEY, "default")
         if (savedKey != null) {
             currentProfileKey = savedKey
-            val profileJson = sharedPreferences.getString(savedKey, null)
+            val profileJson = sharedPreferences.getString("profile_" + savedKey, null)
             if (profileJson != null) {
                 currentProfile = Profile.deserialize(profileJson)
             }
@@ -34,6 +36,16 @@ object PreferenceUtil {
      */
     fun getCurrentProfile(): Profile = currentProfile
     fun getCurrentProfileKey(): String = currentProfileKey
+
+    fun getTagFile(): String {
+        var path = sharedPreferences.getString(TAG_FILE)
+
+        return path
+    }
+
+    fun setTagFile(path: String) {
+        sharedPreferences.edit().putString(TAG_FILE, path).apply()
+    }
 
     /**
      * Kopiert das aktuelle Profil und speichert es unter einem neuen Key.
@@ -47,7 +59,7 @@ object PreferenceUtil {
      */
     fun getProfileKeys(): List<String> {
         return sharedPreferences.all.keys
-            .filter { it != CURRENT_PROFILE_KEY }
+            .filter { it.startsWith("profile_") }
             .toList()
     }
 
@@ -55,7 +67,7 @@ object PreferenceUtil {
      * Lädt das Profil mit dem gegebenen Key und setzt es als aktuelles Profil.
      */
     fun changeProfile(key: String) {
-        val profileJson = sharedPreferences.getString(key, null)
+        val profileJson = sharedPreferences.getString("profile_" + key, null)
         if (profileJson != null) {
             currentProfile = Profile.deserialize(profileJson)
             currentProfileKey = key
@@ -66,9 +78,9 @@ object PreferenceUtil {
     fun renameProfile(key:String) {
         val json = currentProfile.serialize()
         sharedPreferences.edit()
-            .remove(currentProfileKey)
+            .remove("profile_" + currentProfileKey)
             .putString(CURRENT_PROFILE_KEY, key)
-            .putString(key, json)
+            .putString("profile_" + key, json)
             .apply()
         currentProfileKey = key
     }
@@ -84,7 +96,7 @@ object PreferenceUtil {
 
     private fun saveProfilToPreferences(key: String, profile: Profile) {
         val json = profile.serialize()
-        sharedPreferences.edit().putString(key, json).apply()
+        sharedPreferences.edit().putString("profile_" + key, json).apply()
     }
 
     
