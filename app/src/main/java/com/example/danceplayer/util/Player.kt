@@ -3,6 +3,7 @@ package com.example.danceplayer.util
 import android.content.Context
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
+import androidx.media3.common.Player as Media3Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.danceplayer.model.Song
 
@@ -35,7 +36,7 @@ object Player {
     fun initialize(context: Context) {
         if (exoPlayer == null) {
             exoPlayer = ExoPlayer.Builder(context).build()
-            exoPlayer?.addListener(object : com.google.android.exoplayer2.Player.Listener {
+            exoPlayer?.addListener(object : Media3Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     isPlayingState.value = isPlaying
                     if (isPlaying) startPositionUpdater() else stopPositionUpdater()
