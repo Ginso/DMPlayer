@@ -42,6 +42,8 @@ import com.example.danceplayer.ui.pages.DancesPage
 import com.example.danceplayer.ui.pages.PlaylistsPage
 import com.example.danceplayer.ui.pages.SettingsPage
 import com.example.danceplayer.util.PreferenceUtil
+import com.example.danceplayer.util.MusicLibrary
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -49,7 +51,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         PreferenceUtil.initialize(this)
         Player.initialize(this)
-        MusicLibrary.initialize(this)
+        // suspend initialization: runs asynchronously
+        lifecycleScope.launch {
+            MusicLibrary.initialize(this@MainActivity)
+        }
+
         enableEdgeToEdge()
         setContent {
             DancePlayerTheme {
