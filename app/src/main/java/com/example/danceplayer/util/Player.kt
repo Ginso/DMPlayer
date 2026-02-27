@@ -1,6 +1,7 @@
 package com.example.danceplayer.util
 
 import android.content.Context
+import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player as Media3Player
@@ -8,6 +9,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.example.danceplayer.model.Song
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -33,6 +35,7 @@ object Player {
     private var currentIndex: Int = 0
 
 
+    @OptIn(UnstableApi::class)
     fun initialize(context: Context) {
         if (exoPlayer == null) {
             exoPlayer = ExoPlayer.Builder(context).build()

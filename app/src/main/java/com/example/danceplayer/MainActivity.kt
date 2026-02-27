@@ -54,7 +54,6 @@ import com.example.danceplayer.ui.pages.SettingsPage
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.Player
-import com.example.danceplayer.util.DateTimeUtil
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
@@ -63,8 +62,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // suspend initialization: runs asynchronously
         lifecycleScope.launch {
-            PreferenceUtil.initialize(this)
-            Player.initialize(this)
+            PreferenceUtil.initialize(this@MainActivity)
+            Player.initialize(this@MainActivity)
             MusicLibrary.initialize(this@MainActivity)
         }
 
@@ -192,8 +191,8 @@ fun BottomBar() {
                 )
             }
             Text("-", modifier = Modifier.clickable {
-                if (Player.speed >= 0.05f)
-                    Player.setSpeed(Player.speed - 0.05f)
+                if (speed >= 0.05f)
+                    Player.setSpeed(speed - 0.05f)
 
             })
             Column(
@@ -214,7 +213,6 @@ fun BottomBar() {
                         Text(
                             text = song.getDance(),
                             style = TextStyle(fontSize = 12.sp),
-                            background = Color.LightGray,
                             modifier = Modifier
                                 .padding(horizontal = 8.dp, vertical = 2.dp),
                             color = Color.LightGray
@@ -237,26 +235,26 @@ fun BottomBar() {
                             )
                         }
                         Text(
-                            text = "Speed: ${"%d".format((speed * 100).toInt())}%",
+                            text = "${"%d".format((speed * 100).toInt())}%",
                             style = TextStyle(fontSize = 12.sp),
                             modifier = Modifier.padding(start = 8.dp)
                         )
                     }
                 }
             }
+            IconButton(onClick = {
+                if (isPlaying) Player.pause() else Player.play()
+            }) {
+                Icon(
+                    painter = painterResource(id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
+                    contentDescription = "Play/Pause"
+                )
+            }
             Text("+", modifier = Modifier.clickable {
-                if (Player.speed <= 3.95f)
-                    Player.setSpeed(Player.speed + 0.05f)
+                if (speed <= 3.95f)
+                    Player.setSpeed(speed + 0.05f)
 
             })
-            Button(
-                onClick = {
-                    if (speed > 4.0f) return@Button
-                    Player.setSpeed(speed + 0.05f)
-                }
-            ) {
-                Text("+")
-            }
             IconButton(onClick = { Player.next() }) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_next),
