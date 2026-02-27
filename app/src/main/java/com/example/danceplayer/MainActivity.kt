@@ -1,13 +1,17 @@
 package com.example.danceplayer
 
 import android.os.Bundle
+import android.widget.ImageButton
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,10 +41,17 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import com.example.danceplayer.ui.theme.DancePlayerTheme
 import com.example.danceplayer.ui.pages.DancesPage
 import com.example.danceplayer.ui.pages.PlaylistsPage
 import com.example.danceplayer.ui.pages.SettingsPage
+import com.example.danceplayer.util.Player
 import com.example.danceplayer.util.PreferenceUtil
 import kotlinx.coroutines.launch
 
@@ -150,7 +161,8 @@ fun NavigationDrawerContent(onPageSelected: (Int) -> Unit) {
 
 @Composable
 fun BottomBar() {
-    val currentSong = Player.getCurrentSong()
+    val song = Player.getCurrentSong()
+    val context = LocalContext.current
     BottomAppBar(
         modifier = Modifier
             .fillMaxWidth()
@@ -163,6 +175,7 @@ fun BottomBar() {
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             ImageButton(
+                context,
                 painter = painterResource(id = R.drawable.ic_previous),
                 contentDescription = "Previous",
                 onClick = { Player.previous() }
@@ -179,16 +192,18 @@ fun BottomBar() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "${song.getTitle()} - ${song.getArtist()}",
+                    text = "${song?.getTitle()} - ${song?.getArtist()}",
                     style = TextStyle(fontSize = 12.sp)
                 )
                 Text(
-                    text = "${song.getDance()}",
-                    style = TextStyle(fontSize = 12.sp, italic = true),
-                    background = Color.LightGray,
+                    text = "${song?.getDance()}",
+                    style = TextStyle(fontSize = 12.sp, fontStyle = FontStyle.Italic),
                     modifier = Modifier
                         .padding(horizontal = 4.dp, vertical = 2.dp)
-                        .roundedCorner(4.dp)
+                        .background(
+                            color = Color.LightGray,
+                            shape = RoundedCornerShape(8.dp)
+                        )
                 )
                 Row(
                     horizontalArrangement = Arrangement.Center,
