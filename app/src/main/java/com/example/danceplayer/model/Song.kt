@@ -5,7 +5,7 @@ import org.json.JSONObject
 import kotlin.collections.iterator
 
 data class Song(
-    var file:DocumentFile? = null,
+    var file:Uri? = null,
     var tags: Map<String,Any>
 ) {
     companion object {
@@ -53,6 +53,22 @@ data class Song(
 
     fun getPath(): String {
         return tags[_PATH] as? String ?: ""
+    }
+
+    fun getTitle(): String {
+        return tags[_TITLE] as? String ?: ""
+    }
+
+    fun getArtist(): String {
+        return tags[_ARTIST] as? String ?: ""
+    }
+
+    fun getDuration(): Long {
+        return MediaItem.fromUri(file).playbackProperties?.duration ?: 0L
+    }
+
+    fun getDance(): String {
+        return tags[_DANCE] as? String ?: ""
     }
 
 

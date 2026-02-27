@@ -48,12 +48,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         PreferenceUtil.initialize(this)
+        Player.initialize(this)
+        MusicLibrary.initialize(this)
         enableEdgeToEdge()
         setContent {
             DancePlayerTheme {
                 MainScreen()
             }
         }
+    }
+        
+    override fun onDestroy() {
+        super.onDestroy()
+        Player.release()
     }
 }
 
@@ -143,17 +150,84 @@ fun NavigationDrawerContent(onPageSelected: (Int) -> Unit) {
 
 @Composable
 fun BottomBar() {
+    val currentSong = Player.getCurrentSong()
     BottomAppBar(
         modifier = Modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
-        Column(
-            modifier = Modifier.padding(8.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Text("Zeile 1", style = TextStyle(fontSize = 12.sp))
-            Text("Zeile 2", style = TextStyle(fontSize = 12.sp))
-            Text("Zeile 3", style = TextStyle(fontSize = 12.sp))
+            ImageButton(
+                painter = painterResource(id = R.drawable.ic_previous),
+                contentDescription = "Previous",
+                onClick = { Player.previous() }
+            )
+            Button(
+                onClick = {
+                    if (Player.speed < 0.05f) return
+                    Player.setSpeed(Player.speed - 0.05f)
+                }
+            ) {
+                Text("-")
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "${song.getTitle()} - ${song.getArtist()}",
+                    style = TextStyle(fontSize = 12.sp)
+                )
+                Text(
+                    text = "${song.getDance()}",
+                    style = TextStyle(fontSize = 12.sp, italic = true),
+                    background = Color.LightGray,
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                        .roundedCorner(4.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${DateTimeUtil.formatDuration(Player.position)} | ${DateTimeUtil.formatDuration(song.getDuration())}",
+                        style = TextStyle(fontSize = 12.sp),
+                        modifier = Modifier.border(1.dp, Color.Gray, shape = RoundedCornerShape(4.dp))
+                    )
+                    Text(
+                        text = "Speed: ${"%d".format(Player.speed*100)}%",
+                        style = TextStyle(fontSize = 12.sp),
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                    
+                }
+
+            }
+            ImageButton(
+                painter = painterResource(id = if (Player.isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
+                contentDescription = "Play/Pause",
+                onClick = {
+                    if (Player.isPlaying) Player.pause() else Player.play()
+                }
+            )
+            Button(
+                onClick = {
+                    if (Player.speed > 4.0f) return
+                    Player.setSpeed(Player.speed + 0.05f)
+                }
+            ) {
+                Text("+")
+            }
+            ImageButton(
+                painter = painterResource(id = R.drawable.ic_next),
+                contentDescription = "Next",
+                onClick = { Player.next() }
+            )
         }
     }
 }

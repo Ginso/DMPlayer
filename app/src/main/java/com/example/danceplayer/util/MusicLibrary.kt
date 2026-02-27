@@ -55,6 +55,7 @@ object MusicLibrary {
         val rootFolder = DocumentFile.fromTreeUri(context, uri) ?: return
         searchMusicFiles(rootFolder, "")
         filterSongs()
+        Player.load(songs)
     }
 
 
@@ -68,7 +69,7 @@ object MusicLibrary {
                     songInfo = Song(tags = mapOf(Song._PATH to path))
                     addSong(songInfo)
                 }
-                songInfo.file = file
+                songInfo.file = file.uri
             }
         }
     }
@@ -101,7 +102,16 @@ object MusicLibrary {
             songMap.put(path, song)
     }
 
+    // remove all songs that don't have a file
     fun filterSongs() {
+        val iterator = songs.iterator()
+        while (iterator.hasNext()) {
+            val song = iterator.next()
+            if (song.file == null) {
+                iterator.remove()
+                songMap.remove(song.getPath())
+            }
+        }
     }
 
     fun loadJSON(jsonString: String, onError: (String) -> Unit): Boolean {
