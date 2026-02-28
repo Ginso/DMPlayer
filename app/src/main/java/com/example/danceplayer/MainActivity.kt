@@ -55,9 +55,12 @@ import com.example.danceplayer.ui.pages.DancesPage
 import com.example.danceplayer.ui.pages.PlaylistsPage
 import com.example.danceplayer.ui.pages.SettingsPage
 import com.example.danceplayer.ui.theme.DancePlayerTheme
+import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.Player
 import com.example.danceplayer.util.PreferenceUtil
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +69,9 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             PreferenceUtil.initialize(this@MainActivity)
             Player.initialize(this@MainActivity)
-            MusicLibrary.initialize(this@MainActivity)
+            withContext(Dispatchers.IO) {
+                MusicLibrary.initialize(this@MainActivity)
+            }
         }
 
         enableEdgeToEdge()

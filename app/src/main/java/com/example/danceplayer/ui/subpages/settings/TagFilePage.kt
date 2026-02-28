@@ -159,7 +159,7 @@ fun export(context: Context, uri: Uri?, isLoading: MutableState<Boolean>, errorT
             // permission not persistable; nothing to do
         }
         PreferenceUtil.setTagFile(it.toString())
-        MusicLibrary.getMusicFiles(context) // reload music files to update tags
+        //MusicLibrary.getMusicFiles(context) // reload music files to update tags
         isLoading.value = false
     }
 }

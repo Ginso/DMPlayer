@@ -4,6 +4,7 @@ package com.example.danceplayer.util
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
@@ -12,6 +13,8 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import androidx.core.net.toUri
+import kotlin.system.measureNanoTime
+import kotlin.system.measureTimeMillis
 
 object MusicLibrary {
     private val MUSIC_EXTENSIONS = setOf("mp3", "flac", "wav", "ogg", "aac", "m4a", "opus")
@@ -48,16 +51,18 @@ object MusicLibrary {
         }
     }
 
-    fun getMusicFiles(context: Context) {
+    suspend fun getMusicFiles(context: Context) {
         val folderUri = PreferenceUtil.getCurrentProfile().folder
         if (folderUri == "") return
         val uri = folderUri.toUri()
         val rootFolder = DocumentFile.fromTreeUri(context, uri) ?: return
+
         searchMusicFiles(rootFolder, "")
         filterSongs()
-        Player.load(songs)
+        withContext(Dispatchers.Main) {
+            Player.load(songs.subList(0,1))
+        }
     }
-
 
     private fun searchMusicFiles(folder: DocumentFile, pathPrefix: String) {
         folder.listFiles().forEach { file ->
@@ -69,7 +74,7 @@ object MusicLibrary {
                     songInfo = Song(tags = mapOf(Song._PATH to path))
                     addSong(songInfo)
                 }
-                songInfo.file = file.uri
+                songInfo?.file = file.uri
             }
         }
     }
