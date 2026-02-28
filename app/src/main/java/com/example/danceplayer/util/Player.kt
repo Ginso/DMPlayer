@@ -1,6 +1,7 @@
 package com.example.danceplayer.util
 
 import android.content.Context
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackParameters
@@ -9,6 +10,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.example.danceplayer.model.Song
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -107,16 +109,6 @@ object Player {
         stopPositionUpdater()
     }
 
-    fun load(songs: List<Song>, index: Int = 0) {
-        playlist = songs
-        currentIndex = index
-        val mediaItems = songs.map { song ->
-            MediaItem.fromUri(song.file!!)
-        }
-        exoPlayer?.setMediaItems(mediaItems, index, 0L)
-        seekTo(0L)
-        updateCurrentSong()
-    }
 
     fun seekTo(newPosition: Long) {
         exoPlayer?.seekTo(newPosition)
@@ -139,9 +131,9 @@ object Player {
 
     fun previous() {
         val currentPos = positionState.value
-        if (currentPos > 3000) {
+        if (currentPos > 3000 || currentIndex == 0) {
             seekTo(0L)
-        } else if (currentIndex > 0) {
+        } else {
             currentIndex--
             positionState.value = 0L
             exoPlayer?.seekToPreviousMediaItem()
