@@ -44,17 +44,28 @@ object Player {
                     isPlayingState.value = isPlaying
                     if (isPlaying) startPositionUpdater() else stopPositionUpdater()
                 }
-
                 override fun onPlaybackStateChanged(state: Int) {
-                    // keep the position up to date whenever state changes
                     positionState.value = exoPlayer?.currentPosition ?: 0L
                 }
-
                 override fun onPositionDiscontinuity(reason: Int) {
                     positionState.value = exoPlayer?.currentPosition ?: 0L
                 }
+                override fun onPlayerError(error: PlaybackException) {
+                    Log.e("Player", "Playback error", error)
+                    // ggf. Toast o.ä. anzeigen
+                }
             })
         }
+    }
+
+    fun load(songs: List<Song>, index: Int = 0) {
+        playlist = songs
+        currentIndex = index
+        val mediaItems = songs.map { song -> MediaItem.fromUri(song.file!!) }
+        exoPlayer?.setMediaItems(mediaItems, index, 0L)
+        exoPlayer?.prepare()                 // <<< wichtig
+        seekTo(0L)
+        updateCurrentSong()
     }
 
     fun release() {
