@@ -79,6 +79,23 @@ fun SettingsPage() {
     val keepScreenOn = remember { mutableStateOf(profile.keepScreenOn) }
     val showOnLock = remember { mutableStateOf(profile.showOnLock) }
 
+    val toggleShowOnLock: () -> Unit = {
+        showOnLock.value = !showOnLock.value
+        profile.showOnLock = showOnLock.value
+        PreferenceUtil.saveProfile()
+        (context as? ComponentActivity)?.setShowWhenLocked(showOnLock.value)
+    }
+    val toggleKeepScreenOn: () -> Unit = {
+        keepScreenOn.value = !keepScreenOn.value
+        profile.keepScreenOn = keepScreenOn.value
+        PreferenceUtil.saveProfile()
+        if(keepScreenOn.value) {
+            (context as? ComponentActivity)?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            (context as? ComponentActivity)?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
     val treeLauncher = rememberLauncherForActivityResult(
@@ -211,42 +228,28 @@ fun SettingsPage() {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onClick)
+                    .clickable(onClick = toggleShowOnLock)
                     .padding(bottom = 16.dp)
             ) {
                 Text("Show on Lock Screen", color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
                 Spacer(Modifier.weight(1f))
                 Switch(
                     checked = showOnLock.value,
-                    onCheckedChange = {
-                        showOnLock.value = it
-                        profile.showOnLock = it
-                        PreferenceUtil.saveProfile()
-                        (context as? ComponentActivity)?.setShowWhenLocked(it)
-                    }
+                    onCheckedChange = { toggleShowOnLock() }
                 )
             }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onClick)
+                    .clickable(onClick = toggleKeepScreenOn)
                     .padding(bottom = 16.dp)
             ) {
                 Text("Keep Screen On", color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
                 Spacer(Modifier.weight(1f))
                 Switch(
                     checked = keepScreenOn.value,
-                    onCheckedChange = {
-                        keepScreenOn.value = it
-                        profile.keepScreenOn = it
-                        PreferenceUtil.saveProfile()
-                        if(it) {
-                            (context as? ComponentActivity)?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                        } else {
-                            (context as? ComponentActivity)?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                        }
-                    }
+                    onCheckedChange = { toggleKeepScreenOn() }
                 )
             }
             SettingsRow(label = "Custom Tags") { subPage.value = 1 }
