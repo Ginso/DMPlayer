@@ -34,7 +34,8 @@ object Player {
 
     // internal backing fields for playlist and index (no state needed)
     private var playlist: List<Song> = emptyList()
-    private var currentIndex: Int = 0
+    var currentIndex: Int = 0
+        private set
 
 
     @OptIn(UnstableApi::class)
