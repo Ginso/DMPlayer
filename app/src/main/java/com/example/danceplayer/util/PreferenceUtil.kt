@@ -104,7 +104,7 @@ object PreferenceUtil {
 
 data class Profile(
     var folder: String = "",
-    var keepScreenOn: Boolean = false
+    var keepScreenOn: Boolean = false,
     var showOnLock: Boolean = false
 ) {
     companion object {

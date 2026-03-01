@@ -142,6 +142,11 @@ object Player {
         }
     }
 
+    fun getPlayList(): List<Song> {
+        // return a copy of the playlist to prevent external modification
+        return playlist.toList()
+    }
+
     fun removeFromPlaylist(index: Int) {
         if (index in playlist.indices) {
             val mutableList = playlist.toMutableList()

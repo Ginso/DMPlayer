@@ -1,9 +1,23 @@
 package com.example.danceplayer.ui.subpages.settings
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.example.danceplayer.ui.Fragment
+import com.example.danceplayer.util.MusicLibrary
+
 
 @Composable
 fun ParseTagsPage(onBack: () -> Unit) {
-    var tags = MusicLibrary.getAllTags().map { it.name }
+    var tags = MusicLibrary.tags.map { it.name }
     var pattern = remember { mutableStateOf("") }
 
     Fragment("Fill Tags from File name and path", onBack) {
@@ -15,8 +29,8 @@ fun ParseTagsPage(onBack: () -> Unit) {
         Text("You can use the following tags in your pattern:")
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            mainAxisSpacing = 8.dp,
-            crossAxisSpacing = 4.dp
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             tags.forEach { tag ->
                 AssistChip(
@@ -26,11 +40,12 @@ fun ParseTagsPage(onBack: () -> Unit) {
                 )
             }
         }
-            
+
         OutlinedTextField(
             value = pattern.value,
             onValueChange = { pattern.value = it },
             label = { Text("Pattern") },
             modifier = Modifier.fillMaxWidth()
         )
+    }
 }

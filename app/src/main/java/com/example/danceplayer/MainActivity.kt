@@ -3,6 +3,7 @@ package com.example.danceplayer
 // additional layout/imports used in BottomBar
 import DateTimeUtil
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -78,9 +79,7 @@ class MainActivity : ComponentActivity() {
         if (profile.keepScreenOn) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
-        if (profile.showOnLock) {
-            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
-        }
+        setShowWhenLocked(profile.showOnLock)
 
         enableEdgeToEdge()
         setContent {
@@ -296,7 +295,7 @@ fun BottomBar() {
                 IconButton(
                     onClick = { Player.next() },
                     modifier = Modifier.size(iconSize),
-                    enabled = currentSong != null && Player.currentIndex < Player.playlist.size - 1
+                    enabled = currentSong != null && Player.currentIndex < Player.getPlayList().size - 1
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_next),

@@ -1,5 +1,6 @@
 package com.example.danceplayer.ui.pages
 
+import android.R.attr.onClick
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -36,9 +37,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.compose.material3.Switch
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.ui.subpages.settings.CustomTagsPage
+import com.example.danceplayer.ui.subpages.settings.ParseTagsPage
 import com.example.danceplayer.ui.subpages.settings.TagFilePage
 import kotlinx.coroutines.launch
 
@@ -219,7 +222,7 @@ fun SettingsPage() {
                         showOnLock.value = it
                         profile.showOnLock = it
                         PreferenceUtil.saveProfile()
-                        (LocalContext.current as? ComponentActivity)?.window?.setShowWhenLocked(it)
+                        (context as? ComponentActivity)?.setShowWhenLocked(it)
                     }
                 )
             }
@@ -239,9 +242,9 @@ fun SettingsPage() {
                         profile.keepScreenOn = it
                         PreferenceUtil.saveProfile()
                         if(it) {
-                            (LocalContext.current as? ComponentActivity)?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            (context as? ComponentActivity)?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                         } else {
-                            (LocalContext.current as? ComponentActivity)?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            (context as? ComponentActivity)?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                         }
                     }
                 )
