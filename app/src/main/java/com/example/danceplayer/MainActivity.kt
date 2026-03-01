@@ -74,6 +74,14 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val profile = PreferenceUtil.getCurrentProfile()
+        if (profile.keepScreenOn) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        if (profile.showOnLock) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
+        }
+
         enableEdgeToEdge()
         setContent {
             DancePlayerTheme {
@@ -198,7 +206,11 @@ fun BottomBar() {
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { Player.previous() }, modifier = Modifier.size(iconSize)) {
+                IconButton(
+                    onClick = { Player.previous() },
+                    modifier = Modifier.size(iconSize),
+                    enabled = currentSong != null
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_previous),
                         contentDescription = "Previous",
@@ -272,7 +284,8 @@ fun BottomBar() {
                     onClick = {
                         if (isPlaying) Player.pause() else Player.play()
                     },
-                    modifier = Modifier.size(iconSize)
+                    modifier = Modifier.size(iconSize),
+                    enabled = currentSong != null
                 ) {
                     Icon(
                         painter = painterResource(id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
@@ -280,7 +293,11 @@ fun BottomBar() {
                         modifier = Modifier.size(iconSize)
                     )
                 }
-                IconButton(onClick = { Player.next() }, modifier = Modifier.size(iconSize)) {
+                IconButton(
+                    onClick = { Player.next() },
+                    modifier = Modifier.size(iconSize),
+                    enabled = currentSong != null && Player.currentIndex < Player.playlist.size - 1
+                ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_next),
                         contentDescription = "Next",

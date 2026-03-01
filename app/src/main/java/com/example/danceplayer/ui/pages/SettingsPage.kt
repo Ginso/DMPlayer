@@ -34,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.view.WindowManager
+import androidx.activity.ComponentActivity
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.ui.subpages.settings.CustomTagsPage
@@ -71,6 +73,8 @@ fun SettingsPage() {
     val folder = remember { mutableStateOf(profile.folder.substringAfterLast("/").substringAfterLast("%3A").replace("%2F", "/")) }
     val showCustomTags = remember { mutableStateOf(false) }
     val subPage = remember {mutableStateOf(0)}
+    val keepScreenOn = remember { mutableStateOf(profile.keepScreenOn) }
+    val showOnLock = remember { mutableStateOf(profile.showOnLock) }
 
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
@@ -245,7 +249,52 @@ fun SettingsPage() {
             }
         )
     }
-
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(bottom = 16.dp)
+    ) {
+        Text("Show on Lock Screen", color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
+        Spacer(Modifier.weight(1f))
+        Switch(
+            checked = showOnLock.value,
+            onCheckedChange = {
+                showOnLock.value = it
+                profile.showOnLock = it
+                PreferenceUtil.saveProfile()
+                if(it) {
+                    (LocalContext.current as? ComponentActivity)?.window?.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
+                } else {
+                    (LocalContext.current as? ComponentActivity)?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
+                }
+            }
+        )
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(bottom = 16.dp)
+    ) {
+        Text("Keep Screen On", color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
+        Spacer(Modifier.weight(1f))
+        Switch(
+            checked = keepScreenOn.value,
+            onCheckedChange = {
+                keepScreenOn.value = it
+                profile.keepScreenOn = it
+                PreferenceUtil.saveProfile()
+                if(it) {
+                    (LocalContext.current as? ComponentActivity)?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    (LocalContext.current as? ComponentActivity)?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
+        )
+    }
     if(subPage.value == 1) CustomTagsPage{ subPage.value = 0 }
     if(subPage.value == 2) TagFilePage { subPage.value = 0 }
 

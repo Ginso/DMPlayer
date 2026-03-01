@@ -105,6 +105,7 @@ object PreferenceUtil {
 data class Profile(
     var folder: String = "",
     var keepScreenOn: Boolean = false
+    var showOnLock: Boolean = false
 ) {
     companion object {
         fun deserialize(jsonString: String): Profile {
@@ -112,7 +113,8 @@ data class Profile(
                 val json = JSONObject(jsonString)
                 Profile(
                     folder = json.getString("folder"),
-                    keepScreenOn = json.getBoolean("keepScreenOn")
+                    keepScreenOn = json.getBoolean("keepScreenOn"),
+                    showOnLock = json.getBoolean("showOnLock")
                 )
             } catch (_: Exception) {
                 Profile()
@@ -124,6 +126,7 @@ data class Profile(
         val json = JSONObject()
         json.put("folder", folder)
         json.put("keepScreenOn", keepScreenOn)
+        json.put("showOnLock", showOnLock)
         return json.toString()
     }
 }
