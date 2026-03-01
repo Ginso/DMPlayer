@@ -203,8 +203,52 @@ fun SettingsPage() {
                     }
                 ) { Text("change", color = MaterialTheme.colorScheme.onBackground) }
             }
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onClick)
+                    .padding(bottom = 16.dp)
+            ) {
+                Text("Show on Lock Screen", color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
+                Spacer(Modifier.weight(1f))
+                Switch(
+                    checked = showOnLock.value,
+                    onCheckedChange = {
+                        showOnLock.value = it
+                        profile.showOnLock = it
+                        PreferenceUtil.saveProfile()
+                        (LocalContext.current as? ComponentActivity)?.window?.setShowWhenLocked(it)
+                    }
+                )
+            }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onClick)
+                    .padding(bottom = 16.dp)
+            ) {
+                Text("Keep Screen On", color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
+                Spacer(Modifier.weight(1f))
+                Switch(
+                    checked = keepScreenOn.value,
+                    onCheckedChange = {
+                        keepScreenOn.value = it
+                        profile.keepScreenOn = it
+                        PreferenceUtil.saveProfile()
+                        if(it) {
+                            (LocalContext.current as? ComponentActivity)?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        } else {
+                            (LocalContext.current as? ComponentActivity)?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                        }
+                    }
+                )
+            }
             SettingsRow(label = "Custom Tags") { subPage.value = 1 }
             SettingsRow(label = "Import/Export Tag Info") { subPage.value = 2 }
+            SettingsRow(label = "Fill Tags from File Name/Path") { subPage.value = 3 }
         }
 
 
@@ -249,54 +293,9 @@ fun SettingsPage() {
             }
         )
     }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(bottom = 16.dp)
-    ) {
-        Text("Show on Lock Screen", color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
-        Spacer(Modifier.weight(1f))
-        Switch(
-            checked = showOnLock.value,
-            onCheckedChange = {
-                showOnLock.value = it
-                profile.showOnLock = it
-                PreferenceUtil.saveProfile()
-                if(it) {
-                    (LocalContext.current as? ComponentActivity)?.window?.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
-                } else {
-                    (LocalContext.current as? ComponentActivity)?.window?.clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
-                }
-            }
-        )
-    }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(bottom = 16.dp)
-    ) {
-        Text("Keep Screen On", color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
-        Spacer(Modifier.weight(1f))
-        Switch(
-            checked = keepScreenOn.value,
-            onCheckedChange = {
-                keepScreenOn.value = it
-                profile.keepScreenOn = it
-                PreferenceUtil.saveProfile()
-                if(it) {
-                    (LocalContext.current as? ComponentActivity)?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                } else {
-                    (LocalContext.current as? ComponentActivity)?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                }
-            }
-        )
-    }
     if(subPage.value == 1) CustomTagsPage{ subPage.value = 0 }
     if(subPage.value == 2) TagFilePage { subPage.value = 0 }
+    if(subPage.value == 3) ParseTagsPage { subPage.value = 0 }
 
 
 }
