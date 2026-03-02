@@ -27,7 +27,9 @@ object MusicLibrary {
 
     suspend fun initialize(context: Context) {
         val path = PreferenceUtil.getTagFile()
-        if (path != "") {
+        if (path == "") {
+            getDefaultInfo()
+        } else {
             val uri = path.toUri()
             loadTagFile(context, uri) { /* ignore error */ }
         }
@@ -49,6 +51,23 @@ object MusicLibrary {
             }
             true
         }
+    }
+
+    fun getAllTags(): List<Tag> {
+        return tags + 
+            TagInfo(Song._DURATION, Tag.Type.DATETIME,6) + 
+            TagInfo(Song._PLAYING_AFTER, Tag.Type.DATETIME,5)
+    }
+
+    private fun getDefaultInfo(): AllInfo {
+        addTag(TagInfo(Song._DATE, Tag.Type.DATETIME,2));
+        addTag(TagInfo(Song._TITLE, Tag.Type.STRING));
+        addTag(TagInfo(Song._ARTIST, Tag.Type.STRING));
+        addTag(TagInfo(Song._ALBUM, Tag.Type.STRING));
+        addTag(TagInfo(Song._DANCE, Tag.Type.STRING));
+        addTag(TagInfo(Song._YEAR, Tag.Type.INT));
+        addTag(TagInfo(Song._RATING, Tag.Type.RATING, 5));
+        addTag(TagInfo(Song._TPM, Tag.Type.FLOAT,1));
     }
 
     suspend fun getMusicFiles(context: Context) {
