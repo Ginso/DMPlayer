@@ -59,6 +59,13 @@ object MusicLibrary {
             TagInfo(Song._PLAYING_AFTER, Tag.Type.DATETIME,5)
     }
 
+    fun getAllTagsMap(): Map<String, Tag> {
+        val map = tagMap.toMutableMap()
+        map[Song._DURATION] = TagInfo(Song._DURATION, Tag.Type.DATETIME,6)
+        map[Song._PLAYING_AFTER] = TagInfo(Song._PLAYING_AFTER, Tag.Type.DATETIME,5)
+        return map
+    }
+
     private fun getDefaultInfo(): AllInfo {
         addTag(TagInfo(Song._DATE, Tag.Type.DATETIME,2));
         addTag(TagInfo(Song._TITLE, Tag.Type.STRING));

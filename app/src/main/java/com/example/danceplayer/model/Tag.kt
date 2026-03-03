@@ -11,9 +11,8 @@ data class Tag(
         STRING(0),
         INT(1),
         FLOAT(2),
-        RATING(3),
-        BOOL(4),
-        DATETIME(5),
+        BOOL(3),
+        DATETIME(4),
         NONE(-1);
 
         companion object {

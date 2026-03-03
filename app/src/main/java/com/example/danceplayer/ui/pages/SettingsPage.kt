@@ -137,42 +137,19 @@ fun SettingsPage() {
 
             ) {
                 Text("Profile:", color = MaterialTheme.colorScheme.onBackground)
-                Box(
+                SimpleDropDown(
+                    options = profileKeys.value,
+                    selectedOption = selectedProfile.value,
+                    onOptionSelected = { profileKey ->
+                        selectedProfile.value = profileKey
+                        PreferenceUtil.changeProfile(profileKey)
+                        profileKeys.value = PreferenceUtil.getProfileKeys()
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 16.dp)
 
-                ) {
-                    OutlinedButton(
-                        onClick = { isDropdownOpen.value = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(selectedProfile.value, color = MaterialTheme.colorScheme.onBackground)
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = "Dropdown")
-                    }
-
-                    DropdownMenu(
-                        expanded = isDropdownOpen.value,
-                        onDismissRequest = { isDropdownOpen.value = false }
-                    ) {
-                        profileKeys.value.forEach { profile ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        profile,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                },
-                                onClick = {
-                                    selectedProfile.value = profile
-                                    PreferenceUtil.changeProfile(profile)
-                                    profileKeys.value = PreferenceUtil.getProfileKeys()
-                                    isDropdownOpen.value = false
-                                }
-                            )
-                        }
-                    }
-                }
+                )
             }
 
             Row(
