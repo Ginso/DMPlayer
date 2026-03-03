@@ -255,6 +255,7 @@ fun SettingsPage() {
             SettingsRow(label = "Custom Tags") { subPage.value = 1 }
             SettingsRow(label = "Import/Export Tag Info") { subPage.value = 2 }
             SettingsRow(label = "Fill Tags from File Name/Path") { subPage.value = 3 }
+            SettingsRow(label = "Configure Filter and Sort Options") { subPage.value = 4 }
         }
 
 
@@ -302,6 +303,7 @@ fun SettingsPage() {
     if(subPage.value == 1) CustomTagsPage{ subPage.value = 0 }
     if(subPage.value == 2) TagFilePage { subPage.value = 0 }
     if(subPage.value == 3) ParseTagsPage { subPage.value = 0 }
+    if(subPage.value == 4) FilterPage { subPage.value = 0 }
 
 
 }

@@ -19,8 +19,6 @@ data class Tag(
         companion object {
             fun fromInteger(x: Int): Type =
                 entries.firstOrNull { it.id == x } ?: NONE
-
-
         }
         fun getText(arg: Int):String {
             when (this) {

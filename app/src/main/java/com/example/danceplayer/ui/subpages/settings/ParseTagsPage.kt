@@ -1,15 +1,25 @@
 package com.example.danceplayer.ui.subpages.settings
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.danceplayer.ui.Fragment
 import com.example.danceplayer.util.MusicLibrary
@@ -21,6 +31,10 @@ fun ParseTagsPage(onBack: () -> Unit) {
     var pattern = remember { mutableStateOf("") }
     var preview = remember { mutableStateOf(emptyList<PreviewItem>()) }
     var previewFailed = remember { mutableStateOf(emptyList<String>()) }
+    val errorText = remember { mutableStateOf("") }
+    val isLoading = remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Fragment("Fill Tags from File name and path", onBack) {
         Text("Here you can automatically fill the tags of your songs based on their file name and path. This is especially useful if you have a well-structured music library where the file names and paths contain relevant information about the songs (e.g., Dance/Artist - Title.mp3).")
@@ -54,12 +68,32 @@ fun ParseTagsPage(onBack: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         )
         
-        Button(onClick = { 
-            val (previewItems, failedSongs) = previewTags(pattern.value, MusicLibrary.songs.map { it.path }, tags, errorText)
-            preview.value = previewItems
-            previewFailed.value = failedSongs
-        }) {
-            Text("Preview")
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(onClick = { 
+                coroutineScope.launch {
+                    isLoading.value = true
+                    val (previewItems, failedSongs) = previewTags(pattern.value, MusicLibrary.songs, tags, errorText, false)
+                    preview.value = previewItems
+                    previewFailed.value = failedSongs
+                    isLoading.value = false
+                }
+            }) {
+                Text("Preview")
+            }
+            Button(onClick = {
+                coroutineScope.launch {
+                    isLoading.value = true
+                    val (previewItems, failedSongs) = previewTags(pattern.value, MusicLibrary.songs, tags, errorText, true)
+                    MusicLibrary.save(context)
+                    preview.value = previewItems
+                    previewFailed.value = failedSongs
+                    isLoading.value = false
+                }
+            }) {
+                Text("Apply")
+            }
         }
 
         if (previewFailed.value.isNotEmpty() || preview.value.isNotEmpty()) {
@@ -102,12 +136,39 @@ fun ParseTagsPage(onBack: () -> Unit) {
                 }
             }
         }
-
-
+        if (isLoading.value) {
+            AlertDialog(
+                onDismissRequest = { /* do nothing */ },
+                title = { Text("Loading...") },
+                text = {
+                    Text(
+                        "Please wait...",
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                },
+                confirmButton = { /* no buttons */ }
+            )
+        }
+        if (errorText.value.isNotBlank()) {
+            AlertDialog(
+                onDismissRequest = { errorText.value = "" },
+                title = { Text("Error") },
+                text = { Text(errorText.value, modifier = Modifier.fillMaxWidth(), color = Color.Red) },
+                confirmButton = {
+                    Button(onClick = { errorText.value = "" }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
     }
 }
 
-fun previewTags(pattern: String, songs: List<String>, tags: List<String>, errorText: MutableState<String>): Pair(List<PreviewItem>, List<String>) {
+fun previewTags(pattern: String, 
+    songs: List<Song>, 
+    tags: List<String>, 
+    errorText: MutableState<String>,
+    changeSongs: Boolean): Pair(List<PreviewItem>, List<String>) {
     val tagIndexList = tags.map { tag -> 
         val index = pattern.indexOf("<$tag>")
         if (index == -1) {
@@ -137,14 +198,15 @@ fun previewTags(pattern: String, songs: List<String>, tags: List<String>, errorT
     val folders = pattern.split("/").size
     val remainingSongs = ArrayList<String>()
     val result = songs.map { song ->
-        var remaining = song.split("/").takeLast(folders).joinToString("/")
+        var path = song.gePath()
+        var remaining = path.split("/").takeLast(folders).joinToString("/")
         val map = HashMap<String, String>()
         parts.forEachIndexed { i, part ->
             if (i % 2 == 0) {
                 if (remaining.startsWith(part)) {
                     remaining = remaining.substring(part.length)
                 } else {
-                    remainingSongs.add(song)
+                    remainingSongs.add(path)
                     return@map null
                 }
             } else {
@@ -154,7 +216,7 @@ fun previewTags(pattern: String, songs: List<String>, tags: List<String>, errorT
                 val value = if (nextPart.isNotEmpty()) {
                     val index = remaining.indexOf(nextPart)
                     if (index == -1) {
-                        remainingSongs.add(song)
+                        remainingSongs.add(path)
                         return@map null
                     }
                     val result = remaining.substring(0, index)
@@ -166,9 +228,12 @@ fun previewTags(pattern: String, songs: List<String>, tags: List<String>, errorT
                     result
                 }
                 map[part] = value
+                if (changeSongs) {
+                    song.tags[part] = value
+                }
             }
         }
-        PreviewItem(song, map)
+        PreviewItem(path, map)
     }
     return Pair(result.filterNotNull(), remainingSongs)
 }

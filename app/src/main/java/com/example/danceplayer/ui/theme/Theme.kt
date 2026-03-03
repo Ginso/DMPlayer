@@ -56,3 +56,16 @@ fun DancePlayerTheme(
         content = content
     )
 }
+
+@Composable
+fun DefText(
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        color = MaterialTheme.colorScheme.onBackground,
+        modifier = modifier
+    )
+}
+)

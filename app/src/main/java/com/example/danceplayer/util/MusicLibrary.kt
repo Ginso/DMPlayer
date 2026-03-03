@@ -85,15 +85,17 @@ object MusicLibrary {
 
     private fun searchMusicFiles(folder: DocumentFile, pathPrefix: String) {
         folder.listFiles().forEach { file ->
-            val path = pathPrefix + file.name.lowercase()
+            val path = pathPrefix + file.name
+            val pathLower = path.lowercase()
             if(file.isDirectory) searchMusicFiles(file, path + "/") // Rekursiv in Unterordner
             if (file.isFile && isAudioFile(file.name)) {
-                var songInfo = songMap[path]
+                var songInfo = songMap[pathLower]
                 if (songInfo == null) {
                     songInfo = Song(tags = mapOf(Song._PATH to path))
                     addSong(songInfo)
                 }
                 songInfo?.file = file.uri
+                songInfo?.tags?.put(Song._PATH, path) // make sure correct case is stored
             }
         }
     }
@@ -123,7 +125,7 @@ object MusicLibrary {
         songs.add(song)
         val path = song.getPath()
         if (path.isNotBlank())
-            songMap.put(path, song)
+            songMap.put(path.lowercase(), song)
     }
 
     // remove all songs that don't have a file
