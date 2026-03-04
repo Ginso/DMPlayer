@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import org.json.JSONObject
 import androidx.core.content.edit
+import com.example.danceplayer.ui.subpages.settings.getDefaultFilterOptions
+import org.json.JSONArray
 
 object PreferenceUtil {
     private const val PREFS_NAME = "dm_player_profiles"

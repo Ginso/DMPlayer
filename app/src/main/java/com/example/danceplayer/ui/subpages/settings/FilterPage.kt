@@ -2,7 +2,6 @@ package com.example.danceplayer.ui.subpages.settings
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Alignment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +9,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -22,17 +23,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.KeyboardOptions
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.Fragment
-import com.example.danceplayer.ui.Widgets.DefText
-import com.example.danceplayer.ui.Widgets.SimpleDropDown
+import com.example.danceplayer.ui.theme.DefText
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.PreferenceUtil
+import com.example.danceplayer.util.SimpleDropDown
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -86,14 +87,16 @@ fun FilterPage(onBack: () -> Unit) {
                 })
             })
             selectedRow.value = filterOptions.value.length() - 1 // trigger re-render
-        })
+        }) {
+            Text("new Row")
+        }
 
         Button(onClick = {
             // save to profile
             PreferenceUtil.getCurrentProfile().filterOptions = filterOptions.value
             PreferenceUtil.saveProfile()
             onBack()
-        }, modifier = Modifier.align(Alignment.End)) {
+        }) {
             Text("Save")
         }
 
@@ -104,14 +107,15 @@ fun FilterPage(onBack: () -> Unit) {
             Column {
                 for(j in 0 until arr.length()) {
                     val o = arr.getJSONObject(j)
-                    val tag = MusicLibrary.getAllTagsMap().get(tagName)
+                    val tagName = o.getString("tag")
+                    val tag = MusicLibrary.getAllTagsMap().get(tagName)!!
                     val isFilter = o.getBoolean("filter")
                     val type = o.getJSONArray("type")
                     Column (
                         modifier = Modifier.padding(8.dp)
                             .fillMaxWidth()
                             .border(1.dp, MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(2.dp))
-                        ) {
+                    ) {
                         Row { // buttons
                             if( j > 0) {
                                 Button(onClick = {
@@ -170,8 +174,8 @@ fun FilterPage(onBack: () -> Unit) {
                             SimpleDropDown(
                                 options = MusicLibrary.getAllTags().map { it.name },
                                 selectedOption = tag.name,
-                                onOptionSelected = { tagName ->
-                                    o.put("tag", tagName)
+                                onOptionSelected = { tn ->
+                                    o.put("tag", tn)
                                     filterOptions.value = filterOptions.value // trigger re-render
                                 },
                                 modifier = Modifier.fillMaxWidth()
@@ -214,7 +218,7 @@ fun FilterPage(onBack: () -> Unit) {
                                     selectedOption = type.getInt(0),
                                     onOptionSelected = { option ->
                                         if(option == type.getInt(0)) return@SimpleDropDown // no change
-                                        o.put("type", listof(option,0,5))
+                                        o.put("type", listOf(option,0,5))
                                         filterOptions.value = filterOptions.value // trigger re-render
                                     },
                                 )
@@ -225,7 +229,7 @@ fun FilterPage(onBack: () -> Unit) {
                                             value = "${type.getInt(2)}",
                                             onValueChange = {
                                                 val intValue = it.toIntOrNull() ?: return@TextField
-                                                o.put("type", listof(type.getInt(0),type.getInt(1),intValue))
+                                                o.put("type", listOf(type.getInt(0),type.getInt(1),intValue))
                                                 filterOptions.value = filterOptions.value // trigger re-render
                                             },
                                             modifier = Modifier.width(50.dp),
@@ -235,7 +239,7 @@ fun FilterPage(onBack: () -> Unit) {
                                         )
                                     }
                                 }
-                                options = When(type.getInt(0)) {
+                                val options = when(type.getInt(0)) {
                                     0 -> listOf(
                                             "tag ≤ _",
                                             "tag ≥ _",
@@ -267,7 +271,7 @@ fun FilterPage(onBack: () -> Unit) {
                                     selectedOption = type.getInt(1),
                                     onOptionSelected = { option ->
                                         if(option == type.getInt(1)) return@SimpleDropDown // no change
-                                        o.put("type", listof(type.getInt(0),option,type.getInt(2)))
+                                        o.put("type", listOf(type.getInt(0),option,type.getInt(2)))
                                         filterOptions.value = filterOptions.value // trigger re-render
                                     },
                                 )
@@ -286,22 +290,13 @@ fun FilterPage(onBack: () -> Unit) {
                                     selectedOption = type.getInt(0),
                                     onOptionSelected = { option ->
                                         if(option == type.getInt(0)) return@SimpleDropDown // no change
-                                        o.put("type", listof(option))
+                                        o.put("type", listOf(option))
                                         filterOptions.value = filterOptions.value // trigger re-render
                                     },
                                 )
                             }
                         }
                     }
-                    val tagName = o.getString("tag")
-                    if(tag == null) {
-                        DefText("INVALID")
-                        continue
-                    }
-                    HeaderCell(o, tag, if(tag.type == Tag.Type.INT) 2 else "", "", onValueChange = {
-                        o.put("value", it)
-                        filterOptions.value = filterOptions.value // trigger re-render
-                    })
                 }
             }
         }
@@ -311,7 +306,7 @@ fun FilterPage(onBack: () -> Unit) {
 }
 
 @Composable
-fun HeaderCell(o:JsonObject, tag: Tag, value: Any, value2: Any, onValueChange: (Any) -> Unit = {}, onValue2Change: (Any) -> Unit = {}) {
+fun HeaderCell(o:JSONObject, tag: Tag, value: Any, value2: Any, onValueChange: (Any) -> Unit = {}, onValue2Change: (Any) -> Unit = {}) {
     val text = o.optString("text", "")
     val textSize = o.optInt("textSize", 16)
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -319,32 +314,33 @@ fun HeaderCell(o:JsonObject, tag: Tag, value: Any, value2: Any, onValueChange: (
             val typeArr = o.getJSONArray("type")
             val types = List(typeArr.length()) { typeArr.getInt(it) }
             if(tag.type == Tag.Type.INT) {
+                val intVal = value as Int
                 if(types[0] <= 2) {
                     if(types.size != 3) {
                         DefText("INVALID")
-                        continue
+                        return
                     }
-                    DefText("$text: ", fontSize = textSize.sp)
+                    DefText("$text: ", )
                     for(k in 0 until types[2]) {
-                        var filled = k <= value
-                        if(types[0] == 2 && types[1] == 1) filled = k >= value
+                        var filled = k <= intVal
+                        if(types[0] == 2 && types[1] == 1) filled = k >= intVal
                         
                         if(types[0] == 0) DefText(if(filled) "★" else "☆", fontSize = textSize.sp)
-                        else if(types[0] == 1) DefText("♫", fontSize = textSize.sp, color = if(filled) MaterialTheme.colorScheme.onBackground else Color.Gray)
-                        else if(types[0] == 2) DefText("$k", fontSize = textSize.sp, color = if(filled) MaterialTheme.colorScheme.onBackground else Color.Gray)
+                        else if(types[0] == 1) Text("♫", fontSize = textSize.sp, color = if(filled) MaterialTheme.colorScheme.onBackground else Color.Gray)
+                        else if(types[0] == 2) Text("$k", fontSize = textSize.sp, color = if(filled) MaterialTheme.colorScheme.onBackground else Color.Gray)
                     }
                 } else if(types[0] == 3) {
                     if(types.size != 3) {
                         DefText("INVALID")
-                        continue
+                        return
                     }
                     if(types[1] > 3) {
                         // input
-                        TextField(
+                        TextField (
                             value = "$value",
                             onValueChange = { onValueChange(it) },
                             modifier = Modifier.width(20.dp),
-                            fontSize = textSize.sp,
+                            textStyle = TextStyle(fontSize = textSize.sp),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             )
@@ -362,7 +358,7 @@ fun HeaderCell(o:JsonObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                         value = "$value2",
                         onValueChange = { onValue2Change(it) },
                         modifier = Modifier.width(20.dp),
-                        fontSize = textSize.sp,
+                        textStyle = TextStyle(fontSize = textSize.sp),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Number
                         )
@@ -374,7 +370,7 @@ fun HeaderCell(o:JsonObject, tag: Tag, value: Any, value2: Any, onValueChange: (
             } else if(tag.type == Tag.Type.FLOAT) {
                 if(types.size != 2) {
                     DefText("INVALID")
-                    continue
+                    return
                 }
                 if(types[0] > 3) {
                     // input
@@ -382,7 +378,7 @@ fun HeaderCell(o:JsonObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                         value = "$value",
                         onValueChange = { onValueChange(it) },
                         modifier = Modifier.width(20.dp),
-                        fontSize = textSize.sp,
+                        textStyle = TextStyle(fontSize = textSize.sp),
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Decimal
                         )
@@ -400,7 +396,7 @@ fun HeaderCell(o:JsonObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                     value = "$value2",
                     onValueChange = { onValue2Change(it) },
                     modifier = Modifier.width(20.dp),
-                    fontSize = textSize.sp,
+                    textStyle = TextStyle(fontSize = textSize.sp),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Decimal
                     )
@@ -411,7 +407,7 @@ fun HeaderCell(o:JsonObject, tag: Tag, value: Any, value2: Any, onValueChange: (
             } else if(tag.type == Tag.Type.DATETIME) {
                 if(types.size != 2) {
                     DefText("INVALID")
-                    continue
+                    return
                 }
                 if(types[0] > 3) {
                     // input
@@ -419,7 +415,7 @@ fun HeaderCell(o:JsonObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                         value = "$value",
                         onValueChange = { onValueChange(it) },
                         modifier = Modifier.width(40.dp),
-                        fontSize = textSize.sp
+                        textStyle = TextStyle(fontSize = textSize.sp),
                     )
                     DefText(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
                 }
@@ -434,14 +430,14 @@ fun HeaderCell(o:JsonObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                     value = "$value2",
                     onValueChange = { onValue2Change(it) },
                     modifier = Modifier.width(40.dp),
-                    fontSize = textSize.sp
+                    textStyle = TextStyle(fontSize = textSize.sp),
                 )
             } else if(tag.type == Tag.Type.STRING) {
                 DefText("$text: ", fontSize = textSize.sp)
                 TextField(
                     value = "$value",
                     onValueChange = { onValueChange(it) },
-                    fontSize = textSize.sp,
+                    textStyle = TextStyle(fontSize = textSize.sp),
                     modifier = Modifier.width(100.dp),
                 )
             } else {
@@ -486,13 +482,13 @@ fun validateJSON(jsonArray: JSONArray): Boolean {
     }
 }
 
-fun getDefaultFilterOptions() {
+fun getDefaultFilterOptions(): JSONArray {
     return JSONArray().apply {
         put(JSONArray().apply {
             put(JSONObject().apply {
                 put("filter", true)
                 put("tag", Song._RATING)
-                put("type", listof(0,5,0))
+                put("type", listOf(0,5,0))
                 put("text", "Rating")
             })
         })

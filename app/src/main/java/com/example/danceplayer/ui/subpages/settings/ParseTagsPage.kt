@@ -14,6 +14,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -21,8 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.danceplayer.model.Song
 import com.example.danceplayer.ui.Fragment
 import com.example.danceplayer.util.MusicLibrary
+import kotlinx.coroutines.launch
+import kotlin.collections.emptyList
 
 
 @Composable
@@ -164,30 +168,30 @@ fun ParseTagsPage(onBack: () -> Unit) {
     }
 }
 
-fun previewTags(pattern: String, 
-    songs: List<Song>, 
-    tags: List<String>, 
-    errorText: MutableState<String>,
-    changeSongs: Boolean): Pair(List<PreviewItem>, List<String>) {
-    val tagIndexList = tags.map { tag -> 
+fun previewTags(pattern: String,
+                songs: List<Song>,
+                tags: List<String>,
+                errorText: MutableState<String>,
+                changeSongs: Boolean): Pair<List<PreviewItem>, List<String>> {
+    val tagIndexList = tags.mapNotNull { tag ->
         val index = pattern.indexOf("<$tag>")
         if (index == -1) {
             null
         } else {
             Triple(tag, index, index + tag.length + 2)
         }
-    }.filterNotNull().sortedBy { it.second }
+    }.sortedBy { it.second }
     val parts = ArrayList<String>()
     if(tagIndexList.isEmpty()) {
         errorText.value = "No valid tags found in pattern"
-        return emptyList()
+        return Pair(emptyList<PreviewItem>(), emptyList<String>())
     }
     var index = 0
     tagIndexList.forEach {
         var part = pattern.substring(index, it.second)
         if (part.isEmpty() && !parts.isEmpty()) {
             errorText.value = "Two tags cannot be directly adjacent without any separator to distinguish them"
-            return emptyList()
+            return Pair(emptyList<PreviewItem>(), emptyList<String>())
         }
         parts.add(part)
         parts.add(it.first)
@@ -198,7 +202,7 @@ fun previewTags(pattern: String,
     val folders = pattern.split("/").size
     val remainingSongs = ArrayList<String>()
     val result = songs.map { song ->
-        var path = song.gePath()
+        var path = song.getPath()
         var remaining = path.split("/").takeLast(folders).joinToString("/")
         val map = HashMap<String, String>()
         parts.forEachIndexed { i, part ->

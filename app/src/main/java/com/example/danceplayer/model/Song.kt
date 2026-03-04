@@ -11,7 +11,7 @@ import kotlin.collections.iterator
 
 data class Song(
     var file: Uri? = null,
-    var tags: Map<String,Any>
+    var tags: MutableMap<String,Any>
 ) {
     companion object {
 
@@ -42,7 +42,6 @@ data class Song(
                         Tag.Type.STRING -> map.put(key, json.getString(key))
                         Tag.Type.INT -> map.put(key, json.getInt(key))
                         Tag.Type.FLOAT -> map.put(key, json.getDouble(key))
-                        Tag.Type.RATING -> map.put(key, json.getInt(key))
                         Tag.Type.BOOL -> map.put(key, json.getBoolean(key))
                         Tag.Type.DATETIME -> map.put(key, json.getLong(key))
                         else -> {}
@@ -77,7 +76,6 @@ data class Song(
     fun getDance(): String {
         return tags[_DANCE] as? String ?: ""
     }
-
 
     fun asJSON(): JSONObject {
         val json = JSONObject()

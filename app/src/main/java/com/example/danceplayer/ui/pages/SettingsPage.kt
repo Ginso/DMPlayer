@@ -41,8 +41,10 @@ import androidx.compose.material3.Switch
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.ui.subpages.settings.CustomTagsPage
+import com.example.danceplayer.ui.subpages.settings.FilterPage
 import com.example.danceplayer.ui.subpages.settings.ParseTagsPage
 import com.example.danceplayer.ui.subpages.settings.TagFilePage
+import com.example.danceplayer.util.SimpleDropDown
 import kotlinx.coroutines.launch
 
 

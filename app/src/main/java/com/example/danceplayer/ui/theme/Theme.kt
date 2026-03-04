@@ -3,13 +3,17 @@ package com.example.danceplayer.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.TextUnit
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -60,12 +64,13 @@ fun DancePlayerTheme(
 @Composable
 fun DefText(
     text: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fontSize: TextUnit = LocalTextStyle.current.fontSize
 ) {
     Text(
         text = text,
         color = MaterialTheme.colorScheme.onBackground,
-        modifier = modifier
+        modifier = modifier,
+        fontSize = fontSize
     )
 }
-)

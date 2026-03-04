@@ -24,7 +24,6 @@ data class Tag(
                 STRING -> return "Text"
                 INT -> return "Integer"
                 FLOAT -> return "Decimal"
-                RATING -> return "Rating"
                 BOOL -> return "Yes/No"
                 DATETIME -> {
                     if (arg < 5) return "Date"
