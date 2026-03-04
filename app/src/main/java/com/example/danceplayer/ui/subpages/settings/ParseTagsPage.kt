@@ -1,6 +1,9 @@
 package com.example.danceplayer.ui.subpages.settings
 
+import android.widget.Toast
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -8,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -31,10 +36,10 @@ import kotlin.collections.emptyList
 
 @Composable
 fun ParseTagsPage(onBack: () -> Unit) {
-    var tags = MusicLibrary.tags.map { it.name }
-    var pattern = remember { mutableStateOf("") }
-    var preview = remember { mutableStateOf(emptyList<PreviewItem>()) }
-    var previewFailed = remember { mutableStateOf(emptyList<String>()) }
+    val tags = MusicLibrary.tags.map { it.name }
+    val pattern = remember { mutableStateOf("") }
+    val preview = remember { mutableStateOf(emptyList<PreviewItem>()) }
+    val previewFailed = remember { mutableStateOf(emptyList<String>()) }
     val errorText = remember { mutableStateOf("") }
     val isLoading = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -56,7 +61,6 @@ fun ParseTagsPage(onBack: () -> Unit) {
                 AssistChip(
                     onClick = { pattern.value += "<$tag>" },
                     label = { Text(tag) },
-                    enabled = false
                 )
             }
         }
@@ -78,10 +82,10 @@ fun ParseTagsPage(onBack: () -> Unit) {
             Button(onClick = { 
                 coroutineScope.launch {
                     isLoading.value = true
-                    val failedSongs = MutableListOf<String>()
-                    val previewItems = MutableListOf<PreviewItem>()
-                    val (previewItems, failedSongs) = previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
-                        if (item == null) {
+                    val failedSongs = ArrayList<String>()
+                    val previewItems = ArrayList<PreviewItem>()
+                    previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
+                        if (item.tags == null) {
                             failedSongs.add(item.filePath)
                         } else {
                             previewItems.add(item)
@@ -95,11 +99,11 @@ fun ParseTagsPage(onBack: () -> Unit) {
                 Text("Preview")
             }
             Button(onClick = {
+                isLoading.value = true
                 coroutineScope.launch {
-                    isLoading.value = true
                     var updated = 0
                     previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
-                        if (item != null) {
+                        if (item.tags != null) {
                             item.tags.forEach { (tag, value) ->
                                 item.song.tags[tag] = value
                             }
@@ -122,19 +126,25 @@ fun ParseTagsPage(onBack: () -> Unit) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp)
+                        .height(200.dp)
+                        .border(1.dp, MaterialTheme.colorScheme.onBackground)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     preview.value.forEach { item ->
-                        Text("File: ${item.filePath}")
-                        FlowRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            item.tags.forEach { (tag, value) ->
-                                Text("$tag: $value")
+                        Box(modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(10.dp))) {
+                            Column {
+                                Text("File: ${item.filePath}")
+                                FlowRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    item.tags?.forEach { (tag, value) ->
+                                        Text("$tag: $value")
+                                    }
+                                }
+
                             }
                         }
                     }
@@ -145,7 +155,8 @@ fun ParseTagsPage(onBack: () -> Unit) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(100.dp)
+                        .height(200.dp)
+                        .border(1.dp, MaterialTheme.colorScheme.onBackground)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -187,7 +198,7 @@ fun previewTags(pattern: String,
                 songs: List<Song>,
                 tags: List<String>,
                 errorText: MutableState<String>,
-                callback: (Previewitem?) -> Unit) {
+                callback: (PreviewItem) -> Unit) {
     val tagIndexList = tags.mapNotNull { tag ->
         val index = pattern.indexOf("<$tag>")
         if (index == -1) {
@@ -199,14 +210,14 @@ fun previewTags(pattern: String,
     val parts = ArrayList<String>()
     if(tagIndexList.isEmpty()) {
         errorText.value = "No valid tags found in pattern"
-        return Pair(emptyList<PreviewItem>(), emptyList<String>())
+        return
     }
     var index = 0
     tagIndexList.forEach {
         var part = pattern.substring(index, it.second)
         if (part.isEmpty() && !parts.isEmpty()) {
             errorText.value = "Two tags cannot be directly adjacent without any separator to distinguish them"
-            return Pair(emptyList<PreviewItem>(), emptyList<String>())
+            return
         }
         parts.add(part)
         parts.add(it.first)
@@ -224,7 +235,7 @@ fun previewTags(pattern: String,
                 if (remaining.startsWith(part)) {
                     remaining = remaining.substring(part.length)
                 } else {
-                    callback(null)
+                    callback(PreviewItem(path, song))
                     return@forEach
                 }
             } else {
@@ -234,7 +245,7 @@ fun previewTags(pattern: String,
                 val value = if (nextPart.isNotEmpty()) {
                     val index = remaining.indexOf(nextPart)
                     if (index == -1) {
-                        callback(null)
+                        callback(PreviewItem(path, song))
                         return@forEach
                     }
                     val result = remaining.substring(0, index)
@@ -246,18 +257,14 @@ fun previewTags(pattern: String,
                     result
                 }
                 map[part] = value
-                if (changeSongs) {
-                    song.tags[part] = value
-                }
             }
         }
         callback(PreviewItem(path, song, map))
     }
-    return Pair(result.filterNotNull(), remainingSongs)
 }
 
 data class PreviewItem(
     val filePath: String,
     val song: Song,
-    val tags: Map<String, String>
+    val tags: Map<String, String>? = null
 )

@@ -1,5 +1,32 @@
 package com.example.danceplayer.ui.subpages.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.example.danceplayer.model.Song
+import com.example.danceplayer.ui.Fragment
+import com.example.danceplayer.ui.theme.DefText
+import com.example.danceplayer.util.PreferenceUtil
+import org.json.JSONArray
+import org.json.JSONObject
+
 @Composable
 fun ItemLayoutsPage(onBack: () -> Unit) {
     var currentType = remember { mutableStateOf(0) }
@@ -39,10 +66,10 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
             LayoutTree(currentLayout.value, currentPath)
             VerticalDivider(modifier = Modifier.padding(horizontal = 8.dp).fillMaxHeight())
             if(currentObject != null) {
+                val index = currentPath.value.last()
                 Column {
-                    if(currentPath.size > 0) { // not root object}
+                    if(parentObject != null) { // not root object}
                         Row { // Buttons
-                            val index = currentPath.value.last()
                             if(index > 0) {
                                 Button(onClick = { 
                                     parentObject.getJSONArray("items").apply {
@@ -147,7 +174,7 @@ fun ItemLayoutTypeButton(text: String, type: Int, currentType: MutableState<Int>
     }
 }
 
-fun getDefaultLayout(type: Int): JSONArray {
+fun getDefaultLayout(type: Int): JSONObject {
     return JSONObject().apply {
         put("type", ElementType.ROW)
         put("items", JSONArray().apply {
@@ -228,20 +255,13 @@ fun getDefaultLayout(type: Int): JSONArray {
 }
 
 
-
-enum class LayoutCategory(val type: Int) {
-    BROWSER(0),
-    PLAYLISTS(1),
-    QUEUE(2),
-    QUEUE_PARTY(3)
-}
 enum class ElementType(val type: Int) {
     ROW(0),
     COLUMN(1),
     TAG(2)
 }
 enum class DisplayType(val type: Int) {
-    DEFAULT(0)
+    DEFAULT(0),
     STARS(1),
-    NOTES(2),
+    NOTES(2)
 }

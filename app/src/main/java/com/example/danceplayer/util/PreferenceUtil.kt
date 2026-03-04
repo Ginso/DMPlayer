@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import org.json.JSONObject
 import androidx.core.content.edit
 import com.example.danceplayer.ui.subpages.settings.getDefaultFilterOptions
+import com.example.danceplayer.ui.subpages.settings.getDefaultLayout
 import org.json.JSONArray
 
 object PreferenceUtil {
