@@ -31,6 +31,8 @@ import com.example.danceplayer.model.Song
 import com.example.danceplayer.ui.Fragment
 import com.example.danceplayer.util.MusicLibrary
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.collections.emptyList
 
 
@@ -84,11 +86,13 @@ fun ParseTagsPage(onBack: () -> Unit) {
                     isLoading.value = true
                     val failedSongs = ArrayList<String>()
                     val previewItems = ArrayList<PreviewItem>()
-                    previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
-                        if (item.tags == null) {
-                            failedSongs.add(item.filePath)
-                        } else {
-                            previewItems.add(item)
+                    withContext(Dispatchers.Default) {
+                        previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
+                            if (item.tags == null) {
+                                failedSongs.add(item.filePath)
+                            } else {
+                                previewItems.add(item)
+                            }
                         }
                     }
                     preview.value = previewItems
@@ -99,15 +103,17 @@ fun ParseTagsPage(onBack: () -> Unit) {
                 Text("Preview")
             }
             Button(onClick = {
-                isLoading.value = true
                 coroutineScope.launch {
+                    isLoading.value = true
                     var updated = 0
-                    previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
-                        if (item.tags != null) {
-                            item.tags.forEach { (tag, value) ->
-                                item.song.tags[tag] = value
+                    withContext(Dispatchers.Default) {
+                        previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
+                            if (item.tags != null) {
+                                item.tags.forEach { (tag, value) ->
+                                    item.song.tags[tag] = value
+                                }
+                                updated++
                             }
-                            updated++
                         }
                     }
                     MusicLibrary.save(context)
