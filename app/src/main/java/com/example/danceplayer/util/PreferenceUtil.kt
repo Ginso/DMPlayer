@@ -109,6 +109,10 @@ data class Profile(
     var keepScreenOn: Boolean = false,
     var showOnLock: Boolean = false,
     var filterOptions: JSONArray = getDefaultFilterOptions(),
+    var itemLayoutBrowser: JSONObject = getDefaultLayout(0),
+    var itemLayoutPlaylists: JSONObject = getDefaultLayout(1),
+    var itemLayoutQueue: JSONObject = getDefaultLayout(2),
+    var itemLayoutQueueParty: JSONObject = getDefaultLayout(3)
 ) {
 
     companion object {
@@ -119,14 +123,26 @@ data class Profile(
                     folder = json.optString("folder", ""),
                     keepScreenOn = json.optBoolean("keepScreenOn", false),
                     showOnLock = json.optBoolean("showOnLock", false),
-                    filterOptions = json.optJSONArray("filterOptions") ?: getDefaultFilterOptions()
+                    filterOptions = json.optJSONArray("filterOptions") ?: getDefaultFilterOptions(),
+                    itemLayoutBrowser = json.optJSONObject("itemLayoutBrowser") ?: getDefaultLayout(0),
+                    itemLayoutPlaylists = json.optJSONObject("itemLayoutPlaylists") ?: getDefaultLayout(1),
+                    itemLayoutQueue = json.optJSONObject("itemLayoutQueue") ?: getDefaultLayout(2),
+                    itemLayoutQueueParty = json.optJSONObject("itemLayoutQueueParty") ?: getDefaultLayout(3)
                 )
             } catch (_: Exception) {
                 Profile()
             }
         }
+    }
 
-        
+    fun getLayout(category: Int): JSONObject {
+        return when(category) {
+            0 -> itemLayoutBrowser
+            1 -> itemLayoutPlaylists
+            2 -> itemLayoutQueue
+            3 -> itemLayoutQueueParty
+            else -> JSONObject() // default empty layout
+        }
     }
 
     fun serialize(): String {

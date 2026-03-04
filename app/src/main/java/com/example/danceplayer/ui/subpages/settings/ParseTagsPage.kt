@@ -78,7 +78,15 @@ fun ParseTagsPage(onBack: () -> Unit) {
             Button(onClick = { 
                 coroutineScope.launch {
                     isLoading.value = true
-                    val (previewItems, failedSongs) = previewTags(pattern.value, MusicLibrary.songs, tags, errorText, false)
+                    val failedSongs = MutableListOf<String>()
+                    val previewItems = MutableListOf<PreviewItem>()
+                    val (previewItems, failedSongs) = previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
+                        if (item == null) {
+                            failedSongs.add(item.filePath)
+                        } else {
+                            previewItems.add(item)
+                        }
+                    }
                     preview.value = previewItems
                     previewFailed.value = failedSongs
                     isLoading.value = false
@@ -89,11 +97,18 @@ fun ParseTagsPage(onBack: () -> Unit) {
             Button(onClick = {
                 coroutineScope.launch {
                     isLoading.value = true
-                    val (previewItems, failedSongs) = previewTags(pattern.value, MusicLibrary.songs, tags, errorText, true)
+                    var updated = 0
+                    previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
+                        if (item != null) {
+                            item.tags.forEach { (tag, value) ->
+                                item.song.tags[tag] = value
+                            }
+                            updated++
+                        }
+                    }
                     MusicLibrary.save(context)
-                    preview.value = previewItems
-                    previewFailed.value = failedSongs
                     isLoading.value = false
+                    Toast.makeText(context, "Updated ${updated} / ${MusicLibrary.songs.size} songs", Toast.LENGTH_LONG).show()
                 }
             }) {
                 Text("Apply")
@@ -172,7 +187,7 @@ fun previewTags(pattern: String,
                 songs: List<Song>,
                 tags: List<String>,
                 errorText: MutableState<String>,
-                changeSongs: Boolean): Pair<List<PreviewItem>, List<String>> {
+                callback: (Previewitem?) -> Unit) {
     val tagIndexList = tags.mapNotNull { tag ->
         val index = pattern.indexOf("<$tag>")
         if (index == -1) {
@@ -200,8 +215,7 @@ fun previewTags(pattern: String,
     parts.add(pattern.substring(index, pattern.length))
 
     val folders = pattern.split("/").size
-    val remainingSongs = ArrayList<String>()
-    val result = songs.map { song ->
+    songs.forEach { song ->
         var path = song.getPath()
         var remaining = path.split("/").takeLast(folders).joinToString("/")
         val map = HashMap<String, String>()
@@ -210,8 +224,8 @@ fun previewTags(pattern: String,
                 if (remaining.startsWith(part)) {
                     remaining = remaining.substring(part.length)
                 } else {
-                    remainingSongs.add(path)
-                    return@map null
+                    callback(null)
+                    return@forEach
                 }
             } else {
                 // code above ensures an uneven number of parts, so i + 1 is always valid
@@ -220,8 +234,8 @@ fun previewTags(pattern: String,
                 val value = if (nextPart.isNotEmpty()) {
                     val index = remaining.indexOf(nextPart)
                     if (index == -1) {
-                        remainingSongs.add(path)
-                        return@map null
+                        callback(null)
+                        return@forEach
                     }
                     val result = remaining.substring(0, index)
                     remaining = remaining.substring(index)
@@ -237,12 +251,13 @@ fun previewTags(pattern: String,
                 }
             }
         }
-        PreviewItem(path, map)
+        callback(PreviewItem(path, song, map))
     }
     return Pair(result.filterNotNull(), remainingSongs)
 }
 
 data class PreviewItem(
     val filePath: String,
+    val song: Song,
     val tags: Map<String, String>
 )

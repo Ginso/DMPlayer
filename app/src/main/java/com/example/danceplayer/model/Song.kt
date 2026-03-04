@@ -26,6 +26,7 @@ data class Song(
         const val _TPM: String = "tpm"
         const val _DURATION: String = "duration"
         const val _PLAYING_AFTER: String = "playing_after"
+        const val _POSITION: String = "position"
 
         fun fromJSON(json: JSONObject, tags: Map<String, Tag>, onError: (String) -> Unit): Song? {
             val map = LinkedHashMap<String, Any>()
