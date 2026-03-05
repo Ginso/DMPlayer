@@ -102,6 +102,22 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                             }
                         }
                         if (currentObject.getInt("type") == ElementType.TAG.type) {
+
+                            Row {
+                                DefText("Tag: ")
+                                val tags = MusicLibrary.getAllTags().map { it.name } + Song._PLAYING_AFTER
+                                SimpleDropDown(
+                                    options = tags,
+                                    selectedOption = currentObject.getString("tag"),
+                                    onOptionSelected = { tag -> 
+                                        currentObject.put("tag", tag) 
+                                        currentPath.value = currentPath.value
+                                    },
+                                    modifier: Modifier = Modifier
+                                )
+                            }
+
+                            // TODO
                             
                         } else {
                             Row { // add Buttons 
@@ -126,6 +142,8 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                     Text("+ Container")
                                 }
                             }
+
+                            // TODO
                         }
 
                     }
