@@ -30,7 +30,7 @@ fun Fragment(title:String, onBack: () -> Unit, content: @Composable () -> Unit) 
             .background(MaterialTheme.colorScheme.background)
     ) {
         TopAppBar(
-            title = { Text(title, color = MaterialTheme.colorScheme.onBackground) },
+            title = { Text(title) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
                     Icon(
@@ -51,7 +51,7 @@ fun Fragment(title:String, onBack: () -> Unit, content: @Composable () -> Unit) 
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
-                    .padding(16.dp)
+                    .padding(8.dp)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {

@@ -1,19 +1,25 @@
 package com.example.danceplayer.ui.subpages.settings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -24,14 +30,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.Fragment
-import com.example.danceplayer.ui.theme.DefText
 import com.example.danceplayer.util.MusicLibrary
+import com.example.danceplayer.util.MyTextField
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.SimpleDropDown
 import org.json.JSONArray
@@ -43,219 +50,290 @@ fun FilterPage(onBack: () -> Unit) {
     val selectedRow = remember { mutableStateOf(-1) }
     
     Fragment("Edit you filter and sort options", onBack) {
-        DefText("Here you can edit the filter and sort options for you will see when browsing your songs in the 'Dances' page.")
-        DefText("Click on a line to edit, move or remove it.")
+        Text("Here you can edit the filter and sort options for you will see when browsing your songs in the 'Dances' page.")
+        Text("Click on a line to edit, move or remove it.")
         HorizontalDivider()
         if(!validateJSON(filterOptions.value)) {
-            DefText("Error loading filter options")
+            Text("Error loading filter options")
             Button(onClick = {filterOptions.value = getDefaultFilterOptions() }) {
                 Text("Reset to default")
             }
             return@Fragment
         }
+        Column(
+            modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(4.dp))
+        ) {
+            for(i in 0 until filterOptions.value.length()) {
+                val row = filterOptions.value.getJSONArray(i)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            selectedRow.value = i
+                        }
+                        .padding(4.dp)
+                        // todo min height
+                        .background(if(selectedRow.value == i) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent),
 
-        for(i in 0 until filterOptions.value.length()) {
-            val row = filterOptions.value.getJSONArray(i)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        selectedRow.value = i
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    for(j in 0 until row.length()) {
+                        val o = row.getJSONObject(j)
+                        val tagName = o.getString("tag")
+                        val tag = MusicLibrary.getAllTagsMap().get(tagName)
+                        if(tag == null) {
+                            Text("INVALID")
+                            continue
+                        }
+                        HeaderCell(o, tag, if(tag.type == Tag.Type.INT) 2 else "", "")
                     }
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                for(j in 0 until row.length()) {
-                    val o = row.getJSONObject(j)
-                    val tagName = o.getString("tag")
-                    val tag = MusicLibrary.getAllTagsMap().get(tagName)
-                    if(tag == null) {
-                        DefText("INVALID")
-                        continue
-                    }
-                    HeaderCell(o, tag, if(tag.type == Tag.Type.INT) 2 else "", "")
                 }
             }
         }
 
-        Button(onClick = {
-            filterOptions.value.put(JSONArray().apply { // doesn't trigger re-render, but next line will
-                put(JSONObject().apply {
-                    put("filter", false)
-                    put("tag", Song._RATING)
-                    put("text", "Rating")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Button(onClick = {
+                filterOptions.value.put(JSONArray().apply { // doesn't trigger re-render, but next line will
+                    put(JSONObject().apply {
+                        put("filter", false)
+                        put("tag", Song._RATING)
+                        put("text", "Rating")
+                    })
                 })
-            })
-            selectedRow.value = filterOptions.value.length() - 1 // trigger re-render
-        }) {
-            Text("new Row")
-        }
+                selectedRow.value = filterOptions.value.length() - 1 // trigger re-render
+            }) {
+                Text("new Row")
+            }
 
-        Button(onClick = {
-            // save to profile
-            PreferenceUtil.getCurrentProfile().filterOptions = filterOptions.value
-            PreferenceUtil.saveProfile()
-            onBack()
-        }) {
-            Text("Save")
+            Button(onClick = {
+                // save to profile
+                PreferenceUtil.getCurrentProfile().filterOptions = filterOptions.value
+                PreferenceUtil.saveProfile()
+                onBack()
+            }) {
+                Text("Save")
+            }
         }
 
         HorizontalDivider()
 
         if(selectedRow.value > -1 ) {
             val arr = filterOptions.value.getJSONArray(selectedRow.value)
-            Column {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 for(j in 0 until arr.length()) {
                     val o = arr.getJSONObject(j)
                     val tagName = o.getString("tag")
                     val tag = MusicLibrary.getAllTagsMap().get(tagName)!!
                     val isFilter = o.getBoolean("filter")
-                    val type = o.getJSONArray("type")
-                    Column (
+                    val type = o.optJSONArray("type") ?: JSONArray()
+                    Box(
                         modifier = Modifier.padding(8.dp)
                             .fillMaxWidth()
-                            .border(1.dp, MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(2.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(2.dp)),
                     ) {
-                        Row { // buttons
-                            if( j > 0) {
-                                Button(onClick = {
-                                    val temp = arr.getJSONObject(j-1)
-                                    arr.put(j-1, arr.getJSONObject(j))
-                                    arr.put(j, temp)
-                                    filterOptions.value = filterOptions.value // trigger re-render
-                                }) {
-                                    Text("↑")
-                                }
-                            }
-                            if(j < arr.length() - 1) {
-                                Button(onClick = {
-                                    val temp = arr.getJSONObject(j+1)
-                                    arr.put(j+1, arr.getJSONObject(j))
-                                    arr.put(j, temp)
-                                    filterOptions.value = filterOptions.value // trigger re-render
-                                }) {
-                                    Text("↓")
-                                }
-                            }
-                            Button(onClick = {
-                                arr.remove(j)
-                                filterOptions.value = filterOptions.value // trigger re-render
-                            }) {
-                                Text("X")
-                            }
-                        }
-                        Row { // filter/sorter
-                            RadioButton(
-                                selected = isFilter,
-                                onClick = {
-                                    o.put("filter", true)
-                                    filterOptions.value = filterOptions.value // trigger re-render
-                                }
-                            )
-                            DefText("Filter", modifier = Modifier.clickable {
-                                o.put("filter", true)
-                                filterOptions.value = filterOptions.value // trigger re-render
-                            })
-                            Spacer(modifier = Modifier.width(16.dp))
-                            RadioButton(
-                                selected = !isFilter,
-                                onClick = {
-                                    o.put("filter", false)
-                                    filterOptions.value = filterOptions.value // trigger re-render
-                                }
-                            )
-                            DefText("Sorter", modifier = Modifier.clickable {
-                                o.put("filter", false)
-                                filterOptions.value = filterOptions.value // trigger re-render
-                            })
-                        }
-                        Row { // tag
-                            DefText("Tag: ")
-                            SimpleDropDown(
-                                options = MusicLibrary.getAllTags().map { it.name },
-                                selectedOption = tag.name,
-                                onOptionSelected = { tn ->
-                                    o.put("tag", tn)
-                                    filterOptions.value = filterOptions.value // trigger re-render
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        Row { // text
-                            DefText("Text: ")
-                            TextField(
-                                value = o.optString("text", ""),
-                                onValueChange = {
-                                    o.put("text", it)
-                                    filterOptions.value = filterOptions.value // trigger re-render
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                        Row { // text size
-                            DefText("Text Size: ")
-                            Button(onClick = {
-                                val currentSize = o.optInt("textSize", 16)
-                                o.put("textSize", if(currentSize <= 4) 4 else currentSize - 1)
-                                filterOptions.value = filterOptions.value // trigger re-render
-                            }) {
-                                Text("-")
-                            }
-                            DefText("${o.optInt("textSize", 16)}")
-                            Button(onClick = {
-                                val currentSize = o.optInt("textSize", 16)
-                                o.put("textSize", if(currentSize >= 72) 72 else currentSize + 1)
-                                filterOptions.value = filterOptions.value // trigger re-render
-                            }) {
-                                Text("+")
-                            }
-                        }
+                        Column (
+                            modifier = Modifier.padding(8.dp)
+                                .fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(20.dp)) { // buttons
+                                if( j > 0) {
+                                    Text("↑",
+                                        style = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.ExtraBold),
+                                        modifier = Modifier
+                                            .clickable {
+                                                val temp = arr.getJSONObject(j-1)
+                                                arr.put(j-1, arr.getJSONObject(j))
+                                                arr.put(j, temp)
+                                                filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
 
-                        if(isFilter) {
-                            if(tag.type == Tag.Type.INT) {
-                                SimpleDropDown(
-                                    options = listOf("★★☆", "♫♫♫", "123", "Input"),
-                                    selectedOption = type.getInt(0),
-                                    onOptionSelected = { option ->
-                                        if(option == type.getInt(0)) return@SimpleDropDown // no change
-                                        o.put("type", listOf(option,0,5))
-                                        filterOptions.value = filterOptions.value // trigger re-render
-                                    },
+                                            }
+                                    )
+                                }
+                                if(j < arr.length() - 1) {
+                                    Text("↓",
+                                        style = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.ExtraBold),
+                                        modifier = Modifier
+                                            .clickable {
+                                                val temp = arr.getJSONObject(j+1)
+                                                arr.put(j+1, arr.getJSONObject(j))
+                                                arr.put(j, temp)
+                                                filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                            }
+                                    )
+                                }
+
+                                Text("✖",
+                                    style = TextStyle(fontSize = 26.sp),
+                                    modifier = Modifier
+                                        .clickable {
+                                            arr.remove(j)
+                                            filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+
+                                        }
                                 )
-                                if(type.getInt(0) < 3) { // input
-                                    Row {
-                                        DefText("Max Value:")
-                                        TextField(
-                                            value = "${type.getInt(2)}",
-                                            onValueChange = {
-                                                val intValue = it.toIntOrNull() ?: return@TextField
-                                                o.put("type", listOf(type.getInt(0),type.getInt(1),intValue))
-                                                filterOptions.value = filterOptions.value // trigger re-render
+                            } // buttons
+                            Row(verticalAlignment = Alignment.CenterVertically) { // filter/sorter
+                                RadioButton(
+                                    selected = isFilter,
+                                    onClick = {
+                                        o.put("filter", true)
+                                        filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                    }
+                                )
+                                Text("Filter", modifier = Modifier.clickable {
+                                    o.put("filter", true)
+                                    filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                })
+                                Spacer(modifier = Modifier.width(16.dp))
+                                RadioButton(
+                                    selected = !isFilter,
+                                    onClick = {
+                                        o.put("filter", false)
+                                        filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                    }
+                                )
+                                Text("Sorter", modifier = Modifier.clickable {
+                                    o.put("filter", false)
+                                    filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                })
+                            } // filter/sorter
+                            Row(verticalAlignment = Alignment.CenterVertically) { // text
+                                Text("Text: ")
+                                MyTextField(
+                                    value = o.optString("text", ""),
+                                    onValueChange = {
+                                        o.put("text", it)
+                                        filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            } // text
+                            Row(verticalAlignment = Alignment.CenterVertically) { // tag
+                                Text("Tag: ")
+                                SimpleDropDown(
+                                    options = MusicLibrary.getAllTags().map { it.name },
+                                    selectedOption = tag.name,
+                                    onOptionSelected = { tn ->
+                                        o.put("tag", tn)
+                                        filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            } // tag
+                            Row(verticalAlignment = Alignment.CenterVertically) { // text size
+                                Text("Text Size: ")
+                                Text("-",
+                                    style = TextStyle(fontSize = 32.sp),
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp, horizontal = 8.dp)
+                                        .clickable {
+                                            val currentSize = o.optInt("textSize", 16)
+                                            o.put("textSize", if(currentSize <= 4) 4 else currentSize - 1)
+                                            filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                        }
+                                )
+                                Text("${o.optInt("textSize", 16)}",
+                                    style = TextStyle(fontSize = 20.sp))
+                                Text("+",
+                                    style = TextStyle(fontSize = 26.sp),
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp, horizontal = 8.dp)
+                                        .clickable {
+                                            val currentSize = o.optInt("textSize", 16)
+                                            o.put("textSize", if(currentSize >= 72) 72 else currentSize + 1)
+                                            filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                        }
+                                )
+                            } // text size
+
+                            if(isFilter) {
+                                if(tag.type == Tag.Type.INT) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        SimpleDropDown(
+                                            options = listOf("★★☆", "♫♫♫", "123", "Input"),
+                                            selectedOption = type.getInt(0),
+                                            onOptionSelected = { option ->
+                                                if(option == type.getInt(0)) return@SimpleDropDown // no change
+                                                o.put("type", listOf(option,0,5))
+                                                filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
                                             },
-                                            modifier = Modifier.width(50.dp),
-                                            keyboardOptions = KeyboardOptions(
-                                                keyboardType = KeyboardType.Number
-                                            )
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        if(type.getInt(0) < 3) { // input
+                                                Text("Max Value:")
+                                            MyTextField(
+                                                    value = "${type.getInt(2)}",
+                                                    onValueChange = {
+                                                        val intValue = it.toIntOrNull() ?: return@MyTextField
+                                                        o.put("type", listOf(type.getInt(0),type.getInt(1),intValue))
+                                                        filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                                    },
+                                                    modifier = Modifier
+                                                        .width(40.dp),
+                                                    keyboardOptions = KeyboardOptions(
+                                                        keyboardType = KeyboardType.Number
+                                                    ),
+
+
+                                                )
+                                        }
+                                    }
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text("Show Songs with")
+                                        val options = when(type.getInt(0)) {
+                                            0 -> listOf(
+                                                    "tag ≤ _",
+                                                    "tag ≥ _",
+                                                )
+                                            1 -> listOf(
+                                                    "tag ≤ _",
+                                                    "tag ≥ _",
+                                                )
+                                            2 -> listOf(
+                                                    "tag ≤ _",
+                                                    "tag ≥ _",
+                                                    "tag < _",
+                                                    "tag > _",
+                                                )
+
+                                            else -> listOf(
+                                                    "tag ≤ _",
+                                                    "tag ≥ _",
+                                                    "tag < _",
+                                                    "tag > _",
+                                                    "_ < tag < _",
+                                                    "_ ≤ tag ≤ _",
+                                                    "_ ≤ tag < _",
+                                                    "_ < tag ≤ _"
+                                                )
+                                        }
+                                        SimpleDropDown(
+                                            options = options,
+                                            selectedOption = type.getInt(1),
+                                            onOptionSelected = { option ->
+                                                if(option == type.getInt(1)) return@SimpleDropDown // no change
+                                                o.put("type", listOf(type.getInt(0),option,type.getInt(2)))
+                                                filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                            },
                                         )
                                     }
-                                }
-                                val options = when(type.getInt(0)) {
-                                    0 -> listOf(
-                                            "tag ≤ _",
-                                            "tag ≥ _",
-                                        )
-                                    1 -> listOf(
-                                            "tag ≤ _",
-                                            "tag ≥ _",
-                                        )
-                                    2 -> listOf(
-                                            "tag ≤ _",
-                                            "tag ≥ _",
-                                            "tag < _",
-                                            "tag > _",
-                                        )
-
-                                    else -> listOf(
+                                } else if(tag.type == Tag.Type.FLOAT || tag.type == Tag.Type.DATETIME) {
+                                    SimpleDropDown(
+                                        options = listOf(
                                             "tag ≤ _",
                                             "tag ≥ _",
                                             "tag < _",
@@ -264,39 +342,28 @@ fun FilterPage(onBack: () -> Unit) {
                                             "_ ≤ tag ≤ _",
                                             "_ ≤ tag < _",
                                             "_ < tag ≤ _"
-                                        )
+                                        ),
+                                        selectedOption = type.getInt(0),
+                                        onOptionSelected = { option ->
+                                            if(option == type.getInt(0)) return@SimpleDropDown // no change
+                                            o.put("type", listOf(option))
+                                            filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                        },
+                                    )
                                 }
-                                SimpleDropDown(
-                                    options = options,
-                                    selectedOption = type.getInt(1),
-                                    onOptionSelected = { option ->
-                                        if(option == type.getInt(1)) return@SimpleDropDown // no change
-                                        o.put("type", listOf(type.getInt(0),option,type.getInt(2)))
-                                        filterOptions.value = filterOptions.value // trigger re-render
-                                    },
-                                )
-                            } else if(tag.type == Tag.Type.FLOAT || tag.type == Tag.Type.DATETIME) {
-                                SimpleDropDown(
-                                    options = listOf(
-                                        "tag ≤ _",
-                                        "tag ≥ _",
-                                        "tag < _",
-                                        "tag > _",
-                                        "_ < tag < _",
-                                        "_ ≤ tag ≤ _",
-                                        "_ ≤ tag < _",
-                                        "_ < tag ≤ _"
-                                    ),
-                                    selectedOption = type.getInt(0),
-                                    onOptionSelected = { option ->
-                                        if(option == type.getInt(0)) return@SimpleDropDown // no change
-                                        o.put("type", listOf(option))
-                                        filterOptions.value = filterOptions.value // trigger re-render
-                                    },
-                                )
                             }
                         }
                     }
+                }
+                Button(onClick = {
+                    arr.put(JSONObject().apply {
+                        put("filter", false)
+                        put("tag", Song._TPM)
+                        put("text", "Duration")
+                    })
+                    filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                }) {
+                    Text("Add Item")
                 }
             }
         }
@@ -317,21 +384,21 @@ fun HeaderCell(o:JSONObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                 val intVal = value as Int
                 if(types[0] <= 2) {
                     if(types.size != 3) {
-                        DefText("INVALID")
+                        Text("INVALID")
                         return
                     }
-                    DefText("$text: ", )
+                    Text("$text: ", )
                     for(k in 0 until types[2]) {
                         var filled = k <= intVal
                         if(types[0] == 2 && types[1] == 1) filled = k >= intVal
                         
-                        if(types[0] == 0) DefText(if(filled) "★" else "☆", fontSize = textSize.sp)
+                        if(types[0] == 0) Text(if(filled) "★" else "☆", fontSize = textSize.sp)
                         else if(types[0] == 1) Text("♫", fontSize = textSize.sp, color = if(filled) MaterialTheme.colorScheme.onBackground else Color.Gray)
                         else if(types[0] == 2) Text("$k", fontSize = textSize.sp, color = if(filled) MaterialTheme.colorScheme.onBackground else Color.Gray)
                     }
                 } else if(types[0] == 3) {
                     if(types.size != 3) {
-                        DefText("INVALID")
+                        Text("INVALID")
                         return
                     }
                     if(types[1] > 3) {
@@ -345,10 +412,10 @@ fun HeaderCell(o:JSONObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                                 keyboardType = KeyboardType.Number
                             )
                         )
-                        DefText(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
+                        Text(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
                     }
-                    DefText("$text", fontSize = textSize.sp)
-                    DefText(
+                    Text("$text", fontSize = textSize.sp)
+                    Text(
                         if(types[1] == 3) " > "
                         else if(types[1] == 1) " ≥ "
                         else if(types[1] == 2 || types[1] == 4 ||types[1] == 6) " < " 
@@ -365,11 +432,11 @@ fun HeaderCell(o:JSONObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                     )
 
                 } else {
-                    DefText("INVALID")
+                    Text("INVALID")
                 }
             } else if(tag.type == Tag.Type.FLOAT) {
                 if(types.size != 2) {
-                    DefText("INVALID")
+                    Text("INVALID")
                     return
                 }
                 if(types[0] > 3) {
@@ -383,10 +450,10 @@ fun HeaderCell(o:JSONObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                             keyboardType = KeyboardType.Decimal
                         )
                     )
-                    DefText(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
+                    Text(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
                 }
-                DefText("$text", fontSize = textSize.sp)
-                DefText(
+                Text("$text", fontSize = textSize.sp)
+                Text(
                         if(types[0] == 3) " > "
                         else if(types[0] == 1) " ≥ "
                         else if(types[0] == 2 || types[0] == 4 ||types[0] == 6) " < " 
@@ -402,11 +469,11 @@ fun HeaderCell(o:JSONObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                     )
                 )
             } else if(tag.type == Tag.Type.BOOL) {
-                DefText("$text: ", fontSize = textSize.sp)
-                DefText(listOf("All", "Yes", "No")[value as Int], fontSize = textSize.sp)
+                Text("$text: ", fontSize = textSize.sp)
+                Text(listOf("All", "Yes", "No")[value as Int], fontSize = textSize.sp)
             } else if(tag.type == Tag.Type.DATETIME) {
                 if(types.size != 2) {
-                    DefText("INVALID")
+                    Text("INVALID")
                     return
                 }
                 if(types[0] > 3) {
@@ -417,10 +484,10 @@ fun HeaderCell(o:JSONObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                         modifier = Modifier.width(40.dp),
                         textStyle = TextStyle(fontSize = textSize.sp),
                     )
-                    DefText(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
+                    Text(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
                 }
-                DefText("$text", fontSize = textSize.sp)
-                DefText(
+                Text("$text", fontSize = textSize.sp)
+                Text(
                         if(types[0] == 3) " > "
                         else if(types[0] == 1) " ≥ "
                         else if(types[0] == 2 || types[0] == 4 ||types[0] == 6) " < " 
@@ -433,7 +500,7 @@ fun HeaderCell(o:JSONObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                     textStyle = TextStyle(fontSize = textSize.sp),
                 )
             } else if(tag.type == Tag.Type.STRING) {
-                DefText("$text: ", fontSize = textSize.sp)
+                Text("$text: ", fontSize = textSize.sp)
                 TextField(
                     value = "$value",
                     onValueChange = { onValueChange(it) },
@@ -441,7 +508,7 @@ fun HeaderCell(o:JSONObject, tag: Tag, value: Any, value2: Any, onValueChange: (
                     modifier = Modifier.width(100.dp),
                 )
             } else {
-                DefText("Unknown Type", fontSize = textSize.sp)
+                Text("Unknown Type", fontSize = textSize.sp)
             }
             
         } else { // sorter
@@ -488,11 +555,16 @@ fun getDefaultFilterOptions(): JSONArray {
             put(JSONObject().apply {
                 put("filter", true)
                 put("tag", Song._RATING)
-                put("type", listOf(0,5,0))
+                put("type", JSONArray(listOf(0,0,5)))
                 put("text", "Rating")
             })
         })
         put(JSONArray().apply {
+            put(JSONObject().apply {
+                put("filter", false)
+                put("tag", Song._TPM)
+                put("text", "Duration")
+            })
             put(JSONObject().apply {
                 put("filter", false)
                 put("tag", Song._DURATION)
@@ -506,6 +578,7 @@ fun getDefaultFilterOptions(): JSONArray {
         })
     }
 }
+
 
 /*
     Integer:

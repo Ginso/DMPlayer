@@ -42,6 +42,7 @@ import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.ui.subpages.settings.CustomTagsPage
 import com.example.danceplayer.ui.subpages.settings.FilterPage
+import com.example.danceplayer.ui.subpages.settings.ItemLayoutsPage
 import com.example.danceplayer.ui.subpages.settings.ParseTagsPage
 import com.example.danceplayer.ui.subpages.settings.TagFilePage
 import com.example.danceplayer.util.SimpleDropDown
@@ -57,9 +58,9 @@ fun SettingsRow(label: String, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .padding(bottom = 16.dp)
     ) {
-        Text(label, color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
+        Text(label, fontSize = 20.sp)
         Spacer(Modifier.weight(1f))
-        Text("›", color = MaterialTheme.colorScheme.onBackground, fontSize = 26.sp)
+        Text("›", fontSize = 26.sp)
     }
 }
 
@@ -138,9 +139,9 @@ fun SettingsPage() {
 
 
             ) {
-                Text("Profile:", color = MaterialTheme.colorScheme.onBackground)
+                Text("Profile:")
                 SimpleDropDown(
-                    options = profileKeys.value,
+                    options = profileKeys.value.map { it.substringAfter("profile_") },
                     selectedOption = selectedProfile.value,
                     onOptionSelected = { profileKey ->
                         selectedProfile.value = profileKey
@@ -170,7 +171,7 @@ fun SettingsPage() {
                         .weight(1f)
                         .padding(end = 8.dp)
                 ) {
-                    Text("Rename", color = MaterialTheme.colorScheme.onBackground)
+                    Text("Rename")
                 }
 
                 Button(
@@ -182,7 +183,7 @@ fun SettingsPage() {
                     },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("New Profile", color = MaterialTheme.colorScheme.onBackground)
+                    Text("New Profile")
                 }
             }
             Row(
@@ -192,7 +193,6 @@ fun SettingsPage() {
                     .padding(bottom = 16.dp)
             ) {
                 Text("Music Folder: ${folder.value}",
-                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.weight(1f),
                     softWrap = true
                 )
@@ -200,7 +200,7 @@ fun SettingsPage() {
                     onClick = {
                         treeLauncher.launch(null)
                     }
-                ) { Text("change", color = MaterialTheme.colorScheme.onBackground) }
+                ) { Text("change") }
             }
             
             Row(
@@ -210,7 +210,7 @@ fun SettingsPage() {
                     .clickable(onClick = toggleShowOnLock)
                     .padding(bottom = 16.dp)
             ) {
-                Text("Show on Lock Screen", color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
+                Text("Show on Lock Screen", fontSize = 20.sp)
                 Spacer(Modifier.weight(1f))
                 Switch(
                     checked = showOnLock.value,
@@ -224,7 +224,7 @@ fun SettingsPage() {
                     .clickable(onClick = toggleKeepScreenOn)
                     .padding(bottom = 16.dp)
             ) {
-                Text("Keep Screen On", color = MaterialTheme.colorScheme.onBackground, fontSize = 20.sp)
+                Text("Keep Screen On", fontSize = 20.sp)
                 Spacer(Modifier.weight(1f))
                 Switch(
                     checked = keepScreenOn.value,
@@ -235,6 +235,7 @@ fun SettingsPage() {
             SettingsRow(label = "Import/Export Tag Info") { subPage.value = 2 }
             SettingsRow(label = "Fill Tags from File Name/Path") { subPage.value = 3 }
             SettingsRow(label = "Configure Filter and Sort Options") { subPage.value = 4 }
+            SettingsRow(label = "Configure Layout of Song Items") { subPage.value = 5 }
         }
 
 
@@ -283,6 +284,7 @@ fun SettingsPage() {
     if(subPage.value == 2) TagFilePage { subPage.value = 0 }
     if(subPage.value == 3) ParseTagsPage { subPage.value = 0 }
     if(subPage.value == 4) FilterPage { subPage.value = 0 }
+    if(subPage.value == 5) ItemLayoutsPage { subPage.value = 0 }
 
 
 }

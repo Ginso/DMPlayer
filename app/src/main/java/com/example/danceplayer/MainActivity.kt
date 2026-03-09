@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         setContent {
-            DancePlayerTheme {
+            DancePlayerTheme() {
                 MainScreen()
             }
         }

@@ -1,24 +1,19 @@
 package com.example.danceplayer.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.graphics.Color
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
+    primary = Color.Blue,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Pink80,
+    onPrimary = Color.White,
+
+
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -41,15 +36,9 @@ private val LightColorScheme = lightColorScheme(
 fun DancePlayerTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
@@ -58,19 +47,5 @@ fun DancePlayerTheme(
         colorScheme = colorScheme,
         typography = Typography,
         content = content
-    )
-}
-
-@Composable
-fun DefText(
-    text: String,
-    modifier: Modifier = Modifier,
-    fontSize: TextUnit = LocalTextStyle.current.fontSize
-) {
-    Text(
-        text = text,
-        color = MaterialTheme.colorScheme.onBackground,
-        modifier = modifier,
-        fontSize = fontSize
     )
 }

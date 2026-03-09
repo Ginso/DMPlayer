@@ -46,10 +46,10 @@ fun TagFilePage(onBack: () -> Unit) {
 
     Fragment("Import/Export Tag Info", onBack) {
     
-        Text("The tags that you defined and the values for every song are being stored in a file. Here you can set the location of that file(to export it) or choose an existing file to import.", color = MaterialTheme.colorScheme.onBackground)
+        Text("The tags that you defined and the values for every song are being stored in a file. Here you can set the location of that file(to export it) or choose an existing file to import.")
         HorizontalDivider()
         Text("Export", style = MaterialTheme.typography.titleLarge)
-        Text("Specify the location where the file should be saved at. This file will be used from then on.", color = MaterialTheme.colorScheme.onBackground)
+        Text("Specify the location where the file should be saved at. This file will be used from then on.")
         // launcher for creating or choosing a file location
         val context = LocalContext.current
         val exportLauncher = rememberLauncherForActivityResult(

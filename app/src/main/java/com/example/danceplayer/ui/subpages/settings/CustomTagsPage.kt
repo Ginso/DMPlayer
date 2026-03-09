@@ -23,7 +23,7 @@ import com.example.danceplayer.ui.Fragment
 fun CustomTagsPage(onBack: () -> Unit) {
 
     Fragment("Custom Tags", onBack) {
-        Text("Here you can define your custom tags", color = MaterialTheme.colorScheme.onBackground)
+        Text("Here you can define your custom tags")
         HorizontalDivider()
         Text("Predefined Tags", style = MaterialTheme.typography.titleLarge)
         Column {
@@ -60,7 +60,7 @@ fun CustomTagsPage(onBack: () -> Unit) {
                 Cell("Number", 1f)
             }
         }
-        Text("TODO These tags are...", color = MaterialTheme.colorScheme.onBackground)
+        Text("TODO These tags are...")
         HorizontalDivider()
         Text("Custom Tags", style = MaterialTheme.typography.titleMedium)
 
@@ -79,6 +79,6 @@ fun RowScope.Cell(
             .border(1.dp, MaterialTheme.colorScheme.onBackground)
             .padding(8.dp)
     ) {
-        Text(text, color = MaterialTheme.colorScheme.onBackground)
+        Text(text)
     }
 }
