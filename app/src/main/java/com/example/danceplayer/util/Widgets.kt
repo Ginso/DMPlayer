@@ -249,15 +249,6 @@ private fun TagWidget(song: Song, layout:JSONObject) {
 @Composable
 private fun Container(type: Int, alignment: Int, modifier: Modifier, content: @Composable () -> Unit) {
     return when(type) {
-        ElementType.ROW -> Row(
-            modifier = modifier,
-            verticalAlignment = when(alignment) {
-                0 -> Alignment.Start
-                1 -> Alignment.Center
-                2 -> Alignment.End
-                else -> Alignment.Center
-            } as Alignment.Vertical
-        ) { content() }
         ElementType.COLUMN -> Column(
             modifier = modifier,
             horizontalAlignment = when(alignment) {
@@ -267,6 +258,14 @@ private fun Container(type: Int, alignment: Int, modifier: Modifier, content: @C
                 else -> Alignment.Start
             } as Alignment.Horizontal
         ) { content() }
-        else -> Box()  { content() }
+        else -> Row(
+            modifier = modifier,
+            verticalAlignment = when(alignment) {
+                0 -> Alignment.Start
+                1 -> Alignment.Center
+                2 -> Alignment.End
+                else -> Alignment.Center
+            } as Alignment.Vertical
+        ) { content() }
     }
 }
