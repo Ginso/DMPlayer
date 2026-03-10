@@ -3,6 +3,13 @@ package com.example.danceplayer.util
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,13 +31,24 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.danceplayer.model.Song
+import com.example.danceplayer.model.Tag
+import com.example.danceplayer.ui.subpages.settings.ElementType
+import com.google.common.base.Strings.padEnd
+import org.json.JSONObject
 
 @Composable
 fun SimpleDropDown(
@@ -131,7 +149,7 @@ fun MyTextField(
 }
 
 @Composable
-fun SongItem(song: Song, layout:JSONObject, modifier: Modifier = Modifier) {
+fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .background(MaterialTheme.colorScheme.surfaceVariant)
@@ -149,10 +167,9 @@ fun SongItem(song: Song, layout:JSONObject, modifier: Modifier = Modifier) {
 
 @Composable
 private fun SongItemInner(song: Song, layout:JSONObject, modifier: Modifier = Modifier) {
-    var type = layout.getInt("type")
-    var items = layout.getJSONArray("items")
+    val type = layout.getInt("type")
+    val items = layout.getJSONArray("items")
     Container(type,
-        layout.optInt("arrangement", 0),
         layout.optInt("alignment", 1-type),
         modifier) {
         for(i in 0..items.length()-1) {
@@ -192,9 +209,10 @@ private fun TagWidget(song: Song, layout:JSONObject) {
         val textSize = layout.optInt("textSize", 16)
         val textStyle = TextStyle(
             color = if(layout.optBoolean("gray", false)) Color.Gray else MaterialTheme.colorScheme.onSurfaceVariant,
-            weight = if(layout.optBoolean("bold", false)) FontWeight.Bold else FontWeight.Normal,
-            italic = layout.optBoolean("italic", false),
-            underline = layout.optBoolean("underline", false),
+
+            fontWeight = if(layout.optBoolean("bold", false)) FontWeight.Bold else FontWeight.Normal,
+            fontStyle = if(layout.optBoolean("italic", false)) FontStyle.Italic else null,
+            textDecoration = if(layout.optBoolean("underline", false)) TextDecoration.Underline else null,
             fontSize = textSize.sp
         )
         if(tag.type == Tag.Type.BOOL) {
@@ -207,14 +225,14 @@ private fun TagWidget(song: Song, layout:JSONObject) {
             val intVal = value as Int
             when(layout.optInt("display", 2)) {
                 0 -> {
-                    var text = padEnd(text, intVal, '★')
+                    var text = padEnd("", intVal, '★')
                     text = padEnd(text, maxValue, '☆')
                     //for(i in 1..intVal) text += "★"
                     //for(i in intVal+1..maxValue) text += "☆"
                     Text(text, style = textStyle)
                 }
                 1 -> {
-                    var text = padEnd(text, intVal, '♫')
+                    var text = padEnd("", intVal, '♫')
                     Text(text, style = textStyle.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
                     text = padEnd(text, maxValue - intVal, '♫')
                     Text(text, style = textStyle.copy(color = Color.Gray))
@@ -229,28 +247,26 @@ private fun TagWidget(song: Song, layout:JSONObject) {
 }
 
 @Composable
-private fun Container(type: Int, alignment: Int): @Composable (Modifier, @Composable () -> Unit) -> Unit {
+private fun Container(type: Int, alignment: Int, modifier: Modifier, content: @Composable () -> Unit) {
     return when(type) {
-        ElementType.ROW -> { m, c -> Row(
-            modifier = Modifier,
+        ElementType.ROW -> Row(
+            modifier = modifier,
             verticalAlignment = when(alignment) {
                 0 -> Alignment.Start
                 1 -> Alignment.Center
                 2 -> Alignment.End
-                else -> null
-            }, 
-            content = c
-        )}
-        ElementType.COLUMN -> { m, c -> Column(
-            modifier = Modifier,
+                else -> Alignment.Center
+            } as Alignment.Vertical
+        ) { content() }
+        ElementType.COLUMN -> Column(
+            modifier = modifier,
             horizontalAlignment = when(alignment) {
                 0 -> Alignment.Start
                 1 -> Alignment.Center
                 2 -> Alignment.End
-                else -> null
-            }, 
-            content = c
-        )}
-        else -> { m, c -> Box(modifier = m, content = c) }
+                else -> Alignment.Start
+            } as Alignment.Horizontal
+        ) { content() }
+        else -> Box()  { content() }
     }
 }

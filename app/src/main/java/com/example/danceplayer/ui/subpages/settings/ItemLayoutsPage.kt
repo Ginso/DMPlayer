@@ -13,10 +13,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -27,12 +30,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.danceplayer.model.Song
+import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.Fragment
 import com.example.danceplayer.util.MusicLibrary
+import com.example.danceplayer.util.MyTextField
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.SimpleDropDown
+import com.example.danceplayer.util.SongItem
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -132,7 +141,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                         }
                     }
                     if (type == ElementType.TAG) {
-                        val tagName = currentObject.getInt("tag")
+                        val tagName = currentObject.getString("tag")
                         val tag = MusicLibrary.getAllTagsMap()[tagName]
                         Row {
                             Text("Tag: ")
@@ -146,14 +155,18 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                 }
                             )
                         }
+                        if(tag == null) {
+                            Text("INVALID TAG")
+                            return@Box
+                        }
                         
                         if(tag.type == Tag.Type.BOOL) {
                             Row { // trueText
                                 Text("Text when true")
                                 MyTextField(
-                                    text = currentObject.optString("trueText", ""),
+                                    value = currentObject.optString("trueText", ""),
                                     modifier = Modifier.weight(1f),
-                                    onTextChange = { trueText ->
+                                    onValueChange = { trueText ->
                                         currentObject.put("trueText", trueText)
                                         currentPath.value = currentPath.value.toList()
                                     }
@@ -162,9 +175,9 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                             Row { // falseText
                                 Text("Text when false")
                                 MyTextField(
-                                    text = currentObject.optString("falseText", ""),
+                                    value = currentObject.optString("falseText", ""),
                                     modifier = Modifier.weight(1f),
-                                    onTextChange = { falseText ->
+                                    onValueChange = { falseText ->
                                         currentObject.put("falseText", falseText)
                                         currentPath.value = currentPath.value.toList()
                                     }
@@ -174,9 +187,9 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                             Row { // prefix
                                 Text("Text before: ")
                                 MyTextField(
-                                    text = currentObject.optString("prefix", ""),
+                                    value = currentObject.optString("prefix", ""),
                                     modifier = Modifier.weight(1f),
-                                    onTextChange = { prefix ->
+                                    onValueChange = { prefix ->
                                         currentObject.put("prefix", prefix)
                                         currentPath.value = currentPath.value.toList()
                                     }
@@ -185,9 +198,9 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                             Row { // suffix
                                 Text("Text after: ")
                                 MyTextField(
-                                    text = currentObject.optString("suffix", ""),
+                                    value = currentObject.optString("suffix", ""),
                                     modifier = Modifier.weight(1f),
-                                    onTextChange = { suffix ->
+                                    onValueChange = { suffix ->
                                         currentObject.put("suffix", suffix)
                                         currentPath.value = currentPath.value.toList()
                                     }
