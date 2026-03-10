@@ -2,6 +2,7 @@ package com.example.danceplayer.util
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -85,7 +87,6 @@ private fun SimpleDropDownImpl(
             onClick = { expanded = true },
 
             modifier = Modifier
-                .fillMaxWidth()
                 .onGloballyPositioned { coordinates ->
                     buttonWidth = coordinates.size.width
                 },
@@ -152,10 +153,11 @@ fun MyTextField(
 fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .background(MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(16.dp))
+
     ) {
         Row(
-            modifier = Modifier.padding(all=4.dp),
+            modifier = Modifier.padding(all=8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             SongItemInner(song, layout, Modifier.weight(1f))
@@ -171,20 +173,21 @@ private fun SongItemInner(song: Song, layout:JSONObject, modifier: Modifier = Mo
     val items = layout.getJSONArray("items")
     Container(type,
         layout.optInt("alignment", 1-type),
-        modifier) {
+        layout.optInt("space", 8),
+        modifier) { weight ->
         for(i in 0..items.length()-1) {
             val item = items.getJSONObject(i)
             when(item.getInt("type")) {
-                ElementType.TAG -> Text(song.getTitle(), modifier = Modifier.weight(1f))
+                ElementType.TAG -> TagWidget(song, item)
                 ElementType.SPACE -> {
                     val size = item.getInt("size")
-                    val modifier = if(size == 0) Modifier.weight(1f) else if(type == ElementType.ROW) Modifier.width(size.dp) else Modifier.height(size.dp)
+                    val modifier = if(size == 0) weight(Modifier) else if(type == ElementType.ROW) Modifier.width(size.dp) else Modifier.height(size.dp)
                     Spacer(modifier = modifier)
                 }
                 else -> {
-                    var modifier = Modifier
-                    if(item.optInt("width", 0) == 1) modifier = if(type == ElementType.ROW) modifier.weight(1f) else modifier.fillMaxWidth()
-                    if(item.optInt("height", 0) == 1) modifier = if(type == ElementType.ROW) modifier.fillMaxHeight() else modifier.weight(1f)
+                    var modifier: Modifier = Modifier
+                    if(item.optInt("width", 0) == 1) modifier = if(type == ElementType.ROW) weight(modifier) else modifier.fillMaxWidth()
+                    if(item.optInt("height", 0) == 1) modifier = if(type == ElementType.ROW) modifier.fillMaxHeight() else weight(modifier)
 
                     SongItemInner(song, item, modifier)
                 }
@@ -234,7 +237,7 @@ private fun TagWidget(song: Song, layout:JSONObject) {
                 1 -> {
                     var text = padEnd("", intVal, '♫')
                     Text(text, style = textStyle.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
-                    text = padEnd(text, maxValue - intVal, '♫')
+                    text = padEnd("", maxValue - intVal, '♫')
                     Text(text, style = textStyle.copy(color = Color.Gray))
                 }
                 else -> Text(intVal.toString(), style = textStyle)
@@ -247,25 +250,38 @@ private fun TagWidget(song: Song, layout:JSONObject) {
 }
 
 @Composable
-private fun Container(type: Int, alignment: Int, modifier: Modifier, content: @Composable () -> Unit) {
-    return when(type) {
+private fun Container(
+    type: Int,
+    alignment: Int,
+    space: Int,
+    modifier: Modifier = Modifier,
+    content: @Composable ((Modifier) -> Modifier) -> Unit
+) {
+    when (type) {
         ElementType.COLUMN -> Column(
             modifier = modifier,
-            horizontalAlignment = when(alignment) {
+            verticalArrangement = Arrangement.spacedBy(space.dp),
+            horizontalAlignment = when (alignment) {
                 0 -> Alignment.Start
-                1 -> Alignment.Center
+                1 -> Alignment.CenterHorizontally
                 2 -> Alignment.End
                 else -> Alignment.Start
-            } as Alignment.Horizontal
-        ) { content() }
+            }
+        ) {
+            content { it.weight(1f) }
+        }
+
         else -> Row(
             modifier = modifier,
-            verticalAlignment = when(alignment) {
-                0 -> Alignment.Start
-                1 -> Alignment.Center
-                2 -> Alignment.End
-                else -> Alignment.Center
-            } as Alignment.Vertical
-        ) { content() }
+            horizontalArrangement = Arrangement.spacedBy(space.dp),
+            verticalAlignment = when (alignment) {
+                0 -> Alignment.Top
+                1 -> Alignment.CenterVertically
+                2 -> Alignment.Bottom
+                else -> Alignment.CenterVertically
+            }
+        ) {
+            content { it.weight(1f) }
+        }
     }
 }

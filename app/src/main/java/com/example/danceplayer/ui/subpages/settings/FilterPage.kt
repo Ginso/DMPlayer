@@ -225,7 +225,7 @@ fun FilterPage(onBack: () -> Unit) {
                                         o.put("tag", tn)
                                         filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
                                     },
-                                    modifier = Modifier.fillMaxWidth()
+                                    Modifier.weight(1f)
                                 )
                             } // tag
                             Row(verticalAlignment = Alignment.CenterVertically) { // text size
@@ -329,6 +329,7 @@ fun FilterPage(onBack: () -> Unit) {
                                                 o.put("type", listOf(type.getInt(0),option,type.getInt(2)))
                                                 filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
                                             },
+                                            Modifier.weight(1f)
                                         )
                                     }
                                 } else if(tag.type == Tag.Type.FLOAT || tag.type == Tag.Type.DATETIME) {
@@ -349,6 +350,7 @@ fun FilterPage(onBack: () -> Unit) {
                                             o.put("type", listOf(option))
                                             filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
                                         },
+                                        Modifier.weight(1f)
                                     )
                                 }
                             }

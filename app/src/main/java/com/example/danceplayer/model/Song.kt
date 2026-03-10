@@ -1,5 +1,6 @@
 package com.example.danceplayer.model
 
+import DateTimeUtil.formatDuration
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import androidx.annotation.OptIn
@@ -7,6 +8,8 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
 import kotlin.collections.iterator
 
 data class Song(
@@ -81,7 +84,7 @@ data class Song(
     fun getTagValue(tag:Tag): Any {
         when(tag.name) {
             _TITLE -> return getTitle()
-            _DURATION -> return getDuration()
+            _DURATION -> return formatDuration(getDuration())
             else -> {
                 if(tag.type == Tag.Type.DATETIME) {
                     val timestamp = tags[tag.name] as? Long ?: 0L
@@ -95,7 +98,7 @@ data class Song(
                         "mm:ss" //6
                     )
                     val format = formats[tag.arg]
-                    return java.text.SimpleDateFormat(format).format(java.util.Date(timestamp))
+                    return SimpleDateFormat(format).format(Date(timestamp))
                 } else {
                     return tags[tag.name] ?: ""
                 }

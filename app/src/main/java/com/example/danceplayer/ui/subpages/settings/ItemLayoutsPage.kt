@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
@@ -47,12 +49,21 @@ import org.json.JSONObject
 
 @Composable
 fun ItemLayoutsPage(onBack: () -> Unit) {
+    val profile = PreferenceUtil.getCurrentProfile()
     val currentType = remember { mutableIntStateOf(0) }
-    val layoutBrowser = remember { mutableStateOf(PreferenceUtil.getCurrentProfile().itemLayoutBrowser) }
-    val layoutPlaylists = remember { mutableStateOf(PreferenceUtil.getCurrentProfile().itemLayoutPlaylists) }
-    val layoutQueue = remember { mutableStateOf(PreferenceUtil.getCurrentProfile().itemLayoutQueue) }
-    val layoutQueueParty = remember { mutableStateOf(PreferenceUtil.getCurrentProfile().itemLayoutQueueParty) }
+    val copyType = remember { mutableIntStateOf(0) }
+    val layoutBrowser = remember { mutableStateOf(profile.itemLayoutBrowser) }
+    val layoutPlaylists = remember { mutableStateOf(profile.itemLayoutPlaylists) }
+    val layoutQueue = remember { mutableStateOf(profile.itemLayoutQueue) }
+    val layoutQueueParty = remember { mutableStateOf(profile.itemLayoutQueueParty) }
     val sample = remember { mutableStateOf(MusicLibrary.songs.shuffled().take(10)) }
+
+    val changed = listOf(
+        profile.itemLayoutBrowser.toString() != layoutBrowser.value.toString(),
+        profile.itemLayoutPlaylists.toString() != layoutPlaylists.value.toString(),
+        profile.itemLayoutQueue.toString() != layoutQueue.value.toString(),
+        profile.itemLayoutQueueParty.toString() != layoutQueueParty.value.toString(),
+    )
 
     val currentLayout = when(currentType.intValue) {
         0 -> layoutBrowser
@@ -74,15 +85,71 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
         HorizontalDivider()
         SimpleDropDown(listOf("Dance Browser", "Playlists", "Player Queue", "Player Queue Party"),
             currentType.intValue,
-            {n -> currentType.intValue=n})
+            {n -> currentType.intValue=n},
+            Modifier.fillMaxWidth())
         if(currentType.intValue == 3) {
             Text("The Queue Party layout is used for the current song when you enable the Queue Party mode in the queue view. For example you can use it to show the current dance big enough to read from a distance.")
         }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Copy From")
+            SimpleDropDown(listOf("Dance Browser", "Playlists", "Player Queue", "Player Queue Party"),
+                copyType.intValue,
+                {n -> copyType.intValue=n},
+                Modifier.padding(start=8.dp).weight(1f)
+            )
+            Button(
+                onClick = {
+                    val origin = when(copyType.intValue) {
+                        0 -> layoutBrowser
+                        1 -> layoutPlaylists
+                        2 -> layoutQueue
+                        3 -> layoutQueueParty
+                        else -> layoutBrowser
+                    }
+                    currentLayout.value = JSONObject(origin.toString())
+                },
+                enabled = currentType.intValue != copyType.intValue
+            ) {
+                Text("Copy")
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Button(
+                onClick = {
+                    val profile = PreferenceUtil.getCurrentProfile()
+                    when(currentType.intValue) {
+                        0 -> profile.itemLayoutBrowser = currentLayout.value
+                        1 -> profile.itemLayoutPlaylists = currentLayout.value
+                        2 -> profile.itemLayoutQueue = currentLayout.value
+                        else -> profile.itemLayoutQueueParty = currentLayout.value
+                    }
+                    PreferenceUtil.saveProfile()
+                },
+                enabled = changed[currentType.intValue]
+            ) {
+                Text("Save")
+            }
+
+            Button(
+                onClick = {
+                    val profile = PreferenceUtil.getCurrentProfile()
+                    profile.itemLayoutBrowser = layoutBrowser.value
+                    profile.itemLayoutPlaylists = layoutPlaylists.value
+                    profile.itemLayoutQueue = layoutQueue.value
+                    profile.itemLayoutQueueParty = layoutQueueParty.value
+                    PreferenceUtil.saveProfile()
+                },
+                enabled = changed.any { it }
+            ) {
+                Text("Save all")
+            }
+        }
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min)
         ) {
             Box(
                 modifier = Modifier
+                    .fillMaxHeight()
                     .border(1.dp, MaterialTheme.colorScheme.outline)
 
             ) {
@@ -97,6 +164,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
             Box(
                 modifier = Modifier
                     .weight(1f)
+                    .fillMaxHeight()
                     .border(1.dp, MaterialTheme.colorScheme.outline)
 
             ) {
@@ -104,7 +172,8 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                 val type = currentObject.getInt("type")
                 Column(
                     modifier = Modifier
-                        .padding(all = 8.dp)
+                        .padding(all = 8.dp),
+                    Arrangement.spacedBy(4.dp)
                 ) {
                     if(parentObject != null) { // not root object
                         Row { // Buttons
@@ -143,7 +212,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                     if (type == ElementType.TAG) {
                         val tagName = currentObject.getString("tag")
                         val tag = MusicLibrary.getAllTagsMap()[tagName]
-                        Row {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Tag: ")
                             val tags = MusicLibrary.getAllTags().map { it.name } + Song._PLAYING_AFTER
                             SimpleDropDown(
@@ -151,8 +220,9 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                 selectedOption = tagName,
                                 onOptionSelected = { tag ->
                                     currentObject.put("tag", tag)
-                                    currentPath.value = currentPath.value.toList()
-                                }
+                                    currentLayout.value = JSONObject(currentLayout.value.toString())
+                                },
+                                Modifier.weight(1f)
                             )
                         }
                         if(tag == null) {
@@ -168,7 +238,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                     modifier = Modifier.weight(1f),
                                     onValueChange = { trueText ->
                                         currentObject.put("trueText", trueText)
-                                        currentPath.value = currentPath.value.toList()
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
                                     }
                                 )
                             } // trueText
@@ -179,7 +249,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                     modifier = Modifier.weight(1f),
                                     onValueChange = { falseText ->
                                         currentObject.put("falseText", falseText)
-                                        currentPath.value = currentPath.value.toList()
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
                                     }
                                 )
                             } // falseText
@@ -191,7 +261,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                     modifier = Modifier.weight(1f),
                                     onValueChange = { prefix ->
                                         currentObject.put("prefix", prefix)
-                                        currentPath.value = currentPath.value.toList()
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
                                     }
                                 )
                             } // prefix
@@ -202,21 +272,21 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                     modifier = Modifier.weight(1f),
                                     onValueChange = { suffix ->
                                         currentObject.put("suffix", suffix)
-                                        currentPath.value = currentPath.value.toList()
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
                                     }
                                 )
                             } // suffix
                         }
 
                         if(tag.type == Tag.Type.INT) {
-                            Row { // display
+                            Row(verticalAlignment = Alignment.CenterVertically) { // display
                                 Text("Display type: ")
                                 SimpleDropDown(
                                     options = listOf("★★☆", "♫♫♫", "123"),
                                     selectedOption = currentObject.optInt("display", 2),
                                     onOptionSelected = { option ->
                                         currentObject.put("display", option)
-                                        currentPath.value = currentPath.value.toList()
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
                                     },
                                     modifier = Modifier.weight(1f)
                                 )
@@ -224,26 +294,28 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                             } // display
 
                             if(currentObject.optInt("display", 2) < 2) {
-                                Text("Max Value: ")
-                                MyTextField(
-                                    value = "${currentObject.optInt("maxValue", 5)}",
-                                    onValueChange = {
-                                        val intValue = it.toIntOrNull() ?: return@MyTextField
-                                        currentObject.put("maxValue", intValue)
-                                        currentPath.value = currentPath.value.toList()
-                                    },
-                                    modifier = Modifier
-                                        .width(40.dp),
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = KeyboardType.Number
-                                    ),
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Max Value: ")
+                                    MyTextField(
+                                        value = "${currentObject.optInt("maxValue", 5)}",
+                                        onValueChange = {
+                                            val intValue = it.toIntOrNull() ?: return@MyTextField
+                                            currentObject.put("maxValue", intValue)
+                                            currentLayout.value = JSONObject(currentLayout.value.toString())
+                                        },
+                                        modifier = Modifier
+                                            .width(40.dp),
+                                        keyboardOptions = KeyboardOptions(
+                                            keyboardType = KeyboardType.Number
+                                        ),
 
 
-                                )
+                                    )
+                                }
                             }
                         }
                         
-                        Row { // textSize
+                        Row(verticalAlignment = Alignment.CenterVertically) { // textSize
                             Text("Text size: ")
                             Text("-",
                                 style = TextStyle(fontSize = 32.sp),
@@ -252,7 +324,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                     .clickable {
                                         val currentSize = currentObject.optInt("textSize", 16)
                                         currentObject.put("textSize", if(currentSize <= 4) 4 else currentSize - 1)
-                                        currentPath.value = currentPath.value.toList()
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
                                     }
                             )
                             Text("${currentObject.optInt("textSize", 16)}",
@@ -264,70 +336,70 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                     .clickable {
                                         val currentSize = currentObject.optInt("textSize", 16)
                                         currentObject.put("textSize", if(currentSize >= 72) 72 else currentSize + 1)
-                                        currentPath.value = currentPath.value.toList()
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
                                     }
                             )
                         } // textSize
 
                         if(tag.type != Tag.Type.INT || currentObject.optInt("display", 2) != 1) {
-                            Row { // gray
+                            Row(verticalAlignment = Alignment.CenterVertically) { // gray
                                 Switch(
                                     checked = currentObject.optBoolean("gray", false),
                                     onCheckedChange = { isChecked ->
                                         currentObject.put("gray", isChecked)
-                                        currentPath.value = currentPath.value.toList()
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
                                     }
                                 )
-                                Text("Gray")
+                                Text("Gray", Modifier.padding(start=8.dp))
                             } // gray
                         }
 
-                        Row { // bold
+                        Row(verticalAlignment = Alignment.CenterVertically) { // bold
                             Switch(
                                 checked = currentObject.optBoolean("bold", false),
                                 onCheckedChange = { isChecked ->
                                     currentObject.put("bold", isChecked)
-                                    currentPath.value = currentPath.value.toList()
+                                    currentLayout.value = JSONObject(currentLayout.value.toString())
                                 }
                             )
-                            Text("Bold")
+                            Text("Bold", Modifier.padding(start=8.dp))
                         } // bold
 
-                        Row { // italic
+                        Row(verticalAlignment = Alignment.CenterVertically) { // italic
                             Switch(
                                 checked = currentObject.optBoolean("italic", false),
                                 onCheckedChange = { isChecked ->
                                     currentObject.put("italic", isChecked)
-                                    currentPath.value = currentPath.value.toList()
+                                    currentLayout.value = JSONObject(currentLayout.value.toString())
                                 }
                             )
-                            Text("Italic")
+                            Text("Italic", Modifier.padding(start=8.dp))
                         } // italic
 
-                        Row { // underline
+                        Row(verticalAlignment = Alignment.CenterVertically) { // underline
                             Switch(
                                 checked = currentObject.optBoolean("underline", false),
                                 onCheckedChange = { isChecked ->
                                     currentObject.put("underline", isChecked)
-                                    currentPath.value = currentPath.value.toList()
+                                    currentLayout.value = JSONObject(currentLayout.value.toString())
                                 }
                             )
-                            Text("Underline")
+                            Text("Underline", Modifier.padding(start=8.dp))
                         } // underline
                     } else if(type == ElementType.SPACE) {
                         val size = currentObject.getInt("size")
-                        Row {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Switch(
                                 checked = size == 0,
                                 onCheckedChange = { isChecked ->
                                     currentObject.put("size", if(isChecked) 0 else 16)
-                                    currentPath.value = currentPath.value.toList()
+                                    currentLayout.value = JSONObject(currentLayout.value.toString())
                                 }
                             )
-                            Text("Fill remaining space")
+                            Text("Fill remaining space", Modifier.padding(start=8.dp))
                         }
                         if(size != 0) {
-                            Row {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Size: ")
                                 Text("-",
                                     style = TextStyle(fontSize = 32.sp),
@@ -336,7 +408,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                         .clickable {
                                             val currentSize = currentObject.optInt("size", 16)
                                             currentObject.put("size", if(currentSize <= 4) 4 else currentSize - 1)
-                                            currentPath.value = currentPath.value.toList()
+                                            currentLayout.value = JSONObject(currentLayout.value.toString())
                                         }
                                 )
                                 Text("${currentObject.optInt("size", 16)}",
@@ -348,67 +420,100 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                         .clickable {
                                             val currentSize = currentObject.optInt("size", 16)
                                             currentObject.put("size", if(currentSize >= 99) 99 else currentSize + 1)
-                                            currentPath.value = currentPath.value.toList()
+                                            currentLayout.value = JSONObject(currentLayout.value.toString())
                                         }
                                 )
                             }
                         }
                     } else {
-                        Row {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Direction: ")
                             SimpleDropDown(
                                 options = listOf("Row", "Column"),
                                 selectedOption = currentObject.getInt("type"),
                                 onOptionSelected = { t ->
                                     currentObject.put("type", t)
-                                    currentPath.value = currentPath.value.toList()
-                                }
+                                    currentLayout.value = JSONObject(currentLayout.value.toString())
+                                },
+                                Modifier.weight(1f)
                             )
                         }
 
                         if(parentObject != null) {
 
-                            Row {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Width: ")
                                 SimpleDropDown(
                                     options = listOf("Min", "Max"),
                                     selectedOption = currentObject.optInt("width", 0),
                                     onOptionSelected = { t ->
                                         currentObject.put("width", t)
-                                        currentPath.value = currentPath.value.toList()
-                                    }
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
+                                    },
+                                    Modifier.weight(1f)
                                 )
                             }
 
                             
 
-                            Row {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Height: ")
                                 SimpleDropDown(
                                     options = listOf("Min", "Max"),
                                     selectedOption = currentObject.optInt("height", 0),
                                     onOptionSelected = { t ->
                                         currentObject.put("height", t)
-                                        currentPath.value = currentPath.value.toList()
-                                    }
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
+                                    },
+                                    Modifier.weight(1f)
                                 )
                             }
                         }
 
-                        Row {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Item alignment: ")
                             SimpleDropDown(
                                 options = if(type == ElementType.ROW) listOf( "Top", "Center", "Bottom") else listOf("Left", "Center", "Right"),
                                 selectedOption = currentObject.optInt("alignment", 1 - type),
                                 onOptionSelected = { t ->
                                     currentObject.put("alignment", t)
-                                    currentPath.value = currentPath.value.toList()
-                                }
+                                    currentLayout.value = JSONObject(currentLayout.value.toString())
+                                },
+                                Modifier.weight(1f)
                             )
                         }
 
+                        Row(verticalAlignment = Alignment.CenterVertically) { // textSize
+                            Text("Space: ")
+                            Text("-",
+                                style = TextStyle(fontSize = 32.sp),
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp, horizontal = 8.dp)
+                                    .clickable {
+                                        val currentSize = currentObject.optInt("space", 8)
+                                        currentObject.put("space", if(currentSize <= 0) 0 else currentSize - 1)
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
+                                    }
+                            )
+                            Text("${currentObject.optInt("space", 8)}",
+                                style = TextStyle(fontSize = 20.sp))
+                            Text("+",
+                                style = TextStyle(fontSize = 26.sp),
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp, horizontal = 8.dp)
+                                    .clickable {
+                                        val currentSize = currentObject.optInt("space", 8)
+                                        currentObject.put("space", if(currentSize >= 99) 99 else currentSize + 1)
+                                        currentLayout.value = JSONObject(currentLayout.value.toString())
+                                    }
+                            )
+                        }
 
-                        Row(horizontalArrangement = Arrangement.SpaceEvenly) { // add Buttons
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) { // add Buttons
                             Button(onClick = {
                                 val newItem = JSONObject().apply {
                                     put("type", ElementType.TAG)
