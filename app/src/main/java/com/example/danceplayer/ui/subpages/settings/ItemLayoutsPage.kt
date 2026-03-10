@@ -43,6 +43,8 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
     val layoutPlaylists = remember { mutableStateOf(PreferenceUtil.getCurrentProfile().itemLayoutPlaylists) }
     val layoutQueue = remember { mutableStateOf(PreferenceUtil.getCurrentProfile().itemLayoutQueue) }
     val layoutQueueParty = remember { mutableStateOf(PreferenceUtil.getCurrentProfile().itemLayoutQueueParty) }
+    val sample = remember { mutableStateOf(MusicLibrary.songs.shuffled().take(10)) }
+
     val currentLayout = when(currentType.intValue) {
         0 -> layoutBrowser
         1 -> layoutPlaylists
@@ -90,6 +92,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
 
             ) {
                 val index = if(currentPath.value.isEmpty()) -1 else currentPath.value.last()
+                val type = currentObject.getInt("type")
                 Column(
                     modifier = Modifier
                         .padding(all = 8.dp)
@@ -128,24 +131,270 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                             }
                         }
                     }
-                    if (currentObject.getInt("type") == ElementType.TAG) {
-
+                    if (type == ElementType.TAG) {
+                        val tagName = currentObject.getInt("tag")
+                        val tag = MusicLibrary.getAllTagsMap()[tagName]
                         Row {
                             Text("Tag: ")
                             val tags = MusicLibrary.getAllTags().map { it.name } + Song._PLAYING_AFTER
                             SimpleDropDown(
                                 options = tags,
-                                selectedOption = currentObject.getString("tag"),
+                                selectedOption = tagName,
                                 onOptionSelected = { tag ->
                                     currentObject.put("tag", tag)
-                                    currentPath.value = currentPath.value
+                                    currentPath.value = currentPath.value.toList()
+                                }
+                            )
+                        }
+                        
+                        if(tag.type == Tag.Type.BOOL) {
+                            Row { // trueText
+                                Text("Text when true")
+                                MyTextField(
+                                    text = currentObject.optString("trueText", ""),
+                                    modifier = Modifier.weight(1f),
+                                    onTextChange = { trueText ->
+                                        currentObject.put("trueText", trueText)
+                                        currentPath.value = currentPath.value.toList()
+                                    }
+                                )
+                            } // trueText
+                            Row { // falseText
+                                Text("Text when false")
+                                MyTextField(
+                                    text = currentObject.optString("falseText", ""),
+                                    modifier = Modifier.weight(1f),
+                                    onTextChange = { falseText ->
+                                        currentObject.put("falseText", falseText)
+                                        currentPath.value = currentPath.value.toList()
+                                    }
+                                )
+                            } // falseText
+                        } else {
+                            Row { // prefix
+                                Text("Text before: ")
+                                MyTextField(
+                                    text = currentObject.optString("prefix", ""),
+                                    modifier = Modifier.weight(1f),
+                                    onTextChange = { prefix ->
+                                        currentObject.put("prefix", prefix)
+                                        currentPath.value = currentPath.value.toList()
+                                    }
+                                )
+                            } // prefix
+                            Row { // suffix
+                                Text("Text after: ")
+                                MyTextField(
+                                    text = currentObject.optString("suffix", ""),
+                                    modifier = Modifier.weight(1f),
+                                    onTextChange = { suffix ->
+                                        currentObject.put("suffix", suffix)
+                                        currentPath.value = currentPath.value.toList()
+                                    }
+                                )
+                            } // suffix
+                        }
+
+                        if(tag.type == Tag.Type.INT) {
+                            Row { // display
+                                Text("Display type: ")
+                                SimpleDropDown(
+                                    options = listOf("★★☆", "♫♫♫", "123"),
+                                    selectedOption = currentObject.optInt("display", 2),
+                                    onOptionSelected = { option ->
+                                        currentObject.put("display", option)
+                                        currentPath.value = currentPath.value.toList()
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                            } // display
+
+                            if(currentObject.optInt("display", 2) < 2) {
+                                Text("Max Value: ")
+                                MyTextField(
+                                    value = "${currentObject.optInt("maxValue", 5)}",
+                                    onValueChange = {
+                                        val intValue = it.toIntOrNull() ?: return@MyTextField
+                                        currentObject.put("maxValue", intValue)
+                                        currentPath.value = currentPath.value.toList()
+                                    },
+                                    modifier = Modifier
+                                        .width(40.dp),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Number
+                                    ),
+
+
+                                )
+                            }
+                        }
+                        
+                        Row { // textSize
+                            Text("Text size: ")
+                            Text("-",
+                                style = TextStyle(fontSize = 32.sp),
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp, horizontal = 8.dp)
+                                    .clickable {
+                                        val currentSize = currentObject.optInt("textSize", 16)
+                                        currentObject.put("textSize", if(currentSize <= 4) 4 else currentSize - 1)
+                                        currentPath.value = currentPath.value.toList()
+                                    }
+                            )
+                            Text("${currentObject.optInt("textSize", 16)}",
+                                style = TextStyle(fontSize = 20.sp))
+                            Text("+",
+                                style = TextStyle(fontSize = 26.sp),
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp, horizontal = 8.dp)
+                                    .clickable {
+                                        val currentSize = currentObject.optInt("textSize", 16)
+                                        currentObject.put("textSize", if(currentSize >= 72) 72 else currentSize + 1)
+                                        currentPath.value = currentPath.value.toList()
+                                    }
+                            )
+                        } // textSize
+
+                        if(tag.type != Tag.Type.INT || currentObject.optInt("display", 2) != 1) {
+                            Row { // gray
+                                Switch(
+                                    checked = currentObject.optBoolean("gray", false),
+                                    onCheckedChange = { isChecked ->
+                                        currentObject.put("gray", isChecked)
+                                        currentPath.value = currentPath.value.toList()
+                                    }
+                                )
+                                Text("Gray")
+                            } // gray
+                        }
+
+                        Row { // bold
+                            Switch(
+                                checked = currentObject.optBoolean("bold", false),
+                                onCheckedChange = { isChecked ->
+                                    currentObject.put("bold", isChecked)
+                                    currentPath.value = currentPath.value.toList()
+                                }
+                            )
+                            Text("Bold")
+                        } // bold
+
+                        Row { // italic
+                            Switch(
+                                checked = currentObject.optBoolean("italic", false),
+                                onCheckedChange = { isChecked ->
+                                    currentObject.put("italic", isChecked)
+                                    currentPath.value = currentPath.value.toList()
+                                }
+                            )
+                            Text("Italic")
+                        } // italic
+
+                        Row { // underline
+                            Switch(
+                                checked = currentObject.optBoolean("underline", false),
+                                onCheckedChange = { isChecked ->
+                                    currentObject.put("underline", isChecked)
+                                    currentPath.value = currentPath.value.toList()
+                                }
+                            )
+                            Text("Underline")
+                        } // underline
+                    } else if(type == ElementType.SPACE) {
+                        val size = currentObject.getInt("size")
+                        Row {
+                            Switch(
+                                checked = size == 0,
+                                onCheckedChange = { isChecked ->
+                                    currentObject.put("size", if(isChecked) 0 else 16)
+                                    currentPath.value = currentPath.value.toList()
+                                }
+                            )
+                            Text("Fill remaining space")
+                        }
+                        if(size != 0) {
+                            Row {
+                                Text("Size: ")
+                                Text("-",
+                                    style = TextStyle(fontSize = 32.sp),
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp, horizontal = 8.dp)
+                                        .clickable {
+                                            val currentSize = currentObject.optInt("size", 16)
+                                            currentObject.put("size", if(currentSize <= 4) 4 else currentSize - 1)
+                                            currentPath.value = currentPath.value.toList()
+                                        }
+                                )
+                                Text("${currentObject.optInt("size", 16)}",
+                                    style = TextStyle(fontSize = 20.sp))
+                                Text("+",
+                                    style = TextStyle(fontSize = 26.sp),
+                                    modifier = Modifier
+                                        .padding(vertical = 4.dp, horizontal = 8.dp)
+                                        .clickable {
+                                            val currentSize = currentObject.optInt("size", 16)
+                                            currentObject.put("size", if(currentSize >= 99) 99 else currentSize + 1)
+                                            currentPath.value = currentPath.value.toList()
+                                        }
+                                )
+                            }
+                        }
+                    } else {
+                        Row {
+                            Text("Direction: ")
+                            SimpleDropDown(
+                                options = listOf("Row", "Column"),
+                                selectedOption = currentObject.getInt("type"),
+                                onOptionSelected = { t ->
+                                    currentObject.put("type", t)
+                                    currentPath.value = currentPath.value.toList()
                                 }
                             )
                         }
 
-                        // TODO
+                        if(parentObject != null) {
 
-                    } else {
+                            Row {
+                                Text("Width: ")
+                                SimpleDropDown(
+                                    options = listOf("Min", "Max"),
+                                    selectedOption = currentObject.optInt("width", 0),
+                                    onOptionSelected = { t ->
+                                        currentObject.put("width", t)
+                                        currentPath.value = currentPath.value.toList()
+                                    }
+                                )
+                            }
+
+                            
+
+                            Row {
+                                Text("Height: ")
+                                SimpleDropDown(
+                                    options = listOf("Min", "Max"),
+                                    selectedOption = currentObject.optInt("height", 0),
+                                    onOptionSelected = { t ->
+                                        currentObject.put("height", t)
+                                        currentPath.value = currentPath.value.toList()
+                                    }
+                                )
+                            }
+                        }
+
+                        Row {
+                            Text("Item alignment: ")
+                            SimpleDropDown(
+                                options = if(type == ElementType.ROW) listOf( "Top", "Center", "Bottom") else listOf("Left", "Center", "Right"),
+                                selectedOption = currentObject.optInt("alignment", 1 - type),
+                                onOptionSelected = { t ->
+                                    currentObject.put("alignment", t)
+                                    currentPath.value = currentPath.value.toList()
+                                }
+                            )
+                        }
+
+
                         Row(horizontalArrangement = Arrangement.SpaceEvenly) { // add Buttons
                             Button(onClick = {
                                 val newItem = JSONObject().apply {
@@ -159,6 +408,16 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                             }
                             Button(onClick = {
                                 val newItem = JSONObject().apply {
+                                    put("type", ElementType.SPACE)
+                                    put("size", 0)
+                                }
+                                currentObject.getJSONArray("items").put(index, newItem)
+                                currentPath.value = currentPath.value + index
+                            }) {
+                                Text("+ Space")
+                            }
+                            Button(onClick = {
+                                val newItem = JSONObject().apply {
                                     put("type", ElementType.ROW)
                                     put("items", JSONArray())
                                 }
@@ -168,12 +427,29 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                 Text("+ Container")
                             }
                         }
-
-                        // TODO
                     }
                 }
             }
         }
+
+        HorizontalDivider()
+
+        //preview
+        Row {
+            Text("Preview:", style = MaterialTheme.typography.titleLarge)
+            Text("↻", modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .clickable {
+                    sample.value = MusicLibrary.songs.shuffled().take(10)
+                }
+            )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            for(song in sample.value) {
+                SongItem(song, currentLayout.value, Modifier.fillMaxWidth())
+            }
+        }
+        
 
 
 
@@ -305,6 +581,7 @@ object ElementType {
     const val ROW = 0
     const val COLUMN = 1
     const val TAG = 2
+    const val SPACE = 3
 }
 object DisplayType {
     const val DEFAULT = 0

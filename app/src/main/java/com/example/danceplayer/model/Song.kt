@@ -78,6 +78,31 @@ data class Song(
         return tags[_DANCE] as? String ?: ""
     }
 
+    fun getTagValue(tag:Tag): Any {
+        when(tag.name) {
+            _TITLE -> return getTitle()
+            _DURATION -> return getDuration()
+            else -> {
+                if(tag.type == Tag.Type.DATETIME) {
+                    val timestamp = tags[tag.name] as? Long ?: 0L
+                    val formats = listOf(
+                        "dd.MM.yyyy", //0
+                        "dd.MM.yy", //1
+                        "dd.MM.yyyy hh:mm", //2
+                        "dd.MM.yy hh:mm", //3
+                        "HH:mm", //4
+                        "HH:mm:ss", //5
+                        "mm:ss" //6
+                    )
+                    val format = formats[tag.arg]
+                    return java.text.SimpleDateFormat(format).format(java.util.Date(timestamp))
+                } else {
+                    return tags[tag.name] ?: ""
+                }
+            }
+        }
+    }
+
     fun asJSON(): JSONObject {
         val json = JSONObject()
         for ((key, value) in tags) {

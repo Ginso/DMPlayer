@@ -272,7 +272,7 @@ fun FilterPage(onBack: () -> Unit) {
                                         )
                                         if(type.getInt(0) < 3) { // input
                                                 Text("Max Value:")
-                                            MyTextField(
+                                                MyTextField(
                                                     value = "${type.getInt(2)}",
                                                     onValueChange = {
                                                         val intValue = it.toIntOrNull() ?: return@MyTextField
