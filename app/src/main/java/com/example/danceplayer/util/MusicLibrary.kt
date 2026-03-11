@@ -54,20 +54,17 @@ object MusicLibrary {
     }
 
     fun getAllTags(): List<Tag> {
-        return tags + Tag(Song._DURATION, Tag.Type.DATETIME,6)
+        return tags + Tag(Song._DURATION, Tag.Type.TIME)
     }
 
     fun getAllTagsMap(): Map<String, Tag> {
-        return tagMap + (Song._DURATION to Tag(Song._DURATION, Tag.Type.DATETIME,6))
+        return tagMap + (Song._DURATION to Tag(Song._DURATION, Tag.Type.TIME))
     }
 
     private fun getDefaultInfo() {
-        addTag(Tag(Song._DATE, Tag.Type.DATETIME,2));
         addTag(Tag(Song._TITLE, Tag.Type.STRING));
         addTag(Tag(Song._ARTIST, Tag.Type.STRING));
-        addTag(Tag(Song._ALBUM, Tag.Type.STRING));
         addTag(Tag(Song._DANCE, Tag.Type.STRING));
-        addTag(Tag(Song._YEAR, Tag.Type.INT));
         addTag(Tag(Song._TPM, Tag.Type.FLOAT,1));
     }
 

@@ -13,6 +13,8 @@ data class Tag(
         FLOAT(2),
         BOOL(3),
         DATETIME(4),
+        DATE(5),
+        TIME(6),
         NONE(-1);
 
         companion object {
@@ -25,11 +27,10 @@ data class Tag(
                 INT -> return "Integer"
                 FLOAT -> return "Decimal"
                 BOOL -> return "Yes/No"
-                DATETIME -> {
-                    if (arg < 5) return "Date"
-                    return "Time"
-                }
-                NONE -> return ""
+                DATETIME -> return "Date & Time"
+                DATE -> return "Date"
+                TIME -> return "Time"
+                else -> return ""
             }
         }
 

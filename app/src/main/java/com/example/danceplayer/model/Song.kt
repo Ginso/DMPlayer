@@ -19,10 +19,7 @@ data class Song(
     companion object {
 
         const val _PATH: String = "path"
-        const val _DATE: String = "last_modified"
         const val _TITLE: String = "title"
-        const val _YEAR: String = "year"
-        const val _ALBUM: String = "album"
         const val _ARTIST: String = "artist"
         const val _DANCE: String = "dance"
         const val _RATING: String = "rating"
@@ -47,7 +44,7 @@ data class Song(
                         Tag.Type.INT -> map.put(key, json.getInt(key))
                         Tag.Type.FLOAT -> map.put(key, json.getDouble(key))
                         Tag.Type.BOOL -> map.put(key, json.getBoolean(key))
-                        Tag.Type.DATETIME -> map.put(key, json.getLong(key))
+                        Tag.Type.DATETIME, Tag.Type.DATE, Tag.Type.TIME -> map.put(key, json.getLong(key))
                         else -> {}
                     }
                 } catch (e: Exception) {
@@ -78,7 +75,7 @@ data class Song(
     }
 
     fun getDance(): String {
-        return tags[_DANCE] as? String ?: ""
+        return tags[_DANCE] as? String ?: "<EMPTY_DANCE>"
     }
 
     fun getTagValue(tag:Tag): Any {
@@ -86,21 +83,22 @@ data class Song(
             _TITLE -> return getTitle()
             _DURATION -> return formatDuration(getDuration())
             else -> {
-                if(tag.type == Tag.Type.DATETIME) {
-                    val timestamp = tags[tag.name] as? Long ?: 0L
-                    val formats = listOf(
-                        "dd.MM.yyyy", //0
-                        "dd.MM.yy", //1
-                        "dd.MM.yyyy hh:mm", //2
-                        "dd.MM.yy hh:mm", //3
-                        "HH:mm", //4
-                        "HH:mm:ss", //5
-                        "mm:ss" //6
-                    )
-                    val format = formats[tag.arg]
-                    return SimpleDateFormat(format).format(Date(timestamp))
-                } else {
-                    return tags[tag.name] ?: ""
+                return when (type) {
+                    Tag.Type.DATE -> DateTimeFormatter
+                        .ofLocalizedDate(FormatStyle.MEDIUM)
+                        .localizedBy(locale)
+                        .withZone(zone)
+                        .format(tags[tag.name] as? Long ?: 0L)
+
+                    Tag.Type.TIME -> formatDuration(tags[tag.name] as? Long ?: 0L)
+
+                    Tag.Type.DATETIME -> DateTimeFormatter
+                        .ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
+                        .localizedBy(locale)
+                        .withZone(zone)
+                        .format(tags[tag.name] as? Long ?: 0L)
+
+                    else -> tags[tag.name] ?: ""
                 }
             }
         }

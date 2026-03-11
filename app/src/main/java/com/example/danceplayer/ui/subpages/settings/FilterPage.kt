@@ -61,7 +61,7 @@ fun FilterPage(onBack: () -> Unit) {
             return@Fragment
         }
         Column(
-            modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(4.dp))
+            modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(4.dp))
         ) {
             for(i in 0 until filterOptions.value.length()) {
                 val row = filterOptions.value.getJSONArray(i)
@@ -255,103 +255,107 @@ fun FilterPage(onBack: () -> Unit) {
                             } // text size
 
                             if(isFilter) {
-                                if(tag.type == Tag.Type.INT) {
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
+                                when(tag.type) {
+                                    Tag.Type.INT -> {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            SimpleDropDown(
+                                                options = listOf("★★☆", "♫♫♫", "123", "Input"),
+                                                selectedOption = type.getInt(0),
+                                                onOptionSelected = { option ->
+                                                    if(option == type.getInt(0)) return@SimpleDropDown // no change
+                                                    o.put("type", listOf(option,0,5))
+                                                    filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                                },
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            if(type.getInt(0) < 3) { // input
+                                                    Text("Max Value:")
+                                                    MyTextField(
+                                                        value = "${type.getInt(2)}",
+                                                        onValueChange = {
+                                                            val intValue = it.toIntOrNull() ?: return@MyTextField
+                                                            o.put("type", listOf(type.getInt(0),type.getInt(1),intValue))
+                                                            filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                                        },
+                                                        modifier = Modifier
+                                                            .width(40.dp),
+                                                        keyboardOptions = KeyboardOptions(
+                                                            keyboardType = KeyboardType.Number
+                                                        ),
+
+
+                                                    )
+                                            }
+                                        }
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text("Show Songs with")
+                                            val options = when(type.getInt(0)) {
+                                                0 -> listOf(
+                                                        "tag ≤ _",
+                                                        "tag ≥ _",
+                                                    )
+                                                1 -> listOf(
+                                                        "tag ≤ _",
+                                                        "tag ≥ _",
+                                                    )
+                                                2 -> listOf(
+                                                        "tag ≤ _",
+                                                        "tag ≥ _",
+                                                        "tag < _",
+                                                        "tag > _",
+                                                    )
+
+                                                else -> listOf(
+                                                        "tag ≤ _",
+                                                        "tag ≥ _",
+                                                        "tag < _",
+                                                        "tag > _",
+                                                        "_ < tag < _",
+                                                        "_ ≤ tag ≤ _",
+                                                        "_ ≤ tag < _",
+                                                        "_ < tag ≤ _"
+                                                    )
+                                            }
+                                            SimpleDropDown(
+                                                options = options,
+                                                selectedOption = type.getInt(1),
+                                                onOptionSelected = { option ->
+                                                    if(option == type.getInt(1)) return@SimpleDropDown // no change
+                                                    o.put("type", listOf(type.getInt(0),option,type.getInt(2)))
+                                                    filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
+                                                },
+                                                Modifier.weight(1f)
+                                            )
+                                        }
+                                    }
+                                    Tag.Type.FLOAT, Tag.Type.DATETIME, Tag.Type.DATE, Tag.Type.TIME -> {
                                         SimpleDropDown(
-                                            options = listOf("★★☆", "♫♫♫", "123", "Input"),
+                                            options = listOf(
+                                                "tag ≤ _",
+                                                "tag ≥ _",
+                                                "tag < _",
+                                                "tag > _",
+                                                "_ < tag < _",
+                                                "_ ≤ tag ≤ _",
+                                                "_ ≤ tag < _",
+                                                "_ < tag ≤ _"
+                                            ),
                                             selectedOption = type.getInt(0),
                                             onOptionSelected = { option ->
                                                 if(option == type.getInt(0)) return@SimpleDropDown // no change
-                                                o.put("type", listOf(option,0,5))
-                                                filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
-                                            },
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        if(type.getInt(0) < 3) { // input
-                                                Text("Max Value:")
-                                                MyTextField(
-                                                    value = "${type.getInt(2)}",
-                                                    onValueChange = {
-                                                        val intValue = it.toIntOrNull() ?: return@MyTextField
-                                                        o.put("type", listOf(type.getInt(0),type.getInt(1),intValue))
-                                                        filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
-                                                    },
-                                                    modifier = Modifier
-                                                        .width(40.dp),
-                                                    keyboardOptions = KeyboardOptions(
-                                                        keyboardType = KeyboardType.Number
-                                                    ),
-
-
-                                                )
-                                        }
-                                    }
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text("Show Songs with")
-                                        val options = when(type.getInt(0)) {
-                                            0 -> listOf(
-                                                    "tag ≤ _",
-                                                    "tag ≥ _",
-                                                )
-                                            1 -> listOf(
-                                                    "tag ≤ _",
-                                                    "tag ≥ _",
-                                                )
-                                            2 -> listOf(
-                                                    "tag ≤ _",
-                                                    "tag ≥ _",
-                                                    "tag < _",
-                                                    "tag > _",
-                                                )
-
-                                            else -> listOf(
-                                                    "tag ≤ _",
-                                                    "tag ≥ _",
-                                                    "tag < _",
-                                                    "tag > _",
-                                                    "_ < tag < _",
-                                                    "_ ≤ tag ≤ _",
-                                                    "_ ≤ tag < _",
-                                                    "_ < tag ≤ _"
-                                                )
-                                        }
-                                        SimpleDropDown(
-                                            options = options,
-                                            selectedOption = type.getInt(1),
-                                            onOptionSelected = { option ->
-                                                if(option == type.getInt(1)) return@SimpleDropDown // no change
-                                                o.put("type", listOf(type.getInt(0),option,type.getInt(2)))
+                                                o.put("type", listOf(option))
                                                 filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
                                             },
                                             Modifier.weight(1f)
                                         )
                                     }
-                                } else if(tag.type == Tag.Type.FLOAT || tag.type == Tag.Type.DATETIME) {
-                                    SimpleDropDown(
-                                        options = listOf(
-                                            "tag ≤ _",
-                                            "tag ≥ _",
-                                            "tag < _",
-                                            "tag > _",
-                                            "_ < tag < _",
-                                            "_ ≤ tag ≤ _",
-                                            "_ ≤ tag < _",
-                                            "_ < tag ≤ _"
-                                        ),
-                                        selectedOption = type.getInt(0),
-                                        onOptionSelected = { option ->
-                                            if(option == type.getInt(0)) return@SimpleDropDown // no change
-                                            o.put("type", listOf(option))
-                                            filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
-                                        },
-                                        Modifier.weight(1f)
-                                    )
+                                    else -> {}
                                 }
                             }
                         }
@@ -375,146 +379,174 @@ fun FilterPage(onBack: () -> Unit) {
 }
 
 @Composable
-fun HeaderCell(o:JSONObject, tag: Tag, value: Any, value2: Any, onValueChange: (Any) -> Unit = {}, onValue2Change: (Any) -> Unit = {}) {
+fun HeaderCell(o:JSONObject, tag: Tag, value: Any?, value2: Any?, onValueChange: (Any) -> Unit = {}, onValue2Change: (Any) -> Unit = {}) {
     val text = o.optString("text", "")
     val textSize = o.optInt("textSize", 16)
     Row(verticalAlignment = Alignment.CenterVertically) {
         if(o.getBoolean("filter")) {
             val typeArr = o.getJSONArray("type")
             val types = List(typeArr.length()) { typeArr.getInt(it) }
-            if(tag.type == Tag.Type.INT) {
-                val intVal = value as Int
-                if(types[0] <= 2) {
-                    if(types.size != 3) {
-                        Text("INVALID")
-                        return
-                    }
-                    Text("$text: ", )
-                    for(k in 0 until types[2]) {
-                        var filled = k <= intVal
-                        if(types[0] == 2 && types[1] == 1) filled = k >= intVal
-                        
-                        if(types[0] == 0) Text(if(filled) "★" else "☆", fontSize = textSize.sp)
-                        else if(types[0] == 1) Text("♫", fontSize = textSize.sp, color = if(filled) MaterialTheme.colorScheme.onBackground else Color.Gray)
-                        else if(types[0] == 2) Text("$k", fontSize = textSize.sp, color = if(filled) MaterialTheme.colorScheme.onBackground else Color.Gray)
-                    }
-                } else if(types[0] == 3) {
-                    if(types.size != 3) {
-                        Text("INVALID")
-                        return
-                    }
-                    if(types[1] > 3) {
-                        // input
-                        TextField (
-                            value = "$value",
-                            onValueChange = { onValueChange(it) },
+            when(tag.type) {
+                Tag.Type.INT -> {
+                    val intVal = value as? Int ?: -1
+                    if(types[0] <= 2) {
+                        if(types.size != 3) {
+                            Text("INVALID")
+                            return
+                        }
+                        Text("$text: ", )
+                        for(k in 0 until types[2]) {
+                            var filled = k <= intVal
+                            if(types[0] == 2 && types[1] == 1) filled = k >= intVal
+                            
+                            if(types[0] == 0) Text(if(filled) "★" else "☆", fontSize = textSize.sp)
+                            else if(types[0] == 1) Text("♫", fontSize = textSize.sp, color = if(filled) MaterialTheme.colorScheme.onBackground else Color.Gray)
+                            else if(types[0] == 2) Text("$k", fontSize = textSize.sp, color = if(filled) MaterialTheme.colorScheme.onBackground else Color.Gray)
+                        }
+                    } else if(types[0] == 3) {
+                        if(types.size != 3) {
+                            Text("INVALID")
+                            return
+                        }
+                        if(types[1] > 3) {
+                            // input
+                            TextField (
+                                value = "$value",
+                                onValueChange = { onValueChange(it) },
+                                modifier = Modifier.width(20.dp),
+                                textStyle = TextStyle(fontSize = textSize.sp),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Number
+                                )
+                            )
+                            Text(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
+                        }
+                        Text("$text", fontSize = textSize.sp)
+                        Text(
+                            if(types[1] == 3) " > "
+                            else if(types[1] == 1) " ≥ "
+                            else if(types[1] == 2 || types[1] == 4 ||types[1] == 6) " < " 
+                            else " ≤ ",
+                            fontSize = textSize.sp)
+                        TextField(
+                            value = "$value2",
+                            onValueChange = { onValue2Change(it) },
                             modifier = Modifier.width(20.dp),
                             textStyle = TextStyle(fontSize = textSize.sp),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Number
                             )
                         )
+
+                    } else {
+                        Text("INVALID")
+                    }
+                }
+                Tag.Type.FLOAT -> {
+                    if(types.size != 2) {
+                        Text("INVALID")
+                        return
+                    }
+                    if(types[0] > 3) {
+                        // input
+                        TextField(
+                            value = "$value",
+                            onValueChange = { onValueChange(it) },
+                            modifier = Modifier.width(20.dp),
+                            textStyle = TextStyle(fontSize = textSize.sp),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Decimal
+                            )
+                        )
                         Text(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
                     }
                     Text("$text", fontSize = textSize.sp)
                     Text(
-                        if(types[1] == 3) " > "
-                        else if(types[1] == 1) " ≥ "
-                        else if(types[1] == 2 || types[1] == 4 ||types[1] == 6) " < " 
-                        else " ≤ ",
-                        fontSize = textSize.sp)
+                            if(types[0] == 3) " > "
+                            else if(types[0] == 1) " ≥ "
+                            else if(types[0] == 2 || types[0] == 4 ||types[0] == 6) " < " 
+                            else " ≤ ",
+                            fontSize = textSize.sp)
                     TextField(
                         value = "$value2",
                         onValueChange = { onValue2Change(it) },
                         modifier = Modifier.width(20.dp),
                         textStyle = TextStyle(fontSize = textSize.sp),
                         keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number
-                        )
-                    )
-
-                } else {
-                    Text("INVALID")
-                }
-            } else if(tag.type == Tag.Type.FLOAT) {
-                if(types.size != 2) {
-                    Text("INVALID")
-                    return
-                }
-                if(types[0] > 3) {
-                    // input
-                    TextField(
-                        value = "$value",
-                        onValueChange = { onValueChange(it) },
-                        modifier = Modifier.width(20.dp),
-                        textStyle = TextStyle(fontSize = textSize.sp),
-                        keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Decimal
                         )
                     )
-                    Text(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
                 }
-                Text("$text", fontSize = textSize.sp)
-                Text(
-                        if(types[0] == 3) " > "
-                        else if(types[0] == 1) " ≥ "
-                        else if(types[0] == 2 || types[0] == 4 ||types[0] == 6) " < " 
-                        else " ≤ ",
-                        fontSize = textSize.sp)
-                TextField(
-                    value = "$value2",
-                    onValueChange = { onValue2Change(it) },
-                    modifier = Modifier.width(20.dp),
-                    textStyle = TextStyle(fontSize = textSize.sp),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Decimal
-                    )
-                )
-            } else if(tag.type == Tag.Type.BOOL) {
-                Text("$text: ", fontSize = textSize.sp)
-                Text(listOf("All", "Yes", "No")[value as Int], fontSize = textSize.sp)
-            } else if(tag.type == Tag.Type.DATETIME) {
-                if(types.size != 2) {
-                    Text("INVALID")
-                    return
-                }
-                if(types[0] > 3) {
-                    // input
+                Tag.Type.BOOL -> {
+                    Text("$text: ", fontSize = textSize.sp)
+                    Text(listOf("All", "Yes", "No")[value as? Int ?: 0], 
+                    fontSize = textSize.sp,
+                    modifier = Modifier.clickable {
+                        val newValue = ((value ?: 0) + 1) % 3 as Int
+                        onValueChange(newValue)
+                    })
+                } 
+                Tag.Type.DATETIME, Tag.Type.DATE, Tag.Type.TIME -> {
+                    if(types.size != 2) {
+                        Text("INVALID")
+                        return
+                    }
+                    if(types[0] > 3) {
+                        // input
+                        TextField(
+                            value = "$value",
+                            placeholder = { Text(DateTimeUtil.getPattern(tag.type), fontSize = textSize.sp) },
+                            onValueChange = { onValueChange(DateTimeUtil.parse(it, tag.type)) },
+                            modifier = Modifier.width(40.dp),
+                            textStyle = TextStyle(fontSize = textSize.sp),
+                        )
+                        Text(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
+                    }
+                    Text("$text", fontSize = textSize.sp)
+                    Text(
+                            if(types[0] == 3) " > "
+                            else if(types[0] == 1) " ≥ "
+                            else if(types[0] == 2 || types[0] == 4 ||types[0] == 6) " < " 
+                            else " ≤ ",
+                            fontSize = textSize.sp)
                     TextField(
-                        value = "$value",
-                        onValueChange = { onValueChange(it) },
+                        value = "$value2",
+                        placeholder = { Text(DateTimeUtil.getPattern(tag.type), fontSize = textSize.sp) },
+                        onValueChange = { onValue2Change(DateTimeUtil.parse(it, tag.type)) },
                         modifier = Modifier.width(40.dp),
                         textStyle = TextStyle(fontSize = textSize.sp),
                     )
-                    Text(if(types[1] == 4 || types[1] == 7) " < " else " ≤ ", fontSize = textSize.sp)
+                } 
+                Tag.Type.STRING -> {
+                    Text("$text: ", fontSize = textSize.sp)
+                    TextField(
+                        value = "$value",
+                        onValueChange = { onValueChange(it) },
+                        textStyle = TextStyle(fontSize = textSize.sp),
+                        modifier = Modifier.width(100.dp),
+                    )
+                } 
+                else -> {
+                    Text("Unknown Type", fontSize = textSize.sp)
                 }
-                Text("$text", fontSize = textSize.sp)
-                Text(
-                        if(types[0] == 3) " > "
-                        else if(types[0] == 1) " ≥ "
-                        else if(types[0] == 2 || types[0] == 4 ||types[0] == 6) " < " 
-                        else " ≤ ",
-                        fontSize = textSize.sp)
-                TextField(
-                    value = "$value2",
-                    onValueChange = { onValue2Change(it) },
-                    modifier = Modifier.width(40.dp),
-                    textStyle = TextStyle(fontSize = textSize.sp),
-                )
-            } else if(tag.type == Tag.Type.STRING) {
-                Text("$text: ", fontSize = textSize.sp)
-                TextField(
-                    value = "$value",
-                    onValueChange = { onValueChange(it) },
-                    textStyle = TextStyle(fontSize = textSize.sp),
-                    modifier = Modifier.width(100.dp),
-                )
-            } else {
-                Text("Unknown Type", fontSize = textSize.sp)
             }
             
         } else { // sorter
-            Text(o.optString("text", ""), fontSize = textSize.sp)
+            val suffix = when(value) {
+                1 -> " ↑"
+                2 -> " ↓"
+                else -> ""
+            }
+            Text(o.optString("text", "") + suffix, 
+                fontSize = textSize.sp,
+                modifier = Modifier.clickable {
+                    val newValue = when(value) {
+                        1 -> 2
+                        else -> 1
+                    }
+                    onValueChange(newValue)
+                }
+            )
         }
     }
 }
