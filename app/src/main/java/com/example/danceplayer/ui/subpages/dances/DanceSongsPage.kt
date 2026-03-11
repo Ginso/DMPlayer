@@ -32,9 +32,10 @@ import org.json.JSONArray
 fun DanceSongsPage(dance: String, onBack: () -> Unit) {
     val profile = PreferenceUtil.getCurrentProfile()
     val songs = remember { mutableStateOf(MusicLibrary.songs.filter { it.getDance() == dance }) }
-    var sorter = remember {mutableStateOf("")}
-    var filterOptions = remember { mutableStateOf(profile.filterOptions) }
+    val sorter = remember {mutableStateOf("")}
+    val filterOptions = remember { mutableStateOf(profile.filterOptions) }
     val itemLayout = profile.itemLayoutBrowser
+    MusicLibrary.hooks.add { songs.value = MusicLibrary.songs.filter { it.getDance() == dance } }
     Fragment(dance, onBack) {
         Column(
             modifier = Modifier
@@ -65,7 +66,7 @@ fun DanceSongsPage(dance: String, onBack: () -> Unit) {
                         if(filter) {
                             val1 = o.opt("value1")
                             val2 = o.opt("value2")
-                        } else if(o.getBoolean("sort")) {
+                        } else {
                             val1 = if(sorter.value == tagName) 1 else if(sorter.value == "-$tagName") 2 else 0
                         }
                         HeaderCell(o, tag, val1, val2, onValueChange = { newVal ->
@@ -144,7 +145,7 @@ fun applyFilters(songs: MutableState<List<Song>>, filterOptions: JSONArray, sort
                         }
                         else -> {
                             val numValue = (songValue as? Number)?.toDouble() ?: return@filter false
-                            val v1 = (value1 as? Number)?.toDouble() ?: Double.MIN_VALUE
+                            val v1 = (value1 as? Number)?.toDouble() ?: -Double.MAX_VALUE
                             val v2 = (value2 as? Number)?.toDouble() ?: Double.MAX_VALUE
                             when(o.getJSONArray("type").getInt(1)) {
                                 0 -> numValue <= v1

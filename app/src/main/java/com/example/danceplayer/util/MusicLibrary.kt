@@ -23,6 +23,7 @@ object MusicLibrary {
     var songs: MutableList<Song> = mutableListOf()
     var tagMap: MutableMap<String, Tag> = LinkedHashMap()
     var songMap: MutableMap<String, Song> = LinkedHashMap()
+    var hooks: MutableList<() -> Unit> = mutableListOf()
 
 
     suspend fun initialize(context: Context) {
@@ -34,6 +35,7 @@ object MusicLibrary {
             loadTagFile(context, uri) { /* ignore error */ }
         }
         getMusicFiles(context)
+
     }
 
     suspend fun loadTagFile(context: Context, uri: Uri, onError: (String) -> Unit): Boolean {
@@ -78,6 +80,9 @@ object MusicLibrary {
         filterSongs()
         withContext(Dispatchers.Main) {
             Player.load(songs.subList(0,1))
+            for(hook in hooks) {
+                hook()
+            }
         }
     }
 

@@ -1,14 +1,26 @@
 package com.example.danceplayer.ui.pages
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.danceplayer.ui.subpages.dances.DanceSongsPage
+import com.example.danceplayer.util.MusicLibrary
 
 @Composable
 fun DancesPage() {
@@ -16,20 +28,22 @@ fun DancesPage() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        var dances = MusicLibrary.songs.map { it.getDance() }
-        val countPerDance = dances.groupingBy { it }.eachCount()
-        dances = dances.distinct().sorted()
+        val dances = remember { mutableStateOf(MusicLibrary.songs.map { it.getDance() })}
+        MusicLibrary.hooks.add { dances.value = MusicLibrary.songs.map { it.getDance() } }
+
+        val countPerDance = dances.value.groupingBy { it }.eachCount()
+        val danceList = dances.value.distinct().sorted()
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            for (dance in dances) {
+            for (dance in danceList) {
                 val count = countPerDance[dance] ?: 0
                 Box(
                     modifier = Modifier
