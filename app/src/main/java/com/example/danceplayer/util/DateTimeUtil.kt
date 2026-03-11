@@ -1,3 +1,10 @@
+import com.example.danceplayer.model.Tag
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.Locale
+
 object DateTimeUtil {
     fun formatDuration(duration: Long): String {
         val hours = duration / 3600000
@@ -20,7 +27,7 @@ object DateTimeUtil {
                             when (text.count { it == ':' }) {
                                 1 -> DateTimeFormatter.ofPattern("mm:ss")
                                 2 -> DateTimeFormatter.ofPattern("HH:mm:ss")
-                                else -> null
+                                else -> return null
                             }
                         }
                         else -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)

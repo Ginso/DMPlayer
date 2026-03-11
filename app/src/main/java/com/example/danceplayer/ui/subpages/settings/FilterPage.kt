@@ -379,7 +379,7 @@ fun FilterPage(onBack: () -> Unit) {
 }
 
 @Composable
-fun HeaderCell(o:JSONObject, tag: Tag, value: Any?, value2: Any?, onValueChange: (Any) -> Unit = {}, onValue2Change: (Any) -> Unit = {}) {
+fun HeaderCell(o:JSONObject, tag: Tag, value: Any?, value2: Any?, onValueChange: (Any?) -> Unit = {}, onValue2Change: (Any?) -> Unit = {}) {
     val text = o.optString("text", "")
     val textSize = o.optInt("textSize", 16)
     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -482,7 +482,7 @@ fun HeaderCell(o:JSONObject, tag: Tag, value: Any?, value2: Any?, onValueChange:
                     Text(listOf("All", "Yes", "No")[value as? Int ?: 0], 
                     fontSize = textSize.sp,
                     modifier = Modifier.clickable {
-                        val newValue = ((value ?: 0) + 1) % 3 as Int
+                        val newValue = ((value as? Int ?: 0) + 1) % 3 as Int
                         onValueChange(newValue)
                     })
                 } 

@@ -9,7 +9,12 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import org.json.JSONObject
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Date
+import java.util.Locale
 import kotlin.collections.iterator
 
 data class Song(
@@ -83,20 +88,20 @@ data class Song(
             _TITLE -> return getTitle()
             _DURATION -> return formatDuration(getDuration())
             else -> {
-                return when (type) {
+                return when (tag.type) {
                     Tag.Type.DATE -> DateTimeFormatter
                         .ofLocalizedDate(FormatStyle.MEDIUM)
-                        .localizedBy(locale)
-                        .withZone(zone)
-                        .format(tags[tag.name] as? Long ?: 0L)
+                        .localizedBy(Locale.getDefault())
+                        .withZone(ZoneId.systemDefault())
+                        .format(Instant.ofEpochMilli(tags[tag.name] as? Long ?: 0L))
 
                     Tag.Type.TIME -> formatDuration(tags[tag.name] as? Long ?: 0L)
 
                     Tag.Type.DATETIME -> DateTimeFormatter
                         .ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-                        .localizedBy(locale)
-                        .withZone(zone)
-                        .format(tags[tag.name] as? Long ?: 0L)
+                        .localizedBy(Locale.getDefault())
+                        .withZone(ZoneId.systemDefault())
+                        .format(Instant.ofEpochMilli(tags[tag.name] as? Long ?: 0L))
 
                     else -> tags[tag.name] ?: ""
                 }
