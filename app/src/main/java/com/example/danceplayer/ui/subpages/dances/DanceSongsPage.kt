@@ -3,9 +3,11 @@ package com.example.danceplayer.ui.subpages.dances
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DanceSongsPage(dance: String, onBack: () -> Unit) {
+    val profile = PreferenceUtil.getCurrentProfile()
     val songs = remember { mutableStateOf(MusicLibrary.songs.filter { it.getDance() == dance }) }
     var sorter = remember {mutableStateOf("")}
-    var filterOptions = remember { mutableStateOf(PreferenceUtil.getCurrentProfile().filterOptions) }
+    var filterOptions = remember { mutableStateOf(profile.filterOptions) }
+    val itemLayout = profile.itemLayoutBrowser
     Fragment(dance, onBack) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -60,6 +62,22 @@ fun DanceSongsPage(dance: String, onBack: () -> Unit) {
                         })
                     }
                 }
+            }
+        }
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            for((index, song) in songs.value.withIndex()) {
+                SongItem(
+                    song, 
+                    itemLayout, 
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            Player.load(songs.value, index)
+                        }
+                )
             }
         }
     }
