@@ -36,241 +36,248 @@ import kotlinx.coroutines.withContext
 import kotlin.collections.emptyList
 
 
-@Composable
-fun ParseTagsPage(onBack: () -> Unit) {
-    val tags = MusicLibrary.tags.value.map { it.name }
-    val pattern = remember { mutableStateOf("") }
-    val preview = remember { mutableStateOf(emptyList<PreviewItem>()) }
-    val previewFailed = remember { mutableStateOf(emptyList<String>()) }
-    val errorText = remember { mutableStateOf("") }
-    val isLoading = remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current
+class ParseTagsPage : Fragment() {
+    override fun getTitle(): String {
+        return "Parse Tags from File name and path"
+    }
 
-    Fragment("Fill Tags from File name and path", onBack) {
-        Text("Here you can automatically fill the tags of your songs based on their file name and path. This is especially useful if you have a well-structured music library where the file names and paths contain relevant information about the songs (e.g., Dance/Artist - Title.mp3).")
-        Text("Enter the pattern of your file names and paths. Use / for folder separation.")
-        Text("Examples:")
-        Text("<Dance>/<Artist> - <Title>.mp3 -> fills the dance with the name of the innermost folder, the artist and title from the file name")
-        Text("<Title> (<TPM>TPM).mp3 -> Fills title and TPM if the files are named like 'Great Song (30TPM).mp3'")
-        Text("You can use the following tags in your pattern:")
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            tags.forEach { tag ->
-                AssistChip(
-                    onClick = { pattern.value += "<$tag>" },
-                    label = { Text(tag) },
+    @Composable
+    override fun Content() {
+        val tags = MusicLibrary.tags.value.map { it.name }
+        val pattern = remember { mutableStateOf("") }
+        val preview = remember { mutableStateOf(emptyList<PreviewItem>()) }
+        val previewFailed = remember { mutableStateOf(emptyList<String>()) }
+        val errorText = remember { mutableStateOf("") }
+        val isLoading = remember { mutableStateOf(false) }
+        val coroutineScope = rememberCoroutineScope()
+        val context = LocalContext.current
+
+        Main {
+            Text("Here you can automatically fill the tags of your songs based on their file name and path. This is especially useful if you have a well-structured music library where the file names and paths contain relevant information about the songs (e.g., Dance/Artist - Title.mp3).")
+            Text("Enter the pattern of your file names and paths. Use / for folder separation.")
+            Text("Examples:")
+            Text("<Dance>/<Artist> - <Title>.mp3 -> fills the dance with the name of the innermost folder, the artist and title from the file name")
+            Text("<Title> (<TPM>TPM).mp3 -> Fills title and TPM if the files are named like 'Great Song (30TPM).mp3'")
+            Text("You can use the following tags in your pattern:")
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                tags.forEach { tag ->
+                    AssistChip(
+                        onClick = { pattern.value += "<$tag>" },
+                        label = { Text(tag) },
+                    )
+                }
+            }
+
+            OutlinedTextField(
+                value = pattern.value,
+                onValueChange = { 
+                    pattern.value = it 
+                    preview.value = emptyList<PreviewItem>()
+                    previewFailed.value = emptyList<String>()
+                },
+                label = { Text("Pattern") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(onClick = { 
+                    coroutineScope.launch {
+                        isLoading.value = true
+                        val failedSongs = ArrayList<String>()
+                        val previewItems = ArrayList<PreviewItem>()
+                        withContext(Dispatchers.Default) {
+                            previewTags(pattern.value, MusicLibrary.songs.value, tags, errorText) { item ->
+                                if (item.tags == null) {
+                                    failedSongs.add(item.filePath)
+                                } else {
+                                    previewItems.add(item)
+                                }
+                            }
+                        }
+                        preview.value = previewItems
+                        previewFailed.value = failedSongs
+                        isLoading.value = false
+                    }
+                }) {
+                    Text("Preview")
+                }
+                Button(onClick = {
+                    coroutineScope.launch {
+                        isLoading.value = true
+                        var updated = 0
+                        withContext(Dispatchers.Default) {
+                            previewTags(pattern.value, MusicLibrary.songs.value, tags, errorText) { item ->
+                                if (item.tags != null) {
+                                    item.tags.forEach { (tag, value) ->
+                                        item.song.tags[tag] = value
+                                    }
+                                    updated++
+                                }
+                            }
+                        }
+                        MusicLibrary.save(context)
+                        isLoading.value = false
+                        Toast.makeText(context, "Updated ${updated} / ${MusicLibrary.songs.value.size} songs", Toast.LENGTH_LONG).show()
+                    }
+                }) {
+                    Text("Apply")
+                }
+            }
+
+            if (previewFailed.value.isNotEmpty() || preview.value.isNotEmpty()) {
+                Text("Parsed ${preview.value.size} songs successfully, failed to parse ${previewFailed.value.size} songs.")
+                if (preview.value.isNotEmpty()) {
+                    Text("Parsed songs:")
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .border(1.dp, MaterialTheme.colorScheme.onBackground)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        preview.value.forEach { item ->
+                            Box(modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(10.dp))) {
+                                Column {
+                                    Text("File: ${item.filePath}")
+                                    FlowRow(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        item.tags?.forEach { (tag, value) ->
+                                            Text("$tag: $value")
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
+                if (previewFailed.value.isNotEmpty()) {
+                    Text("Failed songs:")
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .border(1.dp, MaterialTheme.colorScheme.onBackground)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        previewFailed.value.forEach { song ->
+                            Text(song)
+                        }
+                    }
+                }
+            }
+            if (isLoading.value) {
+                AlertDialog(
+                    onDismissRequest = { /* do nothing */ },
+                    title = { Text("Loading...") },
+                    text = {
+                        Text(
+                            "Please wait...",
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    },
+                    confirmButton = { /* no buttons */ }
+                )
+            }
+            if (errorText.value.isNotBlank()) {
+                AlertDialog(
+                    onDismissRequest = { errorText.value = "" },
+                    title = { Text("Error") },
+                    text = { Text(errorText.value, modifier = Modifier.fillMaxWidth(), color = Color.Red) },
+                    confirmButton = {
+                        Button(onClick = { errorText.value = "" }) {
+                            Text("OK")
+                        }
+                    }
                 )
             }
         }
-
-        OutlinedTextField(
-            value = pattern.value,
-            onValueChange = { 
-                pattern.value = it 
-                preview.value = emptyList<PreviewItem>()
-                previewFailed.value = emptyList<String>()
-            },
-            label = { Text("Pattern") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(onClick = { 
-                coroutineScope.launch {
-                    isLoading.value = true
-                    val failedSongs = ArrayList<String>()
-                    val previewItems = ArrayList<PreviewItem>()
-                    withContext(Dispatchers.Default) {
-                        previewTags(pattern.value, MusicLibrary.songs.value, tags, errorText) { item ->
-                            if (item.tags == null) {
-                                failedSongs.add(item.filePath)
-                            } else {
-                                previewItems.add(item)
-                            }
-                        }
-                    }
-                    preview.value = previewItems
-                    previewFailed.value = failedSongs
-                    isLoading.value = false
-                }
-            }) {
-                Text("Preview")
-            }
-            Button(onClick = {
-                coroutineScope.launch {
-                    isLoading.value = true
-                    var updated = 0
-                    withContext(Dispatchers.Default) {
-                        previewTags(pattern.value, MusicLibrary.songs.value, tags, errorText) { item ->
-                            if (item.tags != null) {
-                                item.tags.forEach { (tag, value) ->
-                                    item.song.tags[tag] = value
-                                }
-                                updated++
-                            }
-                        }
-                    }
-                    MusicLibrary.save(context)
-                    isLoading.value = false
-                    Toast.makeText(context, "Updated ${updated} / ${MusicLibrary.songs.value.size} songs", Toast.LENGTH_LONG).show()
-                }
-            }) {
-                Text("Apply")
-            }
-        }
-
-        if (previewFailed.value.isNotEmpty() || preview.value.isNotEmpty()) {
-            Text("Parsed ${preview.value.size} songs successfully, failed to parse ${previewFailed.value.size} songs.")
-            if (preview.value.isNotEmpty()) {
-                Text("Parsed songs:")
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .border(1.dp, MaterialTheme.colorScheme.onBackground)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    preview.value.forEach { item ->
-                        Box(modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.onBackground, shape = RoundedCornerShape(10.dp))) {
-                            Column {
-                                Text("File: ${item.filePath}")
-                                FlowRow(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    item.tags?.forEach { (tag, value) ->
-                                        Text("$tag: $value")
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-                }
-            }
-            if (previewFailed.value.isNotEmpty()) {
-                Text("Failed songs:")
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .border(1.dp, MaterialTheme.colorScheme.onBackground)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    previewFailed.value.forEach { song ->
-                        Text(song)
-                    }
-                }
-            }
-        }
-        if (isLoading.value) {
-            AlertDialog(
-                onDismissRequest = { /* do nothing */ },
-                title = { Text("Loading...") },
-                text = {
-                    Text(
-                        "Please wait...",
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                },
-                confirmButton = { /* no buttons */ }
-            )
-        }
-        if (errorText.value.isNotBlank()) {
-            AlertDialog(
-                onDismissRequest = { errorText.value = "" },
-                title = { Text("Error") },
-                text = { Text(errorText.value, modifier = Modifier.fillMaxWidth(), color = Color.Red) },
-                confirmButton = {
-                    Button(onClick = { errorText.value = "" }) {
-                        Text("OK")
-                    }
-                }
-            )
-        }
     }
-}
 
-fun previewTags(pattern: String,
-                songs: List<Song>,
-                tags: List<String>,
-                errorText: MutableState<String>,
-                callback: (PreviewItem) -> Unit) {
-    val tagIndexList = tags.mapNotNull { tag ->
-        val index = pattern.indexOf("<$tag>")
-        if (index == -1) {
-            null
-        } else {
-            Triple(tag, index, index + tag.length + 2)
-        }
-    }.sortedBy { it.second }
-    val parts = ArrayList<String>()
-    if(tagIndexList.isEmpty()) {
-        errorText.value = "No valid tags found in pattern"
-        return
-    }
-    var index = 0
-    tagIndexList.forEach {
-        var part = pattern.substring(index, it.second)
-        if (part.isEmpty() && !parts.isEmpty()) {
-            errorText.value = "Two tags cannot be directly adjacent without any separator to distinguish them"
+
+    fun previewTags(pattern: String,
+                    songs: List<Song>,
+                    tags: List<String>,
+                    errorText: MutableState<String>,
+                    callback: (PreviewItem) -> Unit) {
+        val tagIndexList = tags.mapNotNull { tag ->
+            val index = pattern.indexOf("<$tag>")
+            if (index == -1) {
+                null
+            } else {
+                Triple(tag, index, index + tag.length + 2)
+            }
+        }.sortedBy { it.second }
+        val parts = ArrayList<String>()
+        if(tagIndexList.isEmpty()) {
+            errorText.value = "No valid tags found in pattern"
             return
         }
-        parts.add(part)
-        parts.add(it.first)
-        index = it.third
-    }
-    parts.add(pattern.substring(index, pattern.length))
+        var index = 0
+        tagIndexList.forEach {
+            var part = pattern.substring(index, it.second)
+            if (part.isEmpty() && !parts.isEmpty()) {
+                errorText.value = "Two tags cannot be directly adjacent without any separator to distinguish them"
+                return
+            }
+            parts.add(part)
+            parts.add(it.first)
+            index = it.third
+        }
+        parts.add(pattern.substring(index, pattern.length))
 
-    val folders = pattern.split("/").size
-    songs.forEach { song ->
-        var path = song.getPath()
-        var remaining = path.split("/").takeLast(folders).joinToString("/")
-        val map = HashMap<String, String>()
-        parts.forEachIndexed { i, part ->
-            if (i % 2 == 0) {
-                if (remaining.startsWith(part)) {
-                    remaining = remaining.substring(part.length)
-                } else {
-                    callback(PreviewItem(path, song))
-                    return@forEach
-                }
-            } else {
-                // code above ensures an uneven number of parts, so i + 1 is always valid
-                val nextPart = parts[i + 1]
-
-                val value = if (nextPart.isNotEmpty()) {
-                    val index = remaining.indexOf(nextPart)
-                    if (index == -1) {
+        val folders = pattern.split("/").size
+        songs.forEach { song ->
+            var path = song.getPath()
+            var remaining = path.split("/").takeLast(folders).joinToString("/")
+            val map = HashMap<String, String>()
+            parts.forEachIndexed { i, part ->
+                if (i % 2 == 0) {
+                    if (remaining.startsWith(part)) {
+                        remaining = remaining.substring(part.length)
+                    } else {
                         callback(PreviewItem(path, song))
                         return@forEach
                     }
-                    val result = remaining.substring(0, index)
-                    remaining = remaining.substring(index)
-                    result
-                } else { // can only be last part, so take everything until the end of the string
-                    val result = remaining
-                    remaining = ""
-                    result
-                }
-                map[part] = value
-            }
-        }
-        callback(PreviewItem(path, song, map))
-    }
-}
+                } else {
+                    // code above ensures an uneven number of parts, so i + 1 is always valid
+                    val nextPart = parts[i + 1]
 
-data class PreviewItem(
-    val filePath: String,
-    val song: Song,
-    val tags: Map<String, String>? = null
-)
+                    val value = if (nextPart.isNotEmpty()) {
+                        val index = remaining.indexOf(nextPart)
+                        if (index == -1) {
+                            callback(PreviewItem(path, song))
+                            return@forEach
+                        }
+                        val result = remaining.substring(0, index)
+                        remaining = remaining.substring(index)
+                        result
+                    } else { // can only be last part, so take everything until the end of the string
+                        val result = remaining
+                        remaining = ""
+                        result
+                    }
+                    map[part] = value
+                }
+            }
+            callback(PreviewItem(path, song, map))
+        }
+    }
+
+    data class PreviewItem(
+        val filePath: String,
+        val song: Song,
+        val tags: Map<String, String>? = null
+    )
+}

@@ -24,164 +24,170 @@ import com.example.danceplayer.R
 import com.example.danceplayer.ui.Fragment
 import kotlin.math.roundToInt
 
-@Composable
-fun PlayerPage(onClose: () -> Unit) {
-    val currentSong by Player.currentSongState
-    val isPlaying by Player.isPlayingState
-    val speed by Player.speedState
-    val position by Player.positionState
+class PlayerPage : Fragment() {
+    override fun getTitle(): String {
+        return "Current Song"
+    }
 
-    val iconSize = 46.dp
-    Fragment("Current Song", onClose) {
-        Column(
+    @Composable
+    override fun Content() {
+        val currentSong by Player.currentSongState
+        val isPlaying by Player.isPlayingState
+        val speed by Player.speedState
+        val position by Player.positionState
 
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(8.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if(currentSong == null) {
-                Text("No song is currently playing", style = MaterialTheme.typography.titleLarge)
-            } else {
+        val iconSize = 46.dp
+        Main {
+            Column(
 
-                Text(
-                    text = currentSong!!.getTitle(),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text(
-                    text = currentSong!!.getArtist(),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = currentSong!!.getDance(),
-                    style = TextStyle(fontSize = 12.sp, fontStyle = FontStyle.Italic),
-                    modifier = Modifier
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                    color = Color.LightGray
-                )
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(8.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if(currentSong == null) {
+                    Text("No song is currently playing", style = MaterialTheme.typography.titleLarge)
+                } else {
 
-                //speed
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("-10%",
+                    Text(
+                        text = currentSong!!.getTitle(),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = currentSong!!.getArtist(),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = currentSong!!.getDance(),
+                        style = TextStyle(fontSize = 12.sp, fontStyle = FontStyle.Italic),
                         modifier = Modifier
-                            .clickable {
-                                Player.changeSpeed(-0.1f)
-                            }
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                        color = Color.LightGray
                     )
-                    Text("-1%",
-                        modifier = Modifier
-                            .clickable {
-                                Player.changeSpeed(-0.01f)
+
+                    //speed
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("-10%",
+                            modifier = Modifier
+                                .clickable {
+                                    Player.changeSpeed(-0.1f)
+                                }
+                        )
+                        Text("-1%",
+                            modifier = Modifier
+                                .clickable {
+                                    Player.changeSpeed(-0.01f)
+                                }
+                        )
+                        Text(text = "${(speed * 100).toInt()}%")
+                        Text("+1%",
+                            modifier = Modifier
+                                .clickable {
+                                    Player.changeSpeed(0.01f)
+                                }
+                        )
+                        Text("+10%",
+                            modifier = Modifier
+                                .clickable {
+                                    Player.changeSpeed(0.1f)
+                                }
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("25%")
+                        Slider(
+                            value = speed.toFloat(),
+                            valueRange = 0.25f..1.5f,
+                            onValueChange = { Player.setSpeed((it * 100).roundToInt() / 100f) },
+                            modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+                        )
+                        Text("150%")
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        for(i in 0..4) {
+                            Button(
+                                onClick = {
+                                    Player.setSpeed(0.8f + i * 0.1f)
+                                }
+                            ) {
+                                Text("${80 + i * 10}%")
                             }
-                    )
-                    Text(text = "${(speed * 100).toInt()}%")
-                    Text("+1%",
-                        modifier = Modifier
-                            .clickable {
-                                Player.changeSpeed(0.01f)
-                            }
-                    )
-                    Text("+10%",
-                        modifier = Modifier
-                            .clickable {
-                                Player.changeSpeed(0.1f)
-                            }
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("25%")
-                    Slider(
-                        value = speed.toFloat(),
-                        valueRange = 0.25f..1.5f,
-                        onValueChange = { Player.setSpeed((it * 100).roundToInt() / 100f) },
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
-                    )
-                    Text("150%")
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    for(i in 0..4) {
-                        Button(
-                            onClick = {
-                                Player.setSpeed(0.8f + i * 0.1f)
-                            }
-                        ) {
-                            Text("${80 + i * 10}%")
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                        .border(1.dp, Color.Gray, shape = RoundedCornerShape(10.dp))
-                ) {
-                    Text(
-                        text = "${DateTimeUtil.formatDuration(position)} | ${DateTimeUtil.formatDuration(currentSong!!.getDuration())}",
+                    Box(
                         modifier = Modifier
                             .padding(horizontal = 4.dp, vertical = 2.dp)
+                            .border(1.dp, Color.Gray, shape = RoundedCornerShape(10.dp))
+                    ) {
+                        Text(
+                            text = "${DateTimeUtil.formatDuration(position)} | ${DateTimeUtil.formatDuration(currentSong!!.getDuration())}",
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
+                    }
+
+                    Slider(
+                        value = position.toFloat(),
+                        valueRange = 0f..currentSong!!.getDuration().toFloat(),
+                        onValueChange = { Player.seekTo(it.toLong()) },
+                        modifier = Modifier.fillMaxWidth()
                     )
-                }
 
-                Slider(
-                    value = position.toFloat(),
-                    valueRange = 0f..currentSong!!.getDuration().toFloat(),
-                    onValueChange = { Player.seekTo(it.toLong()) },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        onClick = { Player.previous() },
-                        modifier = Modifier.size(iconSize),
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_previous),
-                            contentDescription = "Previous",
-                            modifier = Modifier.size(iconSize)
-                        )
-                    }
-                    IconButton(
-                        onClick = {
-                            if (isPlaying) Player.pause() else Player.play()
-                        },
-                        modifier = Modifier.size(iconSize),
-                    ) {
-                        Icon(
-                            painter = painterResource(id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
-                            contentDescription = "Play/Pause",
-                            modifier = Modifier.size(iconSize)
-                        )
-                    }
-                    IconButton(
-                        onClick = { Player.next() },
-                        modifier = Modifier.size(iconSize),
-                        enabled = Player.currentIndex < Player.getPlayList().size - 1
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_next),
-                            contentDescription = "Next",
-                            modifier = Modifier.size(iconSize)
-                        )
+                        IconButton(
+                            onClick = { Player.previous() },
+                            modifier = Modifier.size(iconSize),
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_previous),
+                                contentDescription = "Previous",
+                                modifier = Modifier.size(iconSize)
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                if (isPlaying) Player.pause() else Player.play()
+                            },
+                            modifier = Modifier.size(iconSize),
+                        ) {
+                            Icon(
+                                painter = painterResource(id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
+                                contentDescription = "Play/Pause",
+                                modifier = Modifier.size(iconSize)
+                            )
+                        }
+                        IconButton(
+                            onClick = { Player.next() },
+                            modifier = Modifier.size(iconSize),
+                            enabled = Player.currentIndex < Player.getPlayList().size - 1
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_next),
+                                contentDescription = "Next",
+                                modifier = Modifier.size(iconSize)
+                            )
+                        }
                     }
                 }
             }

@@ -37,94 +37,103 @@ import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.ui.Fragment
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TagFilePage(onBack: () -> Unit) {
-    val errorText = remember { mutableStateOf("") }
-    val coroutineScope = rememberCoroutineScope()
-    val isLoading = remember { mutableStateOf(false) }
 
-    Fragment("Import/Export Tag Info", onBack) {
-    
-        Text("The tags that you defined and the values for every song are being stored in a file. Here you can set the location of that file(to export it) or choose an existing file to import.")
-        HorizontalDivider()
-        Text("Export", style = MaterialTheme.typography.titleLarge)
-        Text("Specify the location where the file should be saved at. This file will be used from then on.")
-        // launcher for creating or choosing a file location
-        val context = LocalContext.current
-        val exportLauncher = rememberLauncherForActivityResult(
-            ActivityResultContracts.CreateDocument("application/json")
-        ) { uri -> export(context, uri, isLoading, errorText)}
-        // use OpenDocument instead of GetContent so we can take persistable
-        // URI permissions; GetContent only grants a one-time permission which
-        // causes a SecurityException when we try to persist it.
-        val importLauncher = rememberLauncherForActivityResult(
-            ActivityResultContracts.OpenDocument()
-        ) { uri ->
-            coroutineScope.launch {
-                import(context, uri, isLoading, errorText)
-            }
-        }
+class TagFilePage : Fragment() {
 
-        Button(
-            onClick = {
-                // launch with a suggested filename
-                exportLauncher.launch("DancePlayerTags.json")
-            }
-        ) {
-            Text("Export / Choose Location")
-        }
-        HorizontalDivider()
-        Text("Import", style = MaterialTheme.typography.titleLarge)
-        Text("Choose an existing file to import tag information from. That file will be used from then on. Your current tag information will be lost.", color = MaterialTheme.colorScheme.onBackground)
-        Button(
-            onClick = {
-                // OpenDocument expects an array of MIME types
-                importLauncher.launch(arrayOf("application/json"))
-            }
-        ) {
-            Text("Import / Choose File")
-        }
-
+    override fun getTitle(): String {
+        return "Import/Export Tag Info"
     }
 
-    
-    if (errorText.value.isNotBlank()) {
-        AlertDialog(
-            onDismissRequest = { errorText.value = "" },
-            title = { Text("Error") },
-            text = {
-                Text(
-                    errorText.value,
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color.Red
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        errorText.value = ""
-                    }
-                ) {
-                    Text("OK")
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    override fun Content() {
+        val errorText = remember { mutableStateOf("") }
+        val coroutineScope = rememberCoroutineScope()
+        val isLoading = remember { mutableStateOf(false) }
+
+        Main {
+        
+            Text("The tags that you defined and the values for every song are being stored in a file. Here you can set the location of that file(to export it) or choose an existing file to import.")
+            HorizontalDivider()
+            Text("Export", style = MaterialTheme.typography.titleLarge)
+            Text("Specify the location where the file should be saved at. This file will be used from then on.")
+            // launcher for creating or choosing a file location
+            val context = LocalContext.current
+            val exportLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.CreateDocument("application/json")
+            ) { uri -> export(context, uri, isLoading, errorText)}
+            // use OpenDocument instead of GetContent so we can take persistable
+            // URI permissions; GetContent only grants a one-time permission which
+            // causes a SecurityException when we try to persist it.
+            val importLauncher = rememberLauncherForActivityResult(
+                ActivityResultContracts.OpenDocument()
+            ) { uri ->
+                coroutineScope.launch {
+                    import(context, uri, isLoading, errorText)
                 }
             }
-        )
-    }
-    if (isLoading.value) {
-        AlertDialog(
-            onDismissRequest = { /* do nothing */ },
-            title = { Text("Loading...") },
-            text = {
-                Text(
-                    "Please wait...",
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
-            confirmButton = { /* no buttons */ }
-        )
+
+            Button(
+                onClick = {
+                    // launch with a suggested filename
+                    exportLauncher.launch("DancePlayerTags.json")
+                }
+            ) {
+                Text("Export / Choose Location")
+            }
+            HorizontalDivider()
+            Text("Import", style = MaterialTheme.typography.titleLarge)
+            Text("Choose an existing file to import tag information from. That file will be used from then on. Your current tag information will be lost.", color = MaterialTheme.colorScheme.onBackground)
+            Button(
+                onClick = {
+                    // OpenDocument expects an array of MIME types
+                    importLauncher.launch(arrayOf("application/json"))
+                }
+            ) {
+                Text("Import / Choose File")
+            }
+
+        }
+
+        
+        if (errorText.value.isNotBlank()) {
+            AlertDialog(
+                onDismissRequest = { errorText.value = "" },
+                title = { Text("Error") },
+                text = {
+                    Text(
+                        errorText.value,
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color.Red
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            errorText.value = ""
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
+        if (isLoading.value) {
+            AlertDialog(
+                onDismissRequest = { /* do nothing */ },
+                title = { Text("Loading...") },
+                text = {
+                    Text(
+                        "Please wait...",
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                },
+                confirmButton = { /* no buttons */ }
+            )
+        }
     }
 }
+
 
 fun export(context: Context, uri: Uri?, isLoading: MutableState<Boolean>, errorText: MutableState<String>) {
     uri?.let {

@@ -73,12 +73,24 @@ import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     companion object {
-        val title = mutableStateOf<String?>(null)
-        val onBack = mutableStateOf<() -> Unit>({})
 
-        val pageTitles = listOf("Dances",
+        val pageTitles = listOf(
+            "Dances",
             "Playlists",
-            "Settings")
+            "Settings"
+        )
+
+        val pageStack = mutableStateOf<List<Fragment>>(emptyList())
+
+        fun addPage(page: Fragment) {
+            pageStack.value = pageStack.value + page
+        }
+
+        fun popLastPage() {
+            if (pageStack.value.isNotEmpty()) {
+                pageStack.value = pageStack.value.dropLast(1)
+            }
+        }
 
     }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,10 +130,8 @@ fun MainScreen() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val selectedPage = remember { mutableStateOf(0) }
-    val playerPage = remember { mutableStateOf(false) }
     val isInitializing by MusicLibrary.isInitializing
-    val title by MainActivity.title
-    val onBack by MainActivity.onBack
+    val pageStack by MainActivity.pageStack
 
     if (isInitializing) {
         LoadingScreen()
@@ -136,6 +146,7 @@ fun MainScreen() {
                     NavigationDrawerContent(
                         onPageSelected = { page ->
                             selectedPage.value = page
+                            MainActivity.pageStack.value = emptyList() // clear stack when selecting new page
                             scope.launch {
                                 drawerState.close()
                             }
@@ -150,11 +161,11 @@ fun MainScreen() {
                     topBar = {
                         TopAppBar(
                             title = {
-                                Text(title ?: MainActivity.pageTitles[selectedPage.value])
+                                Text(pageStack.lastOrNull()?.getTitle() ?: MainActivity.pageTitles[selectedPage.value])
                             },
                             navigationIcon = {
-                                if(title != null) {
-                                    IconButton(onClick = onBack) {
+                                if(pageStack.isNotEmpty()) {
+                                    IconButton(onClick = MainActivity::popLastPage) {
                                         Icon(
                                             Icons.Default.ArrowBack,
                                             contentDescription = "Back"
@@ -163,22 +174,18 @@ fun MainScreen() {
                                 }
                             },
                             actions = {
-                                if(!playerPage.value) {
-                                    IconButton(onClick = {
-                                        scope.launch {
-                                            drawerState.open()
-                                        }
-                                    }) {
-                                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+                                IconButton(onClick = {
+                                    scope.launch {
+                                        drawerState.open()
                                     }
+                                }) {
+                                    Icon(Icons.Default.Menu, contentDescription = "Menu")
                                 }
                             }
                         )
                     },
                     bottomBar = {
-                        if(!playerPage.value) {
-                            BottomBar(playerPage)
-                        }
+                        BottomBar()
                     }
                 ) { innerPadding ->
                     Box(
@@ -191,8 +198,8 @@ fun MainScreen() {
                             1 -> PlaylistsPage()
                             2 -> SettingsPage()
                         }
-                        if(playerPage.value) {
-                            PlayerPage(onClose = { playerPage.value = false })
+                        for(page in pageStack) {
+                            page.Content()
                         }
                     }
                 }
@@ -244,7 +251,7 @@ fun NavigationDrawerContent(onPageSelected: (Int) -> Unit) {
 }
 
 @Composable
-fun BottomBar(playerPage: MutableState<Boolean>) {
+fun BottomBar() {
     val currentSong by Player.currentSongState
     val isPlaying by Player.isPlayingState
     val speed by Player.speedState
@@ -287,7 +294,7 @@ fun BottomBar(playerPage: MutableState<Boolean>) {
                 modifier = Modifier
                     .weight(1f)
                     .clickable() {
-                        playerPage.value = true
+                        MainActivity.addPage(PlayerPage())
                     },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

@@ -78,7 +78,6 @@ fun SettingsPage() {
     val action = remember { mutableStateOf(PreferenceUtil::createNewProfile) }
     val folder = remember { mutableStateOf(profile.folder.substringAfterLast("/").substringAfterLast("%3A").replace("%2F", "/")) }
     val showCustomTags = remember { mutableStateOf(false) }
-    val subPage = remember {mutableStateOf(0)}
     val keepScreenOn = remember { mutableStateOf(profile.keepScreenOn) }
     val showOnLock = remember { mutableStateOf(profile.showOnLock) }
 
@@ -231,11 +230,11 @@ fun SettingsPage() {
                     onCheckedChange = { toggleKeepScreenOn() }
                 )
             }
-            SettingsRow(label = "Custom Tags") { subPage.value = 1 }
-            SettingsRow(label = "Import/Export Tag Info") { subPage.value = 2 }
-            SettingsRow(label = "Fill Tags from File Name/Path") { subPage.value = 3 }
-            SettingsRow(label = "Configure Filter and Sort Options") { subPage.value = 4 }
-            SettingsRow(label = "Configure Layout of Song Items") { subPage.value = 5 }
+            SettingsRow(label = "Custom Tags") { MainActivity.addPage(CustomTagsPage()) }
+            SettingsRow(label = "Import/Export Tag Info") { MainActivity.addPage(TagFilePage()) }
+            SettingsRow(label = "Fill Tags from File Name/Path") { MainActivity.addPage(ParseTagsPage()) }
+            SettingsRow(label = "Configure Filter and Sort Options") { MainActivity.addPage(FilterPage()) }
+            SettingsRow(label = "Configure Layout of Song Items") { MainActivity.addPage(ItemLayoutsPage()) }
         }
 
 
@@ -280,11 +279,6 @@ fun SettingsPage() {
             }
         )
     }
-    if(subPage.value == 1) CustomTagsPage{ subPage.value = 0 }
-    if(subPage.value == 2) TagFilePage { subPage.value = 0 }
-    if(subPage.value == 3) ParseTagsPage { subPage.value = 0 }
-    if(subPage.value == 4) FilterPage { subPage.value = 0 }
-    if(subPage.value == 5) ItemLayoutsPage { subPage.value = 0 }
 
 
 }

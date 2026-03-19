@@ -26,26 +26,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.danceplayer.MainActivity
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun Fragment(title:String, onBack: () -> Unit, content: @Composable () -> Unit) {
-    val oldTitle = remember { mutableStateOf(MainActivity.title.value) }
-    val oldOnBack = remember { mutableStateOf(MainActivity.onBack.value) }
-    MainActivity.title.value = title
-    MainActivity.onBack.value = {
-        onBack()
-        MainActivity.title.value = oldTitle.value
-        MainActivity.onBack.value = oldOnBack.value
-    }
-    Column(
+class Fragment {
 
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(8.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        content()
+    abstract fun getTitle(): String
+    @Composable
+    abstract fun Content()
+
+    @Composable
+    fun Main(content: @Composable () -> Unit) {
+         
+        Column(
+
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(8.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            content()
+        }
     }
+
+    
+    
 }
