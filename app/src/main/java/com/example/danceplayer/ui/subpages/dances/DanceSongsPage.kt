@@ -16,6 +16,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
@@ -31,16 +32,15 @@ import org.json.JSONArray
 @Composable
 fun DanceSongsPage(dance: String, onBack: () -> Unit) {
     val profile = PreferenceUtil.getCurrentProfile()
-    val songs = remember { mutableStateOf(MusicLibrary.songs.filter { it.getDance() == dance }) }
+    val songs = MusicLibrary.songs.value.filter { it.getDance() == dance }
     val sorter = remember {mutableStateOf("")}
     val filterOptions = remember { mutableStateOf(profile.filterOptions) }
     val itemLayout = profile.itemLayoutBrowser
-    MusicLibrary.hooks.add { songs.value = MusicLibrary.songs.filter { it.getDance() == dance } }
+    val filteredSongs = applyFilters(songs, filterOptions.value, sorter.value)
     Fragment(dance, onBack) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
         ) {
             for(i in 0 until filterOptions.value.length()) {
                 val row = filterOptions.value.getJSONArray(i)
@@ -55,7 +55,7 @@ fun DanceSongsPage(dance: String, onBack: () -> Unit) {
                     for(j in 0 until row.length()) {
                         val o = row.getJSONObject(j)
                         val tagName = o.getString("tag")
-                        val tag = MusicLibrary.getAllTagsMap().get(tagName)
+                        val tag = MusicLibrary.allTagsMap.value[tagName]
                         if(tag == null) {
                             Text("INVALID")
                             continue
@@ -73,18 +73,15 @@ fun DanceSongsPage(dance: String, onBack: () -> Unit) {
                             if(filter) {
                                 o.put("value1", newVal)
                                 filterOptions.value = JSONArray(filterOptions.value.toString())
-                                applyFilters(songs, filterOptions.value, sorter.value)
                             } else {
                                 sorter.value = when(newVal) {
                                     2 -> "-$tagName"
                                     else -> tagName
                                 }
-                                applySorting(songs, tag, newVal as Int)
                             }
                         }, onValue2Change = { newVal ->
                             o.put("value2", newVal)
                             filterOptions.value = JSONArray(filterOptions.value.toString())
-                            applyFilters(songs, filterOptions.value, sorter.value)
                         })
                     }
                 }
@@ -94,14 +91,15 @@ fun DanceSongsPage(dance: String, onBack: () -> Unit) {
         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            for((index, song) in songs.value.withIndex()) {
+            for((index, song) in filteredSongs.withIndex()) {
                 SongItem(
                     song, 
                     itemLayout, 
                     Modifier
                         .fillMaxWidth()
                         .clickable {
-                            Player.load(songs.value, index)
+                            Player.load(filteredSongs, index)
+                            Player.play()
                         }
                 )
             }
@@ -109,18 +107,18 @@ fun DanceSongsPage(dance: String, onBack: () -> Unit) {
     }
 }
 
-fun applySorting(songs: MutableState<List<Song>>, tag: Tag, sortValue: Int) {
+fun applySorting(songs: List<Song>, tag: Tag, sortValue: Int):List<Song> {
     val sorted = when(sortValue) {
-        1 -> songs.value.sortedBy { it.getTagValue(tag) as? Comparable<Any> }
-        2 -> songs.value.sortedByDescending { it.getTagValue(tag) as? Comparable<Any> }
-        else -> songs.value
+        1 -> songs.sortedBy { it.getTagValue(tag) as? Comparable<Any> }
+        2 -> songs.sortedByDescending { it.getTagValue(tag) as? Comparable<Any> }
+        else -> songs
     }
-    songs.value = sorted
+    return sorted
 }
 
-fun applyFilters(songs: MutableState<List<Song>>, filterOptions: JSONArray, sorter: String) {
-    var filtered:List<Song> = MusicLibrary.songs
-    val tagMap = MusicLibrary.getAllTagsMap()
+fun applyFilters(songs: List<Song>, filterOptions: JSONArray, sorter: String):List<Song> {
+    var filtered = songs
+    val tagMap = MusicLibrary.allTagsMap.value
     for(i in 0 until filterOptions.length()) {
         val row = filterOptions.getJSONArray(i)
         for(j in 0 until row.length()) {
@@ -132,7 +130,6 @@ fun applyFilters(songs: MutableState<List<Song>>, filterOptions: JSONArray, sort
                 val value2 = o.opt("value2")
                 filtered = filtered.filter { song ->
                     val songValue = song.getTagValue(tag)
-                    if(songValue == null) return@filter false
                     when(tag.type) {
                         Tag.Type.STRING -> {
                             val strValue = songValue as? String ?: return@filter false
@@ -164,7 +161,7 @@ fun applyFilters(songs: MutableState<List<Song>>, filterOptions: JSONArray, sort
             }
         }
     }
-    songs.value = filtered
     val tag = tagMap.get(sorter.trimStart('-'))
-    if(tag != null) applySorting(songs, tag, if(sorter.startsWith("-")) 2 else 1)
+    if(tag != null) filtered = applySorting(filtered, tag, if(sorter.startsWith("-")) 2 else 1)
+    return filtered
 }

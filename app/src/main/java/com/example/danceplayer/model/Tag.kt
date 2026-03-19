@@ -21,7 +21,7 @@ data class Tag(
             fun fromInteger(x: Int): Type =
                 entries.firstOrNull { it.id == x } ?: NONE
         }
-        fun getText(arg: Int):String {
+        fun getText():String {
             when (this) {
                 STRING -> return "Text"
                 INT -> return "Integer"

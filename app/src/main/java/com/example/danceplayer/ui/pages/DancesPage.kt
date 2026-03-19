@@ -31,11 +31,10 @@ fun DancesPage() {
             .background(MaterialTheme.colorScheme.background)
             .padding(16.dp)
     ) {
-        val dances = remember { mutableStateOf(MusicLibrary.songs.map { it.getDance() })}
-        MusicLibrary.hooks.add { dances.value = MusicLibrary.songs.map { it.getDance() } }
+        val dances = MusicLibrary.songs.value.map { it.getDance() }
 
-        val countPerDance = dances.value.groupingBy { it }.eachCount()
-        val danceList = dances.value.distinct().sorted()
+        val countPerDance = dances.groupingBy { it }.eachCount()
+        val danceList = dances.distinct().sorted()
         Column(
             modifier = Modifier
                 .fillMaxSize()

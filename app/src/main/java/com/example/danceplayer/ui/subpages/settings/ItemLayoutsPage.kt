@@ -56,7 +56,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
     val layoutPlaylists = remember { mutableStateOf(profile.itemLayoutPlaylists) }
     val layoutQueue = remember { mutableStateOf(profile.itemLayoutQueue) }
     val layoutQueueParty = remember { mutableStateOf(profile.itemLayoutQueueParty) }
-    val sample = remember { mutableStateOf(MusicLibrary.songs.shuffled().take(10)) }
+    val sample = remember { mutableStateOf(MusicLibrary.songs.value.shuffled().take(10)) }
 
     val changed = listOf(
         profile.itemLayoutBrowser.toString() != layoutBrowser.value.toString(),
@@ -205,16 +205,16 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
                                 parentObject.getJSONArray("items").remove(index)
                                 currentPath.value = currentPath.value.dropLast(1)
                             }) {
-                                Text("X")
+                                Text("✖")
                             }
                         }
                     }
                     if (type == ElementType.TAG) {
                         val tagName = currentObject.getString("tag")
-                        val tag = MusicLibrary.getAllTagsMap()[tagName]
+                        val tag = MusicLibrary.allTagsMap.value[tagName]
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("Tag: ")
-                            val tags = MusicLibrary.getAllTags().map { it.name } + Song._PLAYING_AFTER
+                            val tags = MusicLibrary.allTags.value.map { it.name } + Song._PLAYING_AFTER
                             SimpleDropDown(
                                 options = tags,
                                 selectedOption = tagName,
@@ -558,7 +558,7 @@ fun ItemLayoutsPage(onBack: () -> Unit) {
             Text("↻", modifier = Modifier
                 .padding(horizontal = 8.dp)
                 .clickable {
-                    sample.value = MusicLibrary.songs.shuffled().take(10)
+                    sample.value = MusicLibrary.songs.value.shuffled().take(10)
                 }
             )
         }

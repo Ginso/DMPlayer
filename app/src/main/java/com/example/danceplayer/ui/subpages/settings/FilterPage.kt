@@ -80,7 +80,7 @@ fun FilterPage(onBack: () -> Unit) {
                     for(j in 0 until row.length()) {
                         val o = row.getJSONObject(j)
                         val tagName = o.getString("tag")
-                        val tag = MusicLibrary.getAllTagsMap().get(tagName)
+                        val tag = MusicLibrary.allTagsMap.value[tagName]
                         if(tag == null) {
                             Text("INVALID")
                             continue
@@ -127,7 +127,7 @@ fun FilterPage(onBack: () -> Unit) {
                 for(j in 0 until arr.length()) {
                     val o = arr.getJSONObject(j)
                     val tagName = o.getString("tag")
-                    val tag = MusicLibrary.getAllTagsMap().get(tagName)!!
+                    val tag = MusicLibrary.allTagsMap.value[tagName]!!
                     val isFilter = o.getBoolean("filter")
                     val type = o.optJSONArray("type") ?: JSONArray()
                     Box(
@@ -219,7 +219,7 @@ fun FilterPage(onBack: () -> Unit) {
                             Row(verticalAlignment = Alignment.CenterVertically) { // tag
                                 Text("Tag: ")
                                 SimpleDropDown(
-                                    options = MusicLibrary.getAllTags().map { it.name },
+                                    options = MusicLibrary.allTags.value.map { it.name },
                                     selectedOption = tag.name,
                                     onOptionSelected = { tn ->
                                         o.put("tag", tn)

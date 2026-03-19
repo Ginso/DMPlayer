@@ -38,7 +38,7 @@ import kotlin.collections.emptyList
 
 @Composable
 fun ParseTagsPage(onBack: () -> Unit) {
-    val tags = MusicLibrary.tags.map { it.name }
+    val tags = MusicLibrary.tags.value.map { it.name }
     val pattern = remember { mutableStateOf("") }
     val preview = remember { mutableStateOf(emptyList<PreviewItem>()) }
     val previewFailed = remember { mutableStateOf(emptyList<String>()) }
@@ -87,7 +87,7 @@ fun ParseTagsPage(onBack: () -> Unit) {
                     val failedSongs = ArrayList<String>()
                     val previewItems = ArrayList<PreviewItem>()
                     withContext(Dispatchers.Default) {
-                        previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
+                        previewTags(pattern.value, MusicLibrary.songs.value, tags, errorText) { item ->
                             if (item.tags == null) {
                                 failedSongs.add(item.filePath)
                             } else {
@@ -107,7 +107,7 @@ fun ParseTagsPage(onBack: () -> Unit) {
                     isLoading.value = true
                     var updated = 0
                     withContext(Dispatchers.Default) {
-                        previewTags(pattern.value, MusicLibrary.songs, tags, errorText) { item ->
+                        previewTags(pattern.value, MusicLibrary.songs.value, tags, errorText) { item ->
                             if (item.tags != null) {
                                 item.tags.forEach { (tag, value) ->
                                     item.song.tags[tag] = value
@@ -118,7 +118,7 @@ fun ParseTagsPage(onBack: () -> Unit) {
                     }
                     MusicLibrary.save(context)
                     isLoading.value = false
-                    Toast.makeText(context, "Updated ${updated} / ${MusicLibrary.songs.size} songs", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "Updated ${updated} / ${MusicLibrary.songs.value.size} songs", Toast.LENGTH_LONG).show()
                 }
             }) {
                 Text("Apply")

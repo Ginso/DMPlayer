@@ -18,30 +18,41 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.danceplayer.MainActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Fragment(title:String, onBack: () -> Unit, content: @Composable () -> Unit) {
+    val oldTitle = remember { mutableStateOf(MainActivity.title.value) }
+    val oldOnBack = remember { mutableStateOf(MainActivity.onBack.value) }
+    MainActivity.title.value = title
+    MainActivity.onBack.value = {
+        onBack()
+        MainActivity.title.value = oldTitle.value
+        MainActivity.onBack.value = oldOnBack.value
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        TopAppBar(
-            title = { Text(title) },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.Default.ArrowBack,
-                        contentDescription = "Back"
-                    )
-                }
-            }
-        )
+//        TopAppBar(
+//            title = { Text(title) },
+//            navigationIcon = {
+//                IconButton(onClick = onBack) {
+//                    Icon(
+//                        Icons.Default.ArrowBack,
+//                        contentDescription = "Back"
+//                    )
+//                }
+//            }
+//        )
 
         Box(
             modifier = Modifier
