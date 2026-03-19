@@ -115,6 +115,7 @@ fun MainScreen() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val selectedPage = remember { mutableStateOf(0) }
+    val playerPage = remember { mutableStateOf(false) }
     val title by MainActivity.title
     val onBack by MainActivity.onBack
 
@@ -179,6 +180,10 @@ fun MainScreen() {
                 }
             }
         }
+    }
+
+    if(playerPage.value) {
+        PlayerPage(onClose = { playerPage.value = false })
     }
 }
 

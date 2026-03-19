@@ -121,6 +121,11 @@ object Player {
         exoPlayer?.setPlaybackParameters(PlaybackParameters(newSpeed))
     }
 
+    fun changeSpeed(delta: Float) {
+        val newSpeed = (speedState.value + delta).coerceIn(0.25f, 8.0f)
+        setSpeed(newSpeed)
+    }
+
     fun next() {
         if (currentIndex < playlist.size - 1) {
             currentIndex++

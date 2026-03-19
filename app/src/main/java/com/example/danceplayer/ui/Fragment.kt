@@ -42,18 +42,6 @@ fun Fragment(title:String, onBack: () -> Unit, content: @Composable () -> Unit) 
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-//        TopAppBar(
-//            title = { Text(title) },
-//            navigationIcon = {
-//                IconButton(onClick = onBack) {
-//                    Icon(
-//                        Icons.Default.ArrowBack,
-//                        contentDescription = "Back"
-//                    )
-//                }
-//            }
-//        )
-
         Box(
             modifier = Modifier
                 .fillMaxSize(),
