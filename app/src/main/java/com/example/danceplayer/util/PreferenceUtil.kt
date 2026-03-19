@@ -46,6 +46,10 @@ object PreferenceUtil {
     fun getCurrentProfile(): Profile = currentProfile
     fun getCurrentProfileKey(): String = currentProfileKey
 
+    fun getAppContextOrNull(): Context? {
+        return if (::appContext.isInitialized) appContext else null
+    }
+
     fun getTagFile(): String {
         val configuredPath = sharedPreferences.getString(TAG_FILE, "")!!
         if (configuredPath.isNotBlank()) return configuredPath
