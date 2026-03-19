@@ -27,10 +27,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -71,12 +73,24 @@ import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     companion object {
-        val title = mutableStateOf<String?>(null)
-        val onBack = mutableStateOf<() -> Unit>({})
 
-        val pageTitles = listOf("Dances",
+        val pageTitles = listOf(
+            "Dances",
             "Playlists",
-            "Settings")
+            "Settings"
+        )
+
+        val pageStack = mutableStateOf<List<Fragment>>(emptyList())
+
+        fun addPage(page: Fragment) {
+            pageStack.value = pageStack.value + page
+        }
+
+        fun popLastPage() {
+            if (pageStack.value.isNotEmpty()) {
+                pageStack.value = pageStack.value.dropLast(1)
+            }
+        }
 
     }
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -116,9 +130,13 @@ fun MainScreen() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val selectedPage = remember { mutableStateOf(0) }
-    val playerPage = remember { mutableStateOf(false) }
-    val title by MainActivity.title
-    val onBack by MainActivity.onBack
+    val isInitializing by MusicLibrary.isInitializing
+    val pageStack by MainActivity.pageStack
+
+    if (isInitializing) {
+        LoadingScreen()
+        return
+    }
 
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         ModalNavigationDrawer(
@@ -128,6 +146,7 @@ fun MainScreen() {
                     NavigationDrawerContent(
                         onPageSelected = { page ->
                             selectedPage.value = page
+                            MainActivity.pageStack.value = emptyList() // clear stack when selecting new page
                             scope.launch {
                                 drawerState.close()
                             }
@@ -142,11 +161,11 @@ fun MainScreen() {
                     topBar = {
                         TopAppBar(
                             title = {
-                                Text(title ?: MainActivity.pageTitles[selectedPage.value])
+                                Text(pageStack.lastOrNull()?.getTitle() ?: MainActivity.pageTitles[selectedPage.value])
                             },
                             navigationIcon = {
-                                if(title != null) {
-                                    IconButton(onClick = onBack) {
+                                if(pageStack.isNotEmpty()) {
+                                    IconButton(onClick = MainActivity::popLastPage) {
                                         Icon(
                                             Icons.Default.ArrowBack,
                                             contentDescription = "Back"
@@ -155,22 +174,18 @@ fun MainScreen() {
                                 }
                             },
                             actions = {
-                                if(!playerPage.value) {
-                                    IconButton(onClick = {
-                                        scope.launch {
-                                            drawerState.open()
-                                        }
-                                    }) {
-                                        Icon(Icons.Default.Menu, contentDescription = "Menu")
+                                IconButton(onClick = {
+                                    scope.launch {
+                                        drawerState.open()
                                     }
+                                }) {
+                                    Icon(Icons.Default.Menu, contentDescription = "Menu")
                                 }
                             }
                         )
                     },
                     bottomBar = {
-                        if(!playerPage.value) {
-                            BottomBar(playerPage)
-                        }
+                        BottomBar()
                     }
                 ) { innerPadding ->
                     Box(
@@ -183,8 +198,8 @@ fun MainScreen() {
                             1 -> PlaylistsPage()
                             2 -> SettingsPage()
                         }
-                        if(playerPage.value) {
-                            PlayerPage(onClose = { playerPage.value = false })
+                        for(page in pageStack) {
+                            page.Content()
                         }
                     }
                 }
@@ -192,6 +207,28 @@ fun MainScreen() {
         }
     }
 
+}
+
+@Composable
+private fun LoadingScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            CircularProgressIndicator()
+            Text(
+                text = "Musikbibliothek wird geladen...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+    }
 }
 
 @Composable
@@ -214,7 +251,7 @@ fun NavigationDrawerContent(onPageSelected: (Int) -> Unit) {
 }
 
 @Composable
-fun BottomBar(playerPage: MutableState<Boolean>) {
+fun BottomBar() {
     val currentSong by Player.currentSongState
     val isPlaying by Player.isPlayingState
     val speed by Player.speedState
@@ -257,7 +294,7 @@ fun BottomBar(playerPage: MutableState<Boolean>) {
                 modifier = Modifier
                     .weight(1f)
                     .clickable() {
-                        playerPage.value = true
+                        MainActivity.addPage(PlayerPage())
                     },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
