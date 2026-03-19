@@ -3,6 +3,7 @@ package com.example.danceplayer.model
 import DateTimeUtil.formatDuration
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.util.Log
 import androidx.annotation.OptIn
 import androidx.documentfile.provider.DocumentFile
 import androidx.media3.common.MediaItem
@@ -75,8 +76,21 @@ data class Song(
 
     @OptIn(UnstableApi::class)
     fun getDuration(): Long {
-        if(file == null) return 0
-        return 67000
+        val cached = tags[_DURATION] as? Long
+        if (cached != null && cached > 0L) return cached
+
+        val songUri = file ?: return 0L
+        val context = com.example.danceplayer.util.PreferenceUtil.getAppContextOrNull() ?: return 0L
+        val retriever = MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(context, songUri)
+            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+        } catch (e: RuntimeException) {
+            Log.w("Song", "Could not read duration for uri=$songUri", e)
+            0L
+        } finally {
+            retriever.release()
+        }
     }
 
     fun getDance(): String {
