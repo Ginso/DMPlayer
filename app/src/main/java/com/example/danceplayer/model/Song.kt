@@ -20,7 +20,8 @@ import kotlin.collections.iterator
 
 data class Song(
     var file: Uri? = null,
-    var tags: MutableMap<String,Any>
+    var tags: MutableMap<String,Any>,
+    var duration: Long? = null
 ) {
     companion object {
 
@@ -76,13 +77,12 @@ data class Song(
 
     @OptIn(UnstableApi::class)
     fun getDuration(): Long {
-        val cached = tags[_DURATION] as? Long
-        if (cached != null && cached > 0L) return cached
+        if (duration != null && duration!! > 0L) return duration!!
 
         val songUri = file ?: return 0L
         val context = com.example.danceplayer.util.PreferenceUtil.getAppContextOrNull() ?: return 0L
         val retriever = MediaMetadataRetriever()
-        return try {
+        duration = try {
             retriever.setDataSource(context, songUri)
             retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
         } catch (e: RuntimeException) {
@@ -91,6 +91,7 @@ data class Song(
         } finally {
             retriever.release()
         }
+        return duration!!
     }
 
     fun getDance(): String {

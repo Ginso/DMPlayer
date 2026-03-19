@@ -25,9 +25,11 @@ object MusicLibrary {
     val allSongs = mutableStateOf<List<Song>>(emptyList())
     var tagMap = mutableStateOf<Map<String, Tag>>(emptyMap())
     var songMap = mutableStateOf<Map<String, Song>>(emptyMap())
+    var isInitializing = mutableStateOf(false)
 
 
     suspend fun initialize(context: Context) {
+        isInitializing.value = true
         val path = PreferenceUtil.getTagFile()
         if (path == "") {
             getDefaultInfo()
@@ -39,8 +41,14 @@ object MusicLibrary {
             }
         }
         getMusicFiles(context)
-
+        allSongs.value = allSongs.value.toList()
+        isInitializing.value = false        
+        for(song in allSongs.value) {
+            song.getDuration() // cache duration for all songs
+        }
+        allSongs.value = allSongs.value.toList()
     }
+
 
     suspend fun loadTagFile(context: Context, uri: Uri, onError: (String) -> Unit): Boolean {
         return withContext(Dispatchers.IO) {
