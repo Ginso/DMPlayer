@@ -33,7 +33,10 @@ object MusicLibrary {
             getDefaultInfo()
         } else {
             val uri = path.toUri()
-            loadTagFile(context, uri) { /* ignore error */ }
+            val loaded = loadTagFile(context, uri) { /* ignore error */ }
+            if (!loaded) {
+                getDefaultInfo()
+            }
         }
         getMusicFiles(context)
 
@@ -168,7 +171,7 @@ object MusicLibrary {
         val tagArray = JSONArray()
         for (tag in tags.value) tagArray.put(tag.asJSON())
         val songArray = JSONArray()
-        for (tag in songs.value) songArray.put(tag.asJSON())
+        for (song in allSongs.value) songArray.put(song.asJSON())
         json.put("tags", tagArray)
         json.put("songs", songArray)
 

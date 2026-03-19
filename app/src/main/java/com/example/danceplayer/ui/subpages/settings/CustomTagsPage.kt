@@ -40,6 +40,8 @@ fun CustomTagsPage(onBack: () -> Unit) {
     val deleteTag = remember { mutableStateOf<Tag?>(null) }
     val deleteValues = remember { mutableStateOf(true) }
     val isLoading = remember { mutableStateOf(false) }
+    val newTagName = remember { mutableStateOf("") }
+    val newTagType = remember { mutableIntStateOf(Tag.Type.STRING.id) }
 
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -120,7 +122,37 @@ fun CustomTagsPage(onBack: () -> Unit) {
                 Text("New Tag", style = MaterialTheme.typography.titleMedium)
                 Row {
                     Text("Name: ")
+                    TextField(
+                        value = newTagName.value,
+                        onValueChange = { newTagName.value = it }
+                    )
                 }
+                Row {
+                    Text("Type: ")
+                    SimpleDropdown(
+                        options = Tag.Type.values().map { it.getText() },
+                        selectedOption = newTagType.value,
+                        onOptionSelected = { selected ->
+                            newTagType.value = selected
+                        }
+                    )
+                }
+                Button(onClick = {
+                    if(newTagName.value.isBlank()) return@Button
+                    val newTag = Tag(
+                        name = newTagName.value,
+                        type = Tag.Type.fromInteger(newTagType.value)
+                    )
+                    coroutineScope.launch {
+                        MusicLibrary.tags.value = MusicLibrary.tags.value + newTag
+                        MusicLibrary.save(context)
+                        newTagName.value = ""
+                        newTagType.value = 0
+                    }
+                }) {
+                    Text("Add Tag")
+                }
+                
             }
         }
     }

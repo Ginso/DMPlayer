@@ -15,7 +15,6 @@ data class Tag(
         DATETIME(4),
         DATE(5),
         TIME(6),
-        NONE(-1);
 
         companion object {
             fun fromInteger(x: Int): Type =

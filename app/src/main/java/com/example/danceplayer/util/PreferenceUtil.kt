@@ -2,18 +2,22 @@ package com.example.danceplayer.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import org.json.JSONObject
 import androidx.core.content.edit
 import com.example.danceplayer.ui.subpages.settings.getDefaultFilterOptions
 import com.example.danceplayer.ui.subpages.settings.getDefaultLayout
 import org.json.JSONArray
+import java.io.File
 
 object PreferenceUtil {
     private const val PREFS_NAME = "dm_player_profiles"
     private const val CURRENT_PROFILE_KEY = "current_profile_key"
     private const val TAG_FILE = "TAG_FILE"
+    private const val DEFAULT_TAG_FILE_NAME = "DancePlayerTags.json"
 
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var appContext: Context
     private var currentProfile: Profile = Profile()
     private var currentProfileKey: String = "Default"
 
@@ -22,6 +26,7 @@ object PreferenceUtil {
      * Muss einmalig beim App-Start aufgerufen werden.
      */
     fun initialize(context: Context) {
+        appContext = context.applicationContext
         sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         
         // Lade das zuletzt verwendete Profil
@@ -42,7 +47,12 @@ object PreferenceUtil {
     fun getCurrentProfileKey(): String = currentProfileKey
 
     fun getTagFile(): String {
-        return sharedPreferences.getString(TAG_FILE, "")!!
+        val configuredPath = sharedPreferences.getString(TAG_FILE, "")!!
+        if (configuredPath.isNotBlank()) return configuredPath
+
+        if (!::appContext.isInitialized) return ""
+        val defaultFile = File(appContext.filesDir, DEFAULT_TAG_FILE_NAME)
+        return Uri.fromFile(defaultFile).toString()
     }
 
     fun setTagFile(path: String) {
