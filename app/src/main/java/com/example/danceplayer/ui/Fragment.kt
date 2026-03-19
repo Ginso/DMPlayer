@@ -28,7 +28,9 @@ import com.example.danceplayer.MainActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Fragment(title:String, onBack: () -> Unit, content: @Composable () -> Unit) {
+fun Fragment(title:String, onBack: () -> Unit, center: Boolean = false, content: @Composable () -> Unit,
+
+) {
     val oldTitle = remember { mutableStateOf(MainActivity.title.value) }
     val oldOnBack = remember { mutableStateOf(MainActivity.onBack.value) }
     MainActivity.title.value = title
@@ -44,7 +46,8 @@ fun Fragment(title:String, onBack: () -> Unit, content: @Composable () -> Unit) 
             .background(MaterialTheme.colorScheme.background)
             .padding(8.dp)
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = if(center) Alignment.CenterHorizontally else Alignment.Start
     ) {
         content()
     }

@@ -128,6 +128,7 @@ fun applyFilters(songs: List<Song>, filterOptions: JSONArray, sorter: String):Li
                 val tag = tagMap.get(tagName) ?: continue
                 val value1 = o.opt("value1")
                 val value2 = o.opt("value2")
+                if(value1 == null && value2 == null) continue
                 filtered = filtered.filter { song ->
                     val songValue = song.getTagValue(tag)
                     when(tag.type) {
@@ -142,17 +143,18 @@ fun applyFilters(songs: List<Song>, filterOptions: JSONArray, sorter: String):Li
                         }
                         else -> {
                             val numValue = (songValue as? Number)?.toDouble() ?: return@filter false
-                            val v1 = (value1 as? Number)?.toDouble() ?: -Double.MAX_VALUE
+                            val v1orMin = (value1 as? Number)?.toDouble() ?: -Double.MAX_VALUE
+                            val v1orMax = (value1 as? Number)?.toDouble() ?: Double.MAX_VALUE
                             val v2 = (value2 as? Number)?.toDouble() ?: Double.MAX_VALUE
                             when(o.getJSONArray("type").getInt(1)) {
-                                0 -> numValue <= v1
-                                1 -> numValue >= v1
-                                2 -> numValue < v1
-                                3 -> numValue > v1
-                                4 -> v1 < numValue && numValue < v2
-                                5 -> v1 <= numValue && numValue <= v2
-                                6 -> v1 <= numValue && numValue < v2
-                                7 -> v1 < numValue && numValue <= v2
+                                0 -> numValue <= v1orMax
+                                1 -> numValue >= v1orMin
+                                2 -> numValue < v1orMax
+                                3 -> numValue > v1orMin
+                                4 -> v1orMin < numValue && numValue < v2
+                                5 -> v1orMin <= numValue && numValue <= v2
+                                6 -> v1orMin <= numValue && numValue < v2
+                                7 -> v1orMin < numValue && numValue <= v2
                                 else -> true
                             }
                         }
