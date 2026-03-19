@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.example.danceplayer.ui.pages.DancesPage
+import com.example.danceplayer.ui.pages.PlayerPage
 import com.example.danceplayer.ui.pages.PlaylistsPage
 import com.example.danceplayer.ui.pages.SettingsPage
 import com.example.danceplayer.ui.theme.DancePlayerTheme
@@ -140,7 +141,9 @@ fun MainScreen() {
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
                         TopAppBar(
-                            title = { Text(title ?: MainActivity.pageTitles[selectedPage.value]) },
+                            title = {
+                                Text(title ?: MainActivity.pageTitles[selectedPage.value])
+                            },
                             navigationIcon = {
                                 if(title != null) {
                                     IconButton(onClick = onBack) {
@@ -152,18 +155,22 @@ fun MainScreen() {
                                 }
                             },
                             actions = {
-                                IconButton(onClick = {
-                                    scope.launch {
-                                        drawerState.open()
+                                if(!playerPage.value) {
+                                    IconButton(onClick = {
+                                        scope.launch {
+                                            drawerState.open()
+                                        }
+                                    }) {
+                                        Icon(Icons.Default.Menu, contentDescription = "Menu")
                                     }
-                                }) {
-                                    Icon(Icons.Default.Menu, contentDescription = "Menu")
                                 }
                             }
                         )
                     },
                     bottomBar = {
-                        BottomBar()
+                        if(!playerPage.value) {
+                            BottomBar(playerPage)
+                        }
                     }
                 ) { innerPadding ->
                     Box(
@@ -176,15 +183,15 @@ fun MainScreen() {
                             1 -> PlaylistsPage()
                             2 -> SettingsPage()
                         }
+                        if(playerPage.value) {
+                            PlayerPage(onClose = { playerPage.value = false })
+                        }
                     }
                 }
             }
         }
     }
 
-    if(playerPage.value) {
-        PlayerPage(onClose = { playerPage.value = false })
-    }
 }
 
 @Composable
@@ -207,7 +214,7 @@ fun NavigationDrawerContent(onPageSelected: (Int) -> Unit) {
 }
 
 @Composable
-fun BottomBar() {
+fun BottomBar(playerPage: MutableState<Boolean>) {
     val currentSong by Player.currentSongState
     val isPlaying by Player.isPlayingState
     val speed by Player.speedState
@@ -247,7 +254,11 @@ fun BottomBar() {
 
             // center song info with weight to take remaining space
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable() {
+                        playerPage.value = true
+                    },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(

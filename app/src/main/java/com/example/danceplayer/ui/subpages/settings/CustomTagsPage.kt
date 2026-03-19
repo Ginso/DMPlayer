@@ -19,8 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -32,6 +34,7 @@ import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.Fragment
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.PreferenceUtil
+import com.example.danceplayer.util.SimpleDropDown
 import kotlinx.coroutines.launch
 
 @Composable
@@ -129,7 +132,7 @@ fun CustomTagsPage(onBack: () -> Unit) {
                 }
                 Row {
                     Text("Type: ")
-                    SimpleDropdown(
+                    SimpleDropDown(
                         options = Tag.Type.values().map { it.getText() },
                         selectedOption = newTagType.value,
                         onOptionSelected = { selected ->

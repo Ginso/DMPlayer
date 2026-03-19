@@ -14,11 +14,11 @@ data class Tag(
         BOOL(3),
         DATETIME(4),
         DATE(5),
-        TIME(6),
+        TIME(6);
 
         companion object {
             fun fromInteger(x: Int): Type =
-                entries.firstOrNull { it.id == x } ?: NONE
+                entries.firstOrNull { it.id == x } ?: STRING
         }
         fun getText():String {
             when (this) {
