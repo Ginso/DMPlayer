@@ -8,6 +8,7 @@ import androidx.annotation.OptIn
 import androidx.documentfile.provider.DocumentFile
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import com.example.danceplayer.util.PreferenceUtil.getAppContextOrNull
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.time.Instant
@@ -80,7 +81,7 @@ data class Song(
         if (cached != null && cached > 0L) return cached
 
         val songUri = file ?: return 0L
-        val context = com.example.danceplayer.util.PreferenceUtil.getAppContextOrNull() ?: return 0L
+        val context = getAppContextOrNull() ?: return 0L
         val retriever = MediaMetadataRetriever()
         return try {
             retriever.setDataSource(context, songUri)
