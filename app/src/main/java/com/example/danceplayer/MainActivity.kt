@@ -304,6 +304,17 @@ fun BottomBar() {
                         modifier = Modifier.size(iconSize)
                     )
                 }
+
+                IconButton(
+                    onClick = { MainActivity.addPage(PlayerPage()) },
+                    modifier = Modifier.size(iconSize),
+                    enabled = currentSong != null
+                ) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
             }
 
             // center song info with weight to take remaining space

@@ -133,3 +133,24 @@ data class Song(
         return json
     }
 }
+
+
+
+data class ContextItem(
+    val text:String,
+    val onClick: (Song) -> Unit
+) {
+    companion object {
+        val NEXT = ContextItem("Play next") { song ->
+            Player.insertSong(song)
+        }
+
+        val APPEND = ContextItem("Add to queue") { song ->
+            Player.appendSong(song)
+        }
+
+        val EDIT = ContextItem("Edit") { song ->
+            //TODO: implement edit functionality
+        }
+    }
+}

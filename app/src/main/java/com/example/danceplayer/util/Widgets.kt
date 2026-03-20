@@ -171,9 +171,12 @@ fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, cont
     var textPosition by remember { mutableStateOf(Offset.Zero) }
     var textSize by remember { mutableStateOf(IntSize.Zero) }
     var overlaySize by remember { mutableStateOf(IntSize.Zero) }
+    var currentSong by Player.currentSong
+    val isCurrent = currentSong == song
      
     ClickBox(
         onClick = onClick,
+        backgroundColor = if(isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surfaceVariant,
         modifier = modifier
     ) {
         Row(
@@ -238,11 +241,6 @@ fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, cont
         }
     }
 }
-
-data class ContextItem(
-    val text:String,
-    val onClick: (Song) -> Unit
-)
 
 @Composable
 private fun SongItemInner(song: Song, layout:JSONObject, modifier: Modifier = Modifier) {

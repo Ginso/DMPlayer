@@ -55,14 +55,9 @@ class DanceSongsPage(
             }
         }
         val contextEntries = listOf(
-            ContextItem("Play Next") { song ->
-                var i = 0
-                i++
-            },
-            ContextItem("Edit") { song ->
-            },
-            ContextItem("Add to Queue") { song ->
-            }
+            ContextItem.NEXT,
+            ContextItem.APPEND,
+            ContextItem.EDIT
         )
         Main {
             Column(

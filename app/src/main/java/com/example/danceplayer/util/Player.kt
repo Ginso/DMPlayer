@@ -171,9 +171,49 @@ object Player {
         }
     }
 
+    fun goTo(index: Int) {
+        if (index in playlist.indices) {
+            currentIndex = index
+            positionState.value = 0L
+            exoPlayer?.seekTo(index, 0L)
+            updateCurrentSong()
+        }
+    }
+
     fun getPlayList(): List<Song> {
         // return a copy of the playlist to prevent external modification
         return playlist.toList()
+    }
+
+    fun insertSong(song: Song) {
+        val mutableList = playlist.toMutableList()
+        val insertIndex = currentIndex + 1
+        mutableList.add(insertIndex, song)
+        playlist = mutableList
+        exoPlayer?.addMediaItem(insertIndex, MediaItem.Builder()
+            .setUri(song.file!!)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(song.getTitle())
+                    .setArtist(song.getArtist())
+                    .build()
+            )
+            .build())
+    }
+
+    fun appendSong(song: Song) {
+        val mutableList = playlist.toMutableList()
+        mutableList.add(song)
+        playlist = mutableList
+        exoPlayer?.addMediaItem(mutableList.size - 1, MediaItem.Builder()
+            .setUri(song.file!!)
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(song.getTitle())
+                    .setArtist(song.getArtist())
+                    .build()
+            )
+            .build())
     }
 
     fun getMediaSession(): MediaSession? = mediaSession
