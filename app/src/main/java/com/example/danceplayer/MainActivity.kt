@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import com.example.danceplayer.ui.Fragment
 import com.example.danceplayer.ui.pages.DancesPage
 import com.example.danceplayer.ui.pages.PlayerPage
 import com.example.danceplayer.ui.pages.PlaylistsPage

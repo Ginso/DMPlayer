@@ -5,8 +5,8 @@ import android.content.SharedPreferences
 import android.net.Uri
 import org.json.JSONObject
 import androidx.core.content.edit
-import com.example.danceplayer.ui.subpages.settings.getDefaultFilterOptions
-import com.example.danceplayer.ui.subpages.settings.getDefaultLayout
+import com.example.danceplayer.ui.subpages.settings.FilterPage
+import com.example.danceplayer.ui.subpages.settings.ItemLayoutsPage
 import org.json.JSONArray
 import java.io.File
 
@@ -123,11 +123,11 @@ data class Profile(
     var folder: String = "",
     var keepScreenOn: Boolean = false,
     var showOnLock: Boolean = false,
-    var filterOptions: JSONArray = getDefaultFilterOptions(),
-    var itemLayoutBrowser: JSONObject = getDefaultLayout(0),
-    var itemLayoutPlaylists: JSONObject = getDefaultLayout(1),
-    var itemLayoutQueue: JSONObject = getDefaultLayout(2),
-    var itemLayoutQueueParty: JSONObject = getDefaultLayout(3)
+    var filterOptions: JSONArray = FilterPage.getDefaultFilterOptions(),
+    var itemLayoutBrowser: JSONObject = ItemLayoutsPage.getDefaultLayout(0),
+    var itemLayoutPlaylists: JSONObject = ItemLayoutsPage.getDefaultLayout(1),
+    var itemLayoutQueue: JSONObject = ItemLayoutsPage.getDefaultLayout(2),
+    var itemLayoutQueueParty: JSONObject = ItemLayoutsPage.getDefaultLayout(3)
 ) {
 
     companion object {
@@ -138,11 +138,11 @@ data class Profile(
                     folder = json.optString("folder", ""),
                     keepScreenOn = json.optBoolean("keepScreenOn", false),
                     showOnLock = json.optBoolean("showOnLock", false),
-                    filterOptions = json.optJSONArray("filterOptions") ?: getDefaultFilterOptions(),
-                    itemLayoutBrowser = json.optJSONObject("itemLayoutBrowser") ?: getDefaultLayout(0),
-                    itemLayoutPlaylists = json.optJSONObject("itemLayoutPlaylists") ?: getDefaultLayout(1),
-                    itemLayoutQueue = json.optJSONObject("itemLayoutQueue") ?: getDefaultLayout(2),
-                    itemLayoutQueueParty = json.optJSONObject("itemLayoutQueueParty") ?: getDefaultLayout(3)
+                    filterOptions = json.optJSONArray("filterOptions") ?: FilterPage.getDefaultFilterOptions(),
+                    itemLayoutBrowser = json.optJSONObject("itemLayoutBrowser") ?: ItemLayoutsPage.getDefaultLayout(0),
+                    itemLayoutPlaylists = json.optJSONObject("itemLayoutPlaylists") ?: ItemLayoutsPage.getDefaultLayout(1),
+                    itemLayoutQueue = json.optJSONObject("itemLayoutQueue") ?: ItemLayoutsPage.getDefaultLayout(2),
+                    itemLayoutQueueParty = json.optJSONObject("itemLayoutQueueParty") ?: ItemLayoutsPage.getDefaultLayout(3)
                 )
             } catch (_: Exception) {
                 Profile()

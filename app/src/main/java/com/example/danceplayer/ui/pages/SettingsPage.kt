@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.Switch
+import com.example.danceplayer.MainActivity
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.ui.subpages.settings.CustomTagsPage

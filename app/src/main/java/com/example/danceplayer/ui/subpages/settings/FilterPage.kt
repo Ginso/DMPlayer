@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.danceplayer.MainActivity
 import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.Fragment
@@ -64,7 +65,7 @@ class FilterPage : Fragment() {
                 Button(onClick = {filterOptions.value = getDefaultFilterOptions() }) {
                     Text("Reset to default")
                 }
-                return@Fragment
+                return@Main
             }
             Column(
                 modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(4.dp))
@@ -119,7 +120,7 @@ class FilterPage : Fragment() {
                     // save to profile
                     PreferenceUtil.getCurrentProfile().filterOptions = filterOptions.value
                     PreferenceUtil.saveProfile()
-                    onBack()
+                    MainActivity.popLastPage()
                 }) {
                     Text("Save")
                 }

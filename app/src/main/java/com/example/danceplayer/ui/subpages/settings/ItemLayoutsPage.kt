@@ -54,7 +54,7 @@ class ItemLayoutsPage : Fragment() {
     }
 
     @Composable
-    override fun Content(onBack: () -> Unit) {
+    override fun Content() {
         val profile = PreferenceUtil.getCurrentProfile()
         val currentType = remember { mutableIntStateOf(0) }
         val copyType = remember { mutableIntStateOf(0) }
@@ -603,28 +603,80 @@ class ItemLayoutsPage : Fragment() {
         }
     }
 
-    @Composable
-    fun ItemLayoutTypeButton(text: String, type: Int, currentType: MutableState<Int>) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            RadioButton(
-                selected = currentType.value == type,
-                onClick = { currentType.value = type }
-            )
-            Text(text, modifier = Modifier
-                .padding(start = 8.dp)
-                .clickable { currentType.value = type })
+    companion object {
+        @Composable
+        fun ItemLayoutTypeButton(text: String, type: Int, currentType: MutableState<Int>) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                RadioButton(
+                    selected = currentType.value == type,
+                    onClick = { currentType.value = type }
+                )
+                Text(text, modifier = Modifier
+                    .padding(start = 8.dp)
+                    .clickable { currentType.value = type })
+            }
         }
-    }
 
-    fun getDefaultLayout(type: Int): JSONObject {
-        return JSONObject().apply {
-            put("type", ElementType.ROW)
-            put("items", JSONArray().apply {
-                if(type > 0) {
+        fun getDefaultLayout(type: Int): JSONObject {
+            return JSONObject().apply {
+                put("type", ElementType.ROW)
+                put("items", JSONArray().apply {
+                    if(type > 0) {
+                        put(JSONObject().apply {
+                            put("type", ElementType.TAG)
+                            put("tag", Song._POSITION)
+                            put("gray", true)
+                        })
+
+                        put(JSONObject().apply {
+                            put("type", ElementType.COLUMN)
+                            put("items", JSONArray().apply {
+                                put(JSONObject().apply {
+                                    put("type", ElementType.TAG)
+                                    put("tag", Song._DURATION)
+                                })
+                                put(JSONObject().apply {
+                                    put("type", ElementType.TAG)
+                                    put("tag", Song._PLAYING_AFTER)
+                                })
+                            })
+                        })
+                    } else {
+                        put(JSONObject().apply {
+                            put("type", ElementType.TAG)
+                            put("tag", Song._DURATION)
+                        })
+                    }
+
+
+
+
                     put(JSONObject().apply {
-                        put("type", ElementType.TAG)
-                        put("tag", Song._POSITION)
-                        put("gray", true)
+                        put("type", ElementType.COLUMN)
+                        put("items", JSONArray().apply {
+                            if(type > 0) {
+                                put(JSONObject().apply {
+                                    put("type", ElementType.TAG)
+                                    put("tag", Song._DANCE)
+                                    if(type == 3) {
+                                        put("size", 20)
+                                    }
+                                })
+                            }
+                            put(JSONObject().apply {
+                                put("type", ElementType.TAG)
+                                put("tag", Song._TPM)
+                                put("decimal", 1)
+                                put("suffix", " TPM")
+                            })
+                            if(type < 2) {
+                                put(JSONObject().apply {
+                                    put("type", ElementType.TAG)
+                                    put("tag", Song._RATING)
+                                    put("display", DisplayType.STARS)
+                                })
+                            }
+                        })
                     })
 
                     put(JSONObject().apply {
@@ -632,67 +684,17 @@ class ItemLayoutsPage : Fragment() {
                         put("items", JSONArray().apply {
                             put(JSONObject().apply {
                                 put("type", ElementType.TAG)
-                                put("tag", Song._DURATION)
+                                put("tag", Song._TITLE)
                             })
                             put(JSONObject().apply {
                                 put("type", ElementType.TAG)
-                                put("tag", Song._PLAYING_AFTER)
+                                put("tag", Song._ARTIST)
+                                put("gray", true)
                             })
-                        })
-                    })
-                } else {
-                    put(JSONObject().apply {
-                        put("type", ElementType.TAG)
-                        put("tag", Song._DURATION)
-                    })
-                }
-
-
-
-
-                put(JSONObject().apply {
-                    put("type", ElementType.COLUMN)
-                    put("items", JSONArray().apply {
-                        if(type > 0) {
-                            put(JSONObject().apply {
-                                put("type", ElementType.TAG)
-                                put("tag", Song._DANCE)
-                                if(type == 3) {
-                                    put("size", 20)
-                                }
-                            })
-                        }
-                        put(JSONObject().apply {
-                            put("type", ElementType.TAG)
-                            put("tag", Song._TPM)
-                            put("decimal", 1)
-                            put("suffix", " TPM")
-                        })
-                        if(type < 2) {
-                            put(JSONObject().apply {
-                                put("type", ElementType.TAG)
-                                put("tag", Song._RATING)
-                                put("display", DisplayType.STARS)
-                            })
-                        }
-                    })
-                })
-
-                put(JSONObject().apply {
-                    put("type", ElementType.COLUMN)
-                    put("items", JSONArray().apply {
-                        put(JSONObject().apply {
-                            put("type", ElementType.TAG)
-                            put("tag", Song._TITLE)
-                        })
-                        put(JSONObject().apply {
-                            put("type", ElementType.TAG)
-                            put("tag", Song._ARTIST)
-                            put("gray", true)
                         })
                     })
                 })
-            })
+            }
         }
     }
 }

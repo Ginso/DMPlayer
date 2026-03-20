@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.danceplayer.MainActivity
 import com.example.danceplayer.ui.subpages.dances.DanceSongsPage
 import com.example.danceplayer.util.MusicLibrary
 
@@ -49,7 +50,9 @@ fun DancesPage() {
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(8.dp))
                         .padding(8.dp)
-                        .clickable { selectedDance.value = dance }
+                        .clickable {
+                            MainActivity.addPage(DanceSongsPage(dance))
+                        }
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth().padding(8.dp)
@@ -68,9 +71,5 @@ fun DancesPage() {
                 }
             }
         }
-    }
-
-    if (selectedDance.value != null) {
-        DanceSongsPage(dance = selectedDance.value!!, onBack = { selectedDance.value = null })
     }
 }
