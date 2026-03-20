@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -45,8 +46,12 @@ class DanceSongsPage(
         val itemLayout = profile.itemLayoutBrowser
         val sorter = remember {mutableStateOf("")}
         val filterOptions = remember { mutableStateOf(profile.filterOptions) }
-        val songs = MusicLibrary.songs.value.filter { it.getDance() == dance }
-        val filteredSongs = applyFilters(songs, filterOptions.value, sorter.value)
+        val filteredSongs = remember {
+            derivedStateOf {
+                val songs = MusicLibrary.songs.value.filter { it.getDance() == dance }
+                applyFilters(songs, filterOptions.value, sorter.value)
+            }
+        }
         Main {
             Column(
                 modifier = Modifier
@@ -101,14 +106,14 @@ class DanceSongsPage(
             HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                for((index, song) in filteredSongs.withIndex()) {
+                for((index, song) in filteredSongs.value.withIndex()) {
                     SongItem(
                         song, 
                         itemLayout, 
                         Modifier
                             .fillMaxWidth()
                             .clickable {
-                                Player.load(filteredSongs, index)
+                                Player.load(filteredSongs.value, index)
                                 Player.play()
                             }
                     )
