@@ -112,11 +112,10 @@ class DanceSongsPage(
                         itemLayout, 
                         Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                Player.load(filteredSongs.value, index)
-                                Player.play()
-                            }
-                    )
+                    ) {
+                        Player.load(filteredSongs.value, index)
+                        Player.play()
+                    }
                 }
             }
         }

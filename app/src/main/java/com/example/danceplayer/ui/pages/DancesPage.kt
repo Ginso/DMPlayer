@@ -22,7 +22,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.danceplayer.MainActivity
 import com.example.danceplayer.ui.subpages.dances.DanceSongsPage
 import com.example.danceplayer.util.ClickBox
@@ -46,7 +49,7 @@ fun DancesPage() {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             for (dance in danceList) {
                 val count = countPerDance[dance] ?: 0
@@ -57,14 +60,13 @@ fun DancesPage() {
                         },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp)
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(12.dp)
                     ) {
                         Text(
                             text = dance,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(

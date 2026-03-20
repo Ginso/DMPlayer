@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +56,7 @@ import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.subpages.settings.ElementType
 import com.google.common.base.Strings.padEnd
+import kotlinx.coroutines.delay
 import org.json.JSONObject
 
 @Composable
@@ -155,11 +157,10 @@ fun MyTextField(
 }
 
 @Composable
-fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier) {
-    Box(
+fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+    ClickBox(
+        onClick = onClick,
         modifier = modifier
-            .background(MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(16.dp))
-
     ) {
         Row(
             modifier = Modifier.padding(all=8.dp),
@@ -171,6 +172,11 @@ fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier) {
         }
     }
 }
+
+data class ContextItem(
+    val text:String,
+    val onClick: () -> Unit
+)
 
 @Composable
 private fun SongItemInner(song: Song, layout:JSONObject, modifier: Modifier = Modifier) {
@@ -292,17 +298,26 @@ private fun Container(
 }
 
 @Composable
-fun ClickBox(onClick: () -> Unit,
-             modifier: Modifier = Modifier,
-             backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
-             backgroundColorClicked: Color = backgroundColor.copy(alpha = 0.85f),
-             shape: Shape = RoundedCornerShape(8.dp),
-             content: @Composable BoxScope.() -> Unit) {
+fun ClickBox(onClick: () -> Unit, 
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    backgroundColorClicked: Color = backgroundColor.copy(alpha = 0.85f),
+    shape: Shape = RoundedCornerShape(16.dp),
+    tapFeedbackDurationMs: Long = 120,
+    content: @Composable BoxScope.() -> Unit) {
 
         val interactionSource = remember { MutableInteractionSource() }
         val isPressed by interactionSource.collectIsPressedAsState()
+        var showTapFeedback by remember { mutableStateOf(false) }
+        LaunchedEffect(showTapFeedback) {
+            if (showTapFeedback) {
+                delay(tapFeedbackDurationMs)
+                showTapFeedback = false
+                onClick()
+            }
+        }
         val itemBackgroundColor by animateColorAsState(
-            targetValue = if (isPressed) {
+            targetValue = if (isPressed || showTapFeedback) {
                 backgroundColorClicked
             } else {
                 backgroundColor
@@ -312,7 +327,9 @@ fun ClickBox(onClick: () -> Unit,
         Box(
             modifier = modifier
                 .background(itemBackgroundColor, shape)
-                .clickable(interactionSource = interactionSource, indication = null) { onClick() },
+                .clickable(interactionSource = interactionSource, indication = null) {
+                    showTapFeedback = true
+                },
             content = content
         )
 }
