@@ -82,6 +82,8 @@ class MainActivity : ComponentActivity() {
         )
 
         val pageStack = mutableStateOf<List<Fragment>>(emptyList())
+        val popupOverlay = mutableStateOf(false)
+        var onDismissPopup: () -> Unit = {}
 
         fun addPage(page: Fragment) {
             pageStack.value = pageStack.value + page
@@ -202,10 +204,23 @@ fun MainScreen() {
                         for(page in pageStack) {
                             page.Content()
                         }
+
                     }
                 }
             }
         }
+    }
+
+    if(MainActivity.popupOverlay.value) {
+        Box (
+            modifier = Modifier.fillMaxSize()
+                .background(Color.Red)
+                .clickable {
+                    MainActivity.popupOverlay.value = false
+                    MainActivity.onDismissPopup()
+                    MainActivity.onDismissPopup = {}
+                }
+        )
     }
 
 }

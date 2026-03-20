@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.Fragment
 import com.example.danceplayer.ui.subpages.settings.FilterPage
+import com.example.danceplayer.util.ContextItem
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.Player
 import com.example.danceplayer.util.PreferenceUtil
@@ -52,9 +54,10 @@ class DanceSongsPage(
                 applyFilters(songs, filterOptions.value, sorter.value)
             }
         }
-        val showContext = remember { mutableIntStateOf(-1) }
         val contextEntries = listOf(
             ContextItem("Play Next") { song ->
+                var i = 0
+                i++
             },
             ContextItem("Edit") { song ->
             },

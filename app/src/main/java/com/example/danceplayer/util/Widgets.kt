@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,14 +45,22 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import com.example.danceplayer.MainActivity
 import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.subpages.settings.ElementType
@@ -158,9 +167,10 @@ fun MyTextField(
 
 @Composable
 fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, contextEntries: List<ContextItem> = emptyList(), onClick: () -> Unit = {}) {
-    val showContext = remember { mutableIntStateOf(false) }
+    val showContext = remember { mutableStateOf(false) }
     var textPosition by remember { mutableStateOf(Offset.Zero) }
     var textSize by remember { mutableStateOf(IntSize.Zero) }
+    var overlaySize by remember { mutableStateOf(IntSize.Zero) }
      
     ClickBox(
         onClick = onClick,
@@ -173,7 +183,13 @@ fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, cont
             SongItemInner(song, layout, Modifier.weight(1f))
             
             Text("•••", modifier = Modifier
-                .clickable() { showContext.value = true }
+                .clickable() {
+                    showContext.value = true
+                    MainActivity.popupOverlay.value = true
+                    MainActivity.onDismissPopup = {
+                        showContext.value = false
+                    }
+                }
                 .onGloballyPositioned {
                     textPosition = it.positionInParent()
                     textSize = it.size
@@ -181,29 +197,42 @@ fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, cont
             )
         }
 
-        Box(
-        modifier = Modifier
-            .offset {
-                IntOffset(
-                    x = (textPosition.x + textSize.width).toInt(),
-                    y = (textPosition.y + textSize.height).toInt()
-                )
-            }
-            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(4.dp))
-            .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(4.dp))
-        ) {
-            Column {
-                contextEntries.forEach { entry ->
-                    Text(
-                        text = entry.text,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                entry.onClick(song)
-                                showContext.value = false
-                            }
-                            .padding(8.dp)
-                    )
+        if(showContext.value) {
+
+            Popup(
+                offset = IntOffset(
+                    (textPosition.x + textSize.width - overlaySize.width).toInt(),
+                    (textPosition.y + textSize.height).toInt()
+                ),
+                onDismissRequest = {
+                    showContext.value = false
+                    MainActivity.popupOverlay.value = false
+                    MainActivity.onDismissPopup = {}
+                }
+            ) {
+                Box(
+                    modifier = Modifier.onGloballyPositioned {
+                        overlaySize = it.size
+                    }
+                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(4.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(4.dp))
+                ) {
+                    Column {
+                        contextEntries.forEach { entry ->
+                            Text(
+                                text = entry.text,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        entry.onClick(song)
+                                        showContext.value = false
+                                        MainActivity.popupOverlay.value = false
+                                        MainActivity.onDismissPopup = {}
+                                    }
+                                    .padding(8.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
