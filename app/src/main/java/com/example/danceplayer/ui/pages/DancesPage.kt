@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.danceplayer.MainActivity
 import com.example.danceplayer.ui.subpages.dances.DanceSongsPage
+import com.example.danceplayer.util.ClickBox
 import com.example.danceplayer.util.MusicLibrary
 
 @Composable

@@ -1,7 +1,11 @@
 package com.example.danceplayer.util
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -38,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -287,12 +292,12 @@ private fun Container(
 }
 
 @Composable
-fun ClickBox(onClick: () -> Unit, 
-    modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
-    backgroundColorClicked: Color = backgroundColor.copy(alpha = 0.85f),
-    shape: Shape = RoundedCornerShape(8.dp),
-    content: @Composable BoxScope.() -> Unit) {
+fun ClickBox(onClick: () -> Unit,
+             modifier: Modifier = Modifier,
+             backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+             backgroundColorClicked: Color = backgroundColor.copy(alpha = 0.85f),
+             shape: Shape = RoundedCornerShape(8.dp),
+             content: @Composable BoxScope.() -> Unit) {
 
         val interactionSource = remember { MutableInteractionSource() }
         val isPressed by interactionSource.collectIsPressedAsState()
