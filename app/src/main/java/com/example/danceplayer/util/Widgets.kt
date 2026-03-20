@@ -285,3 +285,29 @@ private fun Container(
         }
     }
 }
+
+@Composable
+fun ClickBox(onClick: () -> Unit, 
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
+    backgroundColorClicked: Color = backgroundColor.copy(alpha = 0.85f),
+    shape: Shape = RoundedCornerShape(8.dp),
+    content: @Composable BoxScope.() -> Unit) {
+
+        val interactionSource = remember { MutableInteractionSource() }
+        val isPressed by interactionSource.collectIsPressedAsState()
+        val itemBackgroundColor by animateColorAsState(
+            targetValue = if (isPressed) {
+                backgroundColorClicked
+            } else {
+                backgroundColor
+            },
+            label = "danceItemBackground"
+        )
+        Box(
+            modifier = modifier
+                .background(itemBackgroundColor, shape)
+                .clickable(interactionSource = interactionSource, indication = null) { onClick() },
+            content = content
+        )
+}
