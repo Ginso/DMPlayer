@@ -4,9 +4,11 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player as Media3Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaSession
 import com.example.danceplayer.model.Song
 
 import androidx.compose.runtime.mutableStateOf
@@ -22,6 +24,7 @@ import kotlinx.coroutines.launch
 
 object Player {
     private var exoPlayer: ExoPlayer? = null
+    private var mediaSession: MediaSession? = null
 
     // expose compose-friendly state holders
     val isPlayingState = mutableStateOf(false)
@@ -41,7 +44,8 @@ object Player {
     @OptIn(UnstableApi::class)
     fun initialize(context: Context) {
         if (exoPlayer == null) {
-            exoPlayer = ExoPlayer.Builder(context).build()
+            val appContext = context.applicationContext
+            exoPlayer = ExoPlayer.Builder(appContext).build()
             exoPlayer?.addListener(object : Media3Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     isPlayingState.value = isPlaying
@@ -53,18 +57,36 @@ object Player {
                 override fun onPositionDiscontinuity(reason: Int) {
                     positionState.value = exoPlayer?.currentPosition ?: 0L
                 }
+                override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                    currentIndex = exoPlayer?.currentMediaItemIndex ?: currentIndex
+                    positionState.value = exoPlayer?.currentPosition ?: 0L
+                    updateCurrentSong()
+                }
                 override fun onPlayerError(error: PlaybackException) {
                     Log.e("Player", "Playback error", error)
                     // ggf. Toast o.ä. anzeigen
                 }
             })
+
+            // Registers a media session so Bluetooth/headset buttons trigger transport commands.
+            mediaSession = MediaSession.Builder(appContext, exoPlayer!!).build()
         }
     }
 
     fun load(songs: List<Song>, index: Int = 0) {
         playlist = songs
         currentIndex = index
-        val mediaItems = songs.map { song -> MediaItem.fromUri(song.file!!) }
+        val mediaItems = songs.map { song ->
+            MediaItem.Builder()
+                .setUri(song.file!!)
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setTitle(song.getTitle())
+                        .setArtist(song.getArtist())
+                        .build()
+                )
+                .build()
+        }
         exoPlayer?.setMediaItems(mediaItems, index, 0L)
         exoPlayer?.prepare()                 // <<< wichtig
         seekTo(0L)
@@ -74,6 +96,8 @@ object Player {
     fun release() {
         positionJob?.cancel()
         scope.cancel()
+        mediaSession?.release()
+        mediaSession = null
         exoPlayer?.release()
         exoPlayer = null
     }
@@ -151,6 +175,10 @@ object Player {
         // return a copy of the playlist to prevent external modification
         return playlist.toList()
     }
+
+    fun getMediaSession(): MediaSession? = mediaSession
+
+    fun getExoPlayer(): ExoPlayer? = exoPlayer
 
     fun removeFromPlaylist(index: Int) {
         if (index in playlist.indices) {

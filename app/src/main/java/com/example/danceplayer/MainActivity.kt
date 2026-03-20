@@ -2,6 +2,7 @@ package com.example.danceplayer
 
 // additional layout/imports used in BottomBar
 import DateTimeUtil
+import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -98,6 +99,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        startService(Intent(this, com.example.danceplayer.service.PlaybackService::class.java))
         // suspend initialization: runs asynchronously
         lifecycleScope.launch {
             PreferenceUtil.initialize(this@MainActivity)
@@ -123,7 +125,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Player.release()
     }
 }
 
