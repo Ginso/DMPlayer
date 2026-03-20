@@ -52,6 +52,15 @@ class DanceSongsPage(
                 applyFilters(songs, filterOptions.value, sorter.value)
             }
         }
+        val showContext = remember { mutableIntStateOf(-1) }
+        val contextEntries = listOf(
+            ContextItem("Play Next") { song ->
+            },
+            ContextItem("Edit") { song ->
+            },
+            ContextItem("Add to Queue") { song ->
+            }
+        )
         Main {
             Column(
                 modifier = Modifier
@@ -111,7 +120,8 @@ class DanceSongsPage(
                         song, 
                         itemLayout, 
                         Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth(),
+                        contextEntries
                     ) {
                         Player.load(filteredSongs.value, index)
                         Player.play()

@@ -157,7 +157,11 @@ fun MyTextField(
 }
 
 @Composable
-fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, contextEntries: List<ContextItem> = emptyList(), onClick: () -> Unit = {}) {
+    val showContext = remember { mutableIntStateOf(false) }
+    var textPosition by remember { mutableStateOf(Offset.Zero) }
+    var textSize by remember { mutableStateOf(IntSize.Zero) }
+     
     ClickBox(
         onClick = onClick,
         modifier = modifier
@@ -168,14 +172,47 @@ fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, onCl
         ) {
             SongItemInner(song, layout, Modifier.weight(1f))
             
-            Text("•••")
+            Text("•••", modifier = Modifier
+                .clickable() { showContext.value = true }
+                .onGloballyPositioned {
+                    textPosition = it.positionInParent()
+                    textSize = it.size
+                }
+            )
+        }
+
+        Box(
+        modifier = Modifier
+            .offset {
+                IntOffset(
+                    x = (textPosition.x + textSize.width).toInt(),
+                    y = (textPosition.y + textSize.height).toInt()
+                )
+            }
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(4.dp))
+            .border(1.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(4.dp))
+        ) {
+            Column {
+                contextEntries.forEach { entry ->
+                    Text(
+                        text = entry.text,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                entry.onClick(song)
+                                showContext.value = false
+                            }
+                            .padding(8.dp)
+                    )
+                }
+            }
         }
     }
 }
 
 data class ContextItem(
     val text:String,
-    val onClick: () -> Unit
+    val onClick: (Song) -> Unit
 )
 
 @Composable
