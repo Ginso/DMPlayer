@@ -47,6 +47,7 @@ import com.example.danceplayer.ui.subpages.settings.FilterPage
 import com.example.danceplayer.ui.subpages.settings.ItemLayoutsPage
 import com.example.danceplayer.ui.subpages.settings.ParseTagsPage
 import com.example.danceplayer.ui.subpages.settings.TagFilePage
+import com.example.danceplayer.util.Player
 import com.example.danceplayer.util.SimpleDropDown
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -71,7 +72,7 @@ fun SettingsRow(label: String, onClick: () -> Unit) {
 @Composable
 fun SettingsPage() {
     val profile = PreferenceUtil.getCurrentProfile()
-    val context = LocalContext.current
+    val context = LocalContext.current as MainActivity
 
     val profileKeys = remember { mutableStateOf(PreferenceUtil.getProfileKeys()) }
     val selectedProfile = remember { mutableStateOf(PreferenceUtil.getCurrentProfileKey()) }
@@ -117,14 +118,7 @@ fun SettingsPage() {
             profile.folder = it.toString()
             PreferenceUtil.saveProfile()
             folder.value = profile.folder.substringAfterLast("/").substringAfterLast("%3A").replace("%2F", "/")
-            coroutineScope.launch {
-                withContext(Dispatchers.IO) {
-                    MusicLibrary.isInitializing.value = true
-                    MusicLibrary.getMusicFiles(context)
-                    MusicLibrary.isInitializing.value = false
-                    MusicLibrary.loadDuration()
-                }
-            }
+            context.initMusic()
         }
     }
 

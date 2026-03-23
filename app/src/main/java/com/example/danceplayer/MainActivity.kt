@@ -130,6 +130,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    fun initMusic() {
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                MusicLibrary.initialize(this@MainActivity)
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
     }
