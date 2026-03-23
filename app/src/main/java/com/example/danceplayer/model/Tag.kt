@@ -5,7 +5,6 @@ import org.json.JSONObject
 data class Tag(
     var name:String = "",
     var type:Type = Type.STRING,
-    var arg:Int = 0
 ) {
     enum class Type(val id: Int) {
         STRING(0),
@@ -41,7 +40,6 @@ data class Tag(
                 Tag(
                     name = json.getString("name"),
                     type = Tag.Type.fromInteger(json.getInt("type")),
-                    arg = json.optInt("arg", 0)
                 )
             } catch (e: Exception) {
                 onError("Error parsing tag info: ${json.toString()}")
@@ -54,7 +52,6 @@ data class Tag(
         val json = JSONObject()
         json.put("name", name)
         json.put("type", type)
-        json.put("arg", arg)
         return json
     }
 }
