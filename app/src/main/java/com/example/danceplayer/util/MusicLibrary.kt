@@ -116,7 +116,8 @@ object MusicLibrary {
     }
 
     private fun searchMusicFiles(folder: DocumentFile, pathPrefix: String) {
-        folder.listFiles().forEach { file ->
+        val files = folder.listFiles() ?: return
+        files.forEach { file ->
             val path = pathPrefix + file.name
             val pathLower = path.lowercase()
             if(file.isDirectory) searchMusicFiles(file, path + "/") // Rekursiv in Unterordner
