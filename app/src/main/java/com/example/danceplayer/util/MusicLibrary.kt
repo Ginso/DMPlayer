@@ -37,17 +37,29 @@ object MusicLibrary {
         tags.value + Tag(Song._DURATION, Tag.Type.TIME)
     }
 
-    val allSongs = mutableStateOf<List<Song>>(emptyList())
-
-    val allTagsMap = derivedStateOf {
-        tagMap.value + (Song._DURATION to Tag(Song._DURATION, Tag.Type.TIME))
+    val tagMap = derivedStateOf {
+        val map = mutableMapOf<String, Tag>()
+        for (tag in allTags.value) {
+            map.put(tag.name, tag)
+        }
+        map
     }
+
+    val allSongs = mutableStateOf<List<Song>>(emptyList())
 
     val songs = derivedStateOf {
         allSongs.value.filter { song ->  song.file != null }
     }
-    var tagMap = mutableStateOf<Map<String, Tag>>(emptyMap())
-    var songMap = mutableStateOf<Map<String, Song>>(emptyMap())
+
+    var songMap = derivedStateOf {
+        val map = mutableMapOf<String, Song>()
+        for (song in allSongs.value) {
+            val path = song.tags[Song._PATH] as? String ?: continue
+            map.put(path.lowercase(), song)
+        }
+        map
+    }
+
     var isInitializing = mutableStateOf(false)
 
     val counter = mutableIntStateOf(0)
