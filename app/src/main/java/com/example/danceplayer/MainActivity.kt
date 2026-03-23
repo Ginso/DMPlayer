@@ -115,7 +115,7 @@ class MainActivity : ComponentActivity() {
             PreferenceUtil.initialize(this@MainActivity)
             Player.initialize(this@MainActivity)
             withContext(Dispatchers.IO) {
-                //MusicLibrary.initialize(this@MainActivity)
+                MusicLibrary.initialize(this@MainActivity)
             }
         }
 
@@ -336,7 +336,7 @@ fun BottomBar() {
                     enabled = currentSong != null
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.ic_previous),
+                        painter = painterResource(id = R.drawable.ic_queue_music),
                         contentDescription = "Back",
                         modifier = Modifier.size(iconSize)
                     )
