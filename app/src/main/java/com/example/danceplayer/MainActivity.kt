@@ -25,8 +25,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
@@ -43,6 +46,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -65,6 +69,7 @@ import com.example.danceplayer.ui.pages.DancesPage
 import com.example.danceplayer.ui.pages.PlayerPage
 import com.example.danceplayer.ui.pages.PlaylistsPage
 import com.example.danceplayer.ui.pages.SettingsPage
+import com.example.danceplayer.ui.subpages.QueuePage
 import com.example.danceplayer.ui.theme.DancePlayerTheme
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.Player
@@ -81,6 +86,8 @@ class MainActivity : ComponentActivity() {
             "Playlists",
             "Settings"
         )
+
+        val selectedPage = mutableIntStateOf(0)
 
         val pageStack = mutableStateOf<List<Fragment>>(emptyList())
         val popupOverlay = mutableStateOf(false)
@@ -133,7 +140,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val selectedPage = remember { mutableStateOf(0) }
+    val selectedPage = MainActivity.selectedPage
     val isInitializing by MusicLibrary.isInitializing
     val pageStack by MainActivity.pageStack
 
@@ -171,7 +178,7 @@ fun MainScreen() {
                                 if(pageStack.isNotEmpty()) {
                                     IconButton(onClick = MainActivity::popLastPage) {
                                         Icon(
-                                            Icons.Default.ArrowBack,
+                                            Icons.AutoMirrored.Filled.ArrowBack,
                                             contentDescription = "Back"
                                         )
                                     }
@@ -244,6 +251,11 @@ private fun LoadingScreen() {
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
+            Text(
+                text = "${MusicLibrary.counter.intValue} Songs gefunden",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
     }
 }
@@ -306,12 +318,12 @@ fun BottomBar() {
                 }
 
                 IconButton(
-                    onClick = { MainActivity.addPage(PlayerPage()) },
+                    onClick = { MainActivity.addPage(QueuePage()) },
                     modifier = Modifier.size(iconSize),
                     enabled = currentSong != null
                 ) {
                     Icon(
-                        Icons.Default.ArrowBack,
+                        Icons.AutoMirrored.Filled.QueueMusic,
                         contentDescription = "Back"
                     )
                 }

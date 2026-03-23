@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.Switch
+import androidx.compose.ui.graphics.Color
 import com.example.danceplayer.MainActivity
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.MusicLibrary
@@ -47,7 +48,9 @@ import com.example.danceplayer.ui.subpages.settings.ItemLayoutsPage
 import com.example.danceplayer.ui.subpages.settings.ParseTagsPage
 import com.example.danceplayer.ui.subpages.settings.TagFilePage
 import com.example.danceplayer.util.SimpleDropDown
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 @Composable
@@ -115,7 +118,12 @@ fun SettingsPage() {
             PreferenceUtil.saveProfile()
             folder.value = profile.folder.substringAfterLast("/").substringAfterLast("%3A").replace("%2F", "/")
             coroutineScope.launch {
-                MusicLibrary.getMusicFiles(context)
+                withContext(Dispatchers.IO) {
+                    MusicLibrary.isInitializing.value = true
+                    MusicLibrary.getMusicFiles(context)
+                    MusicLibrary.isInitializing.value = false
+                    MusicLibrary.loadDuration()
+                }
             }
         }
     }
@@ -192,8 +200,11 @@ fun SettingsPage() {
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             ) {
-                Text("Music Folder: ${folder.value}",
+                var text = folder.value
+                if(text.isBlank()) text = "UNSET"
+                Text("Music Folder: $text",
                     modifier = Modifier.weight(1f),
+                    color = if(folder.value.isBlank()) Color.Red else MaterialTheme.colorScheme.onBackground,
                     softWrap = true
                 )
                 Button(

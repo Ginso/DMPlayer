@@ -61,6 +61,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.example.danceplayer.MainActivity
+import com.example.danceplayer.model.ContextItem
 import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.subpages.settings.ElementType
@@ -171,7 +172,7 @@ fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, cont
     var textPosition by remember { mutableStateOf(Offset.Zero) }
     var textSize by remember { mutableStateOf(IntSize.Zero) }
     var overlaySize by remember { mutableStateOf(IntSize.Zero) }
-    var currentSong by Player.currentSong
+    var currentSong by Player.currentSongState
     val isCurrent = currentSong == song
      
     ClickBox(

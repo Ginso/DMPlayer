@@ -21,7 +21,10 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.painterResource
 import com.example.danceplayer.R
+import com.example.danceplayer.model.ContextItem
 import com.example.danceplayer.ui.Fragment
+import com.example.danceplayer.util.PreferenceUtil
+import com.example.danceplayer.util.SongItem
 import kotlin.math.roundToInt
 
 class QueuePage : Fragment() {

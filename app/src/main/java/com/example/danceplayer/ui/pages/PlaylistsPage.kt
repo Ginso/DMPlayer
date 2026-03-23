@@ -9,15 +9,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.danceplayer.ui.Fragment
 
-@Composable
-fun PlaylistsPage() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(16.dp)
-    ) {
-        Text("Playlists - wird noch befüllt")
+class PlaylistsPage : Fragment() {
+    override fun getTitle(): String {
+        return "Playlists"
+    }
+
+    @Composable
+    override fun Content() {
+
     }
 }

@@ -6,6 +6,7 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.documentfile.provider.DocumentFile
 import com.example.danceplayer.model.Song
@@ -15,6 +16,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import androidx.core.net.toUri
+import com.example.danceplayer.MainActivity
 import kotlin.system.measureNanoTime
 import kotlin.system.measureTimeMillis
 
@@ -27,43 +29,45 @@ object MusicLibrary {
     var songMap = mutableStateOf<Map<String, Song>>(emptyMap())
     var isInitializing = mutableStateOf(false)
 
+    val counter = mutableIntStateOf(0)
+
 
     suspend fun initialize(context: Context) {
         isInitializing.value = true
         val path = PreferenceUtil.getTagFile()
-        if (path == "") {
+        val uri = path.toUri()
+        val loaded = loadTagFile(context, uri) { /* ignore error */ }
+        if (!loaded) {
             getDefaultInfo()
-        } else {
-            val uri = path.toUri()
-            val loaded = loadTagFile(context, uri) { /* ignore error */ }
-            if (!loaded) {
-                getDefaultInfo()
-            }
         }
-        getMusicFiles(context)
-        allSongs.value = allSongs.value.toList()
-        isInitializing.value = false        
-        for(song in allSongs.value) {
-            song.getDuration() // cache duration for all songs
+        val result = getMusicFiles(context)
+        isInitializing.value = false
+        loadDuration()
+        if(!result) {
+            MainActivity.selectedPage.intValue = 2
+            return
         }
-        allSongs.value = allSongs.value.toList()
     }
 
 
     suspend fun loadTagFile(context: Context, uri: Uri, onError: (String) -> Unit): Boolean {
         return withContext(Dispatchers.IO) {
-            val resolver = context.contentResolver
-            val jsonString = resolver.openInputStream(uri)?.bufferedReader().use { it?.readText() }
-            if (jsonString == null) {
-                onError("Could not read file.")
-                return@withContext false
-            }
+            try {
+                val resolver = context.contentResolver
+                val jsonString = resolver.openInputStream(uri)?.bufferedReader().use { it?.readText() }
+                if (jsonString == null) {
+                    onError("Could not read file.")
+                    return@withContext false
+                }
 
 
-            if (!loadJSON(jsonString, onError)) {
-                return@withContext false
+                if (!loadJSON(jsonString, onError)) {
+                    return@withContext false
+                }
+                true
+            } catch (e: Exception) {
+                false
             }
-            true
         }
     }
 
@@ -86,16 +90,29 @@ object MusicLibrary {
         addTag(Tag(Song._TPM, Tag.Type.FLOAT,1));
     }
 
-    suspend fun getMusicFiles(context: Context) {
+    suspend fun getMusicFiles(context: Context): Boolean {
         val folderUri = PreferenceUtil.getCurrentProfile().folder
-        if (folderUri == "") return
+        if (folderUri == "") return false
         val uri = folderUri.toUri()
-        val rootFolder = DocumentFile.fromTreeUri(context, uri) ?: return
-
+        val rootFolder = DocumentFile.fromTreeUri(context, uri) ?: return false
+        counter.intValue = 0
+        allSongs.value.forEach { song ->  song.file = null }
         searchMusicFiles(rootFolder, "")
+        counter.intValue = 0 // just a test
         withContext(Dispatchers.Main) {
             Player.load(songs.value.subList(0,1))
         }
+
+        allSongs.value = allSongs.value.toList()
+
+        return true
+    }
+
+    suspend fun loadDuration() {
+        for(song in allSongs.value) {
+            song.getDuration() // cache duration for all songs
+        }
+        allSongs.value = allSongs.value.toList()
     }
 
     private fun searchMusicFiles(folder: DocumentFile, pathPrefix: String) {
@@ -111,6 +128,7 @@ object MusicLibrary {
                 }
                 songInfo.file = file.uri
                 songInfo.tags.put(Song._PATH, path) // make sure correct case is stored
+                counter.intValue++
             }
         }
     }

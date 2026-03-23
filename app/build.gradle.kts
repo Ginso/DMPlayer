@@ -54,6 +54,8 @@ dependencies {
     implementation(libs.exoplayer.core)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.session)
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
