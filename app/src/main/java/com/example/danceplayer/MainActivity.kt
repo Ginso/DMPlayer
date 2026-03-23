@@ -63,6 +63,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.times
 import androidx.lifecycle.lifecycleScope
 import com.example.danceplayer.ui.Fragment
 import com.example.danceplayer.ui.pages.DancesPage
@@ -114,7 +115,7 @@ class MainActivity : ComponentActivity() {
             PreferenceUtil.initialize(this@MainActivity)
             Player.initialize(this@MainActivity)
             withContext(Dispatchers.IO) {
-                MusicLibrary.initialize(this@MainActivity)
+                //MusicLibrary.initialize(this@MainActivity)
             }
         }
 
@@ -331,12 +332,13 @@ fun BottomBar() {
 
                 IconButton(
                     onClick = { MainActivity.addPage(QueuePage()) },
-                    modifier = Modifier.size(iconSize),
+                    modifier = Modifier.size(200.dp),
                     enabled = currentSong != null
                 ) {
                     Icon(
-                        Icons.AutoMirrored.Filled.QueueMusic,
-                        contentDescription = "Back"
+                        painter = painterResource(id = R.drawable.ic_previous),
+                        contentDescription = "Back",
+                        modifier = Modifier.size(iconSize)
                     )
                 }
             }

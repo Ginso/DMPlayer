@@ -276,7 +276,7 @@ private fun SongItemInner(song: Song, layout:JSONObject, modifier: Modifier = Mo
 private fun TagWidget(song: Song, layout:JSONObject) {
     Row {
         val tagName = layout.getString("tag")
-        val tag = MusicLibrary.allTagsMap.value[tagName]
+        val tag = MusicLibrary.tagMap.value[tagName]
         if(tag == null) {
             Text("Invalid tag: $tagName", color = Color.Red)
             return@Row

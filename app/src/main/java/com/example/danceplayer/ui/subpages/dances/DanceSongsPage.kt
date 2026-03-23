@@ -77,7 +77,7 @@ class DanceSongsPage(
                         for(j in 0 until row.length()) {
                             val o = row.getJSONObject(j)
                             val tagName = o.getString("tag")
-                            val tag = MusicLibrary.allTagsMap.value[tagName]
+                            val tag = MusicLibrary.tagMap.value[tagName]
                             if(tag == null) {
                                 Text("INVALID")
                                 continue
@@ -140,7 +140,7 @@ class DanceSongsPage(
 
     fun applyFilters(songs: List<Song>, filterOptions: JSONArray, sorter: String):List<Song> {
         var filtered = songs
-        val tagMap = MusicLibrary.allTagsMap.value
+        val tagMap = MusicLibrary.tagMap.value
         for(i in 0 until filterOptions.length()) {
             val row = filterOptions.getJSONArray(i)
             for(j in 0 until row.length()) {

@@ -87,7 +87,7 @@ class FilterPage : Fragment() {
                         for(j in 0 until row.length()) {
                             val o = row.getJSONObject(j)
                             val tagName = o.getString("tag")
-                            val tag = MusicLibrary.allTagsMap.value[tagName]
+                            val tag = MusicLibrary.tagMap.value[tagName]
                             if(tag == null) {
                                 Text("INVALID")
                                 continue
@@ -134,7 +134,7 @@ class FilterPage : Fragment() {
                     for(j in 0 until arr.length()) {
                         val o = arr.getJSONObject(j)
                         val tagName = o.getString("tag")
-                        val tag = MusicLibrary.allTagsMap.value[tagName]!!
+                        val tag = MusicLibrary.tagMap.value[tagName]!!
                         val isFilter = o.getBoolean("filter")
                         val type = o.optJSONArray("type") ?: JSONArray()
                         Box(
@@ -371,7 +371,7 @@ class FilterPage : Fragment() {
                     Button(onClick = {
                         arr.put(JSONObject().apply {
                             put("filter", false)
-                            put("tag", Song._TPM)
+                            put("tag", Song._BPM)
                             put("text", "Duration")
                         })
                         filterOptions.value = JSONArray(filterOptions.value.toString()) // trigger re-render
@@ -604,7 +604,7 @@ class FilterPage : Fragment() {
                 put(JSONArray().apply {
                     put(JSONObject().apply {
                         put("filter", false)
-                        put("tag", Song._TPM)
+                        put("tag", Song._BPM)
                         put("text", "Duration")
                     })
                     put(JSONObject().apply {

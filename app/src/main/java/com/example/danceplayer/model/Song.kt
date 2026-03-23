@@ -33,7 +33,7 @@ data class Song(
         const val _ARTIST: String = "artist"
         const val _DANCE: String = "dance"
         const val _RATING: String = "rating"
-        const val _TPM: String = "tpm"
+        const val _BPM: String = "bpm"
         const val _DURATION: String = "duration"
         const val _PLAYING_AFTER: String = "playing_after"
         const val _POSITION: String = "position"
@@ -71,7 +71,8 @@ data class Song(
     }
 
     fun getTitle(): String {
-        return tags[_TITLE] as? String ?: ""
+        val title = tags[_TITLE] as? String ?: ""
+        return title.ifBlank { getPath().substringAfterLast("/").substringBeforeLast(".") }
     }
 
     fun getArtist(): String {

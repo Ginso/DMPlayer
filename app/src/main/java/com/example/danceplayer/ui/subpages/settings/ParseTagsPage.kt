@@ -57,7 +57,7 @@ class ParseTagsPage : Fragment() {
             Text("Enter the pattern of your file names and paths. Use / for folder separation.")
             Text("Examples:")
             Text("<Dance>/<Artist> - <Title>.mp3 -> fills the dance with the name of the innermost folder, the artist and title from the file name")
-            Text("<Title> (<TPM>TPM).mp3 -> Fills title and TPM if the files are named like 'Great Song (30TPM).mp3'")
+            Text("<Title> (<BPM>BPM).mp3 -> Fills title and BPM if the files are named like 'Great Song (30BPM).mp3'")
             Text("You can use the following tags in your pattern:")
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -123,6 +123,7 @@ class ParseTagsPage : Fragment() {
                         }
                         MusicLibrary.save(context)
                         isLoading.value = false
+                        MusicLibrary.updateViews()
                         Toast.makeText(context, "Updated ${updated} / ${MusicLibrary.songs.value.size} songs", Toast.LENGTH_LONG).show()
                     }
                 }) {
@@ -211,8 +212,9 @@ class ParseTagsPage : Fragment() {
                     tags: List<String>,
                     errorText: MutableState<String>,
                     callback: (PreviewItem) -> Unit) {
+        val trimmed = pattern.trim()
         val tagIndexList = tags.mapNotNull { tag ->
-            val index = pattern.indexOf("<$tag>")
+            val index = trimmed.indexOf("<$tag>")
             if (index == -1) {
                 null
             } else {
@@ -226,7 +228,7 @@ class ParseTagsPage : Fragment() {
         }
         var index = 0
         tagIndexList.forEach {
-            var part = pattern.substring(index, it.second)
+            var part = trimmed.substring(index, it.second)
             if (part.isEmpty() && !parts.isEmpty()) {
                 errorText.value = "Two tags cannot be directly adjacent without any separator to distinguish them"
                 return
@@ -235,9 +237,9 @@ class ParseTagsPage : Fragment() {
             parts.add(it.first)
             index = it.third
         }
-        parts.add(pattern.substring(index, pattern.length))
+        parts.add(trimmed.substring(index, trimmed.length))
 
-        val folders = pattern.split("/").size
+        val folders = trimmed.split("/").size
         songs.forEach { song ->
             var path = song.getPath()
             var remaining = path.split("/").takeLast(folders).joinToString("/")

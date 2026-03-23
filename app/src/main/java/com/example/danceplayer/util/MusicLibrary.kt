@@ -24,7 +24,7 @@ object MusicLibrary {
         Tag(Song._TITLE, Tag.Type.STRING),
         Tag(Song._ARTIST, Tag.Type.STRING),
         Tag(Song._DANCE, Tag.Type.STRING),
-        Tag(Song._TPM, Tag.Type.FLOAT)
+        Tag(Song._BPM, Tag.Type.FLOAT)
     )
 
     val customTags = mutableStateOf<List<Tag>>(emptyList())
@@ -101,7 +101,12 @@ object MusicLibrary {
         }
     }
 
-
+    fun updateViews() {
+        allSongs.value = allSongs.value.toList()
+        val temp = Player.currentSongState.value ?: return
+        Player.currentSongState.value = null
+        Player.currentSongState.value = temp
+    }
 
 
 
@@ -117,7 +122,6 @@ object MusicLibrary {
         allSongs.value.forEach { song ->  song.file = null }
 
         allSongs.value = searchMusicFiles(rootFolder, "")
-        counter.intValue = 0 // just a test
         withContext(Dispatchers.Main) {
             Player.load(songs.value.subList(0,1))
         }

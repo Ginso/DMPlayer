@@ -217,7 +217,7 @@ class ItemLayoutsPage : Fragment() {
                         }
                         if (type == ElementType.TAG) {
                             val tagName = currentObject.getString("tag")
-                            val tag = MusicLibrary.allTagsMap.value[tagName]
+                            val tag = MusicLibrary.tagMap.value[tagName]
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Tag: ")
                                 val tags = MusicLibrary.allTags.value.map { it.name } + Song._PLAYING_AFTER
@@ -665,9 +665,9 @@ class ItemLayoutsPage : Fragment() {
                             }
                             put(JSONObject().apply {
                                 put("type", ElementType.TAG)
-                                put("tag", Song._TPM)
+                                put("tag", Song._BPM)
                                 put("decimal", 1)
-                                put("suffix", " TPM")
+                                put("suffix", " BPM")
                             })
                             if(type < 2) {
                                 put(JSONObject().apply {

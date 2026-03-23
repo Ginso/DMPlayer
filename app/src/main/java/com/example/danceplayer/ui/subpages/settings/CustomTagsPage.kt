@@ -85,25 +85,21 @@ class CustomTagsPage : Fragment() {
                     Cell("Text", 1f)
                 }
                 Row {
-                    Cell("album", 1f)
-                    Cell("Text", 1f)
+                    Cell("BPM", 1f)
+                    Cell("Integer", 1f)
                 }
                 Row {
                     Cell("dance", 1f)
                     Cell("Text", 1f)
-                }
-                Row {
-                    Cell("year", 1f)
-                    Cell("Number", 1f)
                 }
             }
             HorizontalDivider()
             Text("Custom Tags", style = MaterialTheme.typography.titleMedium)
             Text("Here you can define your own tags")
             Column {
-                val tags = MusicLibrary.tags.value
+                val tags = MusicLibrary.customTags.value
                 for(tag in tags) {
-                    if(tag.name in listOf(Song._TITLE, Song._ARTIST, Song._DANCE, Song._TPM)) continue
+                    if(tag.name in listOf(Song._TITLE, Song._ARTIST, Song._DANCE, Song._BPM)) continue
                     Row {
                         Cell(tag.name, 1f)
                         Cell(tag.type.getText(), 1f)
@@ -153,7 +149,7 @@ class CustomTagsPage : Fragment() {
                             type = Tag.Type.fromInteger(newTagType.value)
                         )
                         coroutineScope.launch {
-                            MusicLibrary.tags.value = MusicLibrary.tags.value + newTag
+                            MusicLibrary.customTags.value = MusicLibrary.customTags.value + newTag
                             MusicLibrary.save(context)
                             newTagName.value = ""
                             newTagType.value = 0
@@ -181,7 +177,7 @@ class CustomTagsPage : Fragment() {
                         onClick = {
                             coroutineScope.launch {
                                 isLoading.value = true
-                                MusicLibrary.tags.value = MusicLibrary.tags.value - deleteTag.value!!
+                                MusicLibrary.customTags.value = MusicLibrary.customTags.value - deleteTag.value!!
                                 if(deleteValues.value) {
                                     for(song in MusicLibrary.allSongs.value) {
                                         song.tags.remove(deleteTag.value!!.name)
