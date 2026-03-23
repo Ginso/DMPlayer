@@ -23,7 +23,8 @@ import kotlin.collections.iterator
 data class Song(
     var file: Uri? = null,
     var tags: MutableMap<String,Any>,
-    var duration: Long? = null
+    var duration: Long? = null,
+    var inFile: Boolean = false
 ) {
     companion object {
 
@@ -61,7 +62,7 @@ data class Song(
                     return null
                 }
             }
-            return Song(tags = map)
+            return Song(tags = map, inFile = true)
         }
     }
 

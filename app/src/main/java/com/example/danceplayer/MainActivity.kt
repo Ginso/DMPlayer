@@ -104,11 +104,13 @@ class MainActivity : ComponentActivity() {
         }
 
     }
+    private var initMusicJob: kotlinx.coroutines.Job? = null
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         startService(Intent(this, com.example.danceplayer.service.PlaybackService::class.java))
         // suspend initialization: runs asynchronously
-        lifecycleScope.launch {
+        initMusicJob = lifecycleScope.launch {
             PreferenceUtil.initialize(this@MainActivity)
             Player.initialize(this@MainActivity)
             withContext(Dispatchers.IO) {
@@ -130,8 +132,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     fun initMusic() {
-        lifecycleScope.launch {
+        initMusicJob?.cancel()
+        initMusicJob = lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 MusicLibrary.initialize(this@MainActivity)
             }

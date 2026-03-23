@@ -96,6 +96,7 @@ object MusicLibrary {
         val uri = folderUri.toUri()
         val rootFolder = DocumentFile.fromTreeUri(context, uri) ?: return false
         counter.intValue = 0
+        allSongs.value = allSongs.value.filter { it.inFile } // keep only songs that were loaded from file
         allSongs.value.forEach { song ->  song.file = null }
         searchMusicFiles(rootFolder, "")
         counter.intValue = 0 // just a test
