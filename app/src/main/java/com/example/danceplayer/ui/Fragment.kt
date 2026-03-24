@@ -40,7 +40,7 @@ abstract class Fragment {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(8.dp)
+                .padding(8.dp, 4.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = if(center) Alignment.CenterHorizontally else Alignment.Start

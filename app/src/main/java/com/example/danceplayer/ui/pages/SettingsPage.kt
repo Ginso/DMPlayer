@@ -129,7 +129,7 @@ fun SettingsPage() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(16.dp)
+                .padding(8.dp, 4.dp)
                 .verticalScroll(rememberScrollState())
         ) {
 

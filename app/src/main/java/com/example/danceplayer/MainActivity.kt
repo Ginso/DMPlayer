@@ -172,6 +172,7 @@ fun MainScreen() {
                     }
                 )
                 TopAppBar(
+                    windowInsets = WindowInsets(0, 0, 0, 0),
                     title = {
                         Text(pageStack.lastOrNull()?.getTitle() ?: MainActivity.pageTitles[selectedPage.value])
                     },
@@ -264,7 +265,7 @@ private fun PageSelectionBar(selectedPage: Int, onPageSelected: (Int) -> Unit) {
                             }
                         )
                         .clickable { onPageSelected(idx) }
-                        .padding(vertical = 14.dp),
+                        .padding(vertical = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(

@@ -38,7 +38,7 @@ fun DancesPage() {
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
+            .padding(8.dp, 4.dp)
     ) {
         val dances = MusicLibrary.songs.value.map { it.getDance() }
 
