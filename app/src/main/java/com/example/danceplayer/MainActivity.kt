@@ -262,7 +262,6 @@ fun MainScreen() {
     if(MainActivity.popupOverlay.value) {
         Box (
             modifier = Modifier.fillMaxSize()
-                .background(Color.Red)
                 .clickable {
                     MainActivity.popupOverlay.value = false
                     MainActivity.onDismissPopup()

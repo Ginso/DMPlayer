@@ -50,7 +50,7 @@ abstract class Fragment {
         return stackEntryId
     }
 
-    fun sameType(other: Fragment): Boolean {
+    open fun sameType(other: Fragment): Boolean {
         return javaClass == other.javaClass
     }
 

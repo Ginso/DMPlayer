@@ -1,8 +1,33 @@
 package com.example.danceplayer.ui.subpages
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import com.example.danceplayer.model.Song
+import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.Fragment
+import com.example.danceplayer.util.MusicLibrary
+import com.example.danceplayer.util.MyTextField
 
 class EditSong(
     val song: Song
@@ -22,18 +47,31 @@ class EditSong(
 
         Main {
             val tags by MusicLibrary.tags
+            var maxSize by remember { mutableStateOf(IntSize.Zero) }
+            val density = LocalDensity.current
+            val widthDp = with(density) {
+                maxSize.width.toDp()
+            }
 
             for (tag in tags) {
                 val value = song.getTagValue(tag)
                 Row(
-                    arrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(tag.name)
+                    Text(tag.name,
+                        modifier = Modifier
+                            .width(widthDp)
+                            .onGloballyPositioned {
+                                if(it.size.width > maxSize.width)
+                                    maxSize = it.size
+                            }
+                        )
                     when (tag.type) {
                         Tag.Type.STRING -> {
                             var text by remember { mutableStateOf(value as? String ?: "") }
-                            TextField(
+                            MyTextField(
                                 value = text,
                                 onValueChange = { newValue ->
                                     text = newValue
@@ -46,7 +84,7 @@ class EditSong(
 
                         Tag.Type.INT -> {
                             var text by remember { mutableStateOf((value as? Int)?.toString() ?: "") }
-                            TextField(
+                            MyTextField(
                                 value = text,
                                 onValueChange = { newValue ->
                                     text = newValue
@@ -65,7 +103,7 @@ class EditSong(
 
                         Tag.Type.FLOAT -> {
                             var text by remember { mutableStateOf((value as? Float)?.toString() ?: "") }
-                            TextField(
+                            MyTextField(
                                 value = text,
                                 onValueChange = { newValue ->
                                     text = newValue
@@ -94,7 +132,7 @@ class EditSong(
                         }
                         Tag.Type.DATETIME, Tag.Type.DATE, Tag.Type.TIME -> {
                             var text by remember { mutableStateOf((value as? String) ?: "") }
-                            TextField(
+                            MyTextField(
                                 value = text,
                                 onValueChange = { newValue ->
                                     text = newValue
