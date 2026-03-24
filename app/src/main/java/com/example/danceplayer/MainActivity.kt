@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -32,18 +33,22 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -152,10 +157,22 @@ fun MainScreen() {
     val selectedPage = MainActivity.selectedPage
     val isInitializing by MusicLibrary.isInitializing
     val pageStack by MainActivity.pageStack
+    val isPlaying by Player.isPlayingState
+    val context = LocalContext.current
+    val showCloseConfirm = remember { mutableStateOf(false) }
 
     if (isInitializing) {
         LoadingScreen()
         return
+    }
+
+    BackHandler {
+        when {
+            showCloseConfirm.value -> showCloseConfirm.value = false
+            pageStack.isNotEmpty() -> MainActivity.popLastPage()
+            isPlaying -> showCloseConfirm.value = true
+            else -> (context as? ComponentActivity)?.finish()
+        }
     }
 
     Scaffold(
@@ -207,6 +224,29 @@ fun MainScreen() {
                 page.Content()
             }
         }
+    }
+
+    if (showCloseConfirm.value) {
+        AlertDialog(
+            onDismissRequest = { showCloseConfirm.value = false },
+            title = { Text("Close App?") },
+            text = { Text("Music is currently playing. Do you really want to close the app?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showCloseConfirm.value = false
+                        (context as? ComponentActivity)?.finish()
+                    }
+                ) {
+                    Text("Close")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCloseConfirm.value = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     if(MainActivity.popupOverlay.value) {
