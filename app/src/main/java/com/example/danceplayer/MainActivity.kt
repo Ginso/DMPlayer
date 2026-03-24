@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -160,7 +161,9 @@ fun MainScreen() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            Column {
+            Column(
+                modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
+            ) {
                 PageSelectionBar(
                     selectedPage = selectedPage.value,
                     onPageSelected = { page ->
