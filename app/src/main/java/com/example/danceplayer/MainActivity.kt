@@ -246,13 +246,13 @@ private fun LoadingScreen() {
 private fun PageSelectionBar(selectedPage: Int, onPageSelected: (Int) -> Unit) {
     Surface(shadowElevation = 2.dp) {
         Row(
-        modifier = Modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface)
         ) {
-        MainActivity.pageTitles.forEachIndexed { idx, page ->
-            Box(
-                modifier = Modifier
+            MainActivity.pageTitles.forEachIndexed { idx, page ->
+                Box(
+                    modifier = Modifier
                         .weight(1f)
                         .background(
                             if (idx == selectedPage) {
@@ -263,18 +263,19 @@ private fun PageSelectionBar(selectedPage: Int, onPageSelected: (Int) -> Unit) {
                         )
                         .clickable { onPageSelected(idx) }
                         .padding(vertical = 14.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = page,
-                    color = if (idx == selectedPage) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = page,
+                        color = if (idx == selectedPage) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        },
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
