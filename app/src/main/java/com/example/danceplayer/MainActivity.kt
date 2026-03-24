@@ -21,46 +21,34 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.QueueMusic
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
@@ -161,8 +149,6 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
     val selectedPage = MainActivity.selectedPage
     val isInitializing by MusicLibrary.isInitializing
     val pageStack by MainActivity.pageStack
@@ -172,72 +158,50 @@ fun MainScreen() {
         return
     }
 
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        ModalNavigationDrawer(
-            drawerState = drawerState,
-            drawerContent = {
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    NavigationDrawerContent(
-                        onPageSelected = { page ->
-                            selectedPage.value = page
-                            MainActivity.pageStack.value = emptyList() // clear stack when selecting new page
-                            scope.launch {
-                                drawerState.close()
-                            }
-                        }
-                    )
-                }
-            }
-        ) {
-            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        TopAppBar(
-                            title = {
-                                Text(pageStack.lastOrNull()?.getTitle() ?: MainActivity.pageTitles[selectedPage.value])
-                            },
-                            navigationIcon = {
-                                if(pageStack.isNotEmpty()) {
-                                    IconButton(onClick = MainActivity::popLastPage) {
-                                        Icon(
-                                            Icons.AutoMirrored.Filled.ArrowBack,
-                                            contentDescription = "Back"
-                                        )
-                                    }
-                                }
-                            },
-                            actions = {
-                                IconButton(onClick = {
-                                    scope.launch {
-                                        drawerState.open()
-                                    }
-                                }) {
-                                    Icon(Icons.Default.Menu, contentDescription = "Menu")
-                                }
-                            }
-                        )
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            Column {
+                PageSelectionBar(
+                    selectedPage = selectedPage.value,
+                    onPageSelected = { page ->
+                        selectedPage.value = page
+                        MainActivity.pageStack.value = emptyList()
+                    }
+                )
+                TopAppBar(
+                    title = {
+                        Text(pageStack.lastOrNull()?.getTitle() ?: MainActivity.pageTitles[selectedPage.value])
                     },
-                    bottomBar = {
-                        BottomBar()
-                    }
-                ) { innerPadding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    ) {
-                        when (selectedPage.value) {
-                            0 -> DancesPage()
-                            1 -> PlaylistsPage()
-                            2 -> SettingsPage()
+                    navigationIcon = {
+                        if (pageStack.isNotEmpty()) {
+                            IconButton(onClick = MainActivity::popLastPage) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back"
+                                )
+                            }
                         }
-                        for(page in pageStack) {
-                            page.Content()
-                        }
-
                     }
-                }
+                )
+            }
+        },
+        bottomBar = {
+            BottomBar()
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            when (selectedPage.value) {
+                0 -> DancesPage()
+                1 -> PlaylistsPage()
+                2 -> SettingsPage()
+            }
+            for (page in pageStack) {
+                page.Content()
             }
         }
     }
@@ -279,20 +243,39 @@ private fun LoadingScreen() {
 }
 
 @Composable
-fun NavigationDrawerContent(onPageSelected: (Int) -> Unit) {
-    Column(
+private fun PageSelectionBar(selectedPage: Int, onPageSelected: (Int) -> Unit) {
+    Surface(shadowElevation = 2.dp) {
+        Row(
         modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(16.dp)
-    ) {
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+        ) {
         MainActivity.pageTitles.forEachIndexed { idx, page ->
-            Text(
-                page,
+            Box(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .clickable { onPageSelected(idx) }
-            )
+                        .weight(1f)
+                        .background(
+                            if (idx == selectedPage) {
+                                MaterialTheme.colorScheme.primaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.surface
+                            }
+                        )
+                        .clickable { onPageSelected(idx) }
+                        .padding(vertical = 14.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = page,
+                    color = if (idx == selectedPage) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }
