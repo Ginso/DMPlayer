@@ -17,36 +17,40 @@ object DateTimeUtil {
         }
     }
 
-    fun parse(text: String, type: Tag.Type): Long? {
+    fun parse(text: String, type: Tag.Type): Long {
         return try {
-            when (type) {
-                Tag.Type.DATETIME, Tag.Type.DATE, Tag.Type.TIME -> {
-                    val formatter = when (type) {
-                        Tag.Type.DATE -> DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
-                        Tag.Type.TIME -> {
-                            when (text.count { it == ':' }) {
-                                1 -> DateTimeFormatter.ofPattern("mm:ss")
-                                2 -> DateTimeFormatter.ofPattern("HH:mm:ss")
-                                else -> return null
-                            }
-                        }
-                        else -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT)
-                    }.localizedBy(Locale.getDefault()).withZone(ZoneId.systemDefault())
-                    formatter.parse(text, Instant::from).toEpochMilli()
+            val formatter = when (type) {
+                Tag.Type.TIME -> {
+                    when (text.count { it == ':' }) {
+                        1 -> DateTimeFormatter.ofPattern("mm:ss")
+                        2 -> DateTimeFormatter.ofPattern("HH:mm:ss")
+                        else -> return 0L
+                    }
+
                 }
-                else -> null
+                Tag.Type.DATETIME, Tag.Type.DATE -> {
+                    getFormatter(type) ?: return 0L
+                }
+                else -> return 0L
             }
+            formatter.parse(text, Instant::from).toEpochMilli()
         } catch (e: Exception) {
-             null
+             0L
          }
     }
 
     fun getPattern(type: Tag.Type): String {
         return when(type) {
-            Tag.Type.DATE -> DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).localizedBy(Locale.getDefault()).withZone(ZoneId.systemDefault()).toString()
             Tag.Type.TIME -> "mm:ss or hh:mm:ss"
-            Tag.Type.DATETIME -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).localizedBy(Locale.getDefault()).withZone(ZoneId.systemDefault()).toString()
-            else -> ""
+            else -> getFormatter(type)?.toString() ?: ""
+        }
+    }
+
+    fun  getFormatter(type: Tag.Type): DateTimeFormatter? {
+        return when(type) {
+            Tag.Type.DATE -> DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).localizedBy(Locale.getDefault()).withZone(ZoneId.systemDefault())
+            Tag.Type.DATETIME -> DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM, FormatStyle.SHORT).localizedBy(Locale.getDefault()).withZone(ZoneId.systemDefault())
+            else -> null
         }
     }
 }
