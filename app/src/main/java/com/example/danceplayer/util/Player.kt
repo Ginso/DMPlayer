@@ -20,6 +20,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 object Player {
@@ -32,7 +33,7 @@ object Player {
     val speedState = mutableStateOf(1.0f)
     val currentSongState = mutableStateOf<Song?>(null)
 
-    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var positionJob: Job? = null
 
     // internal backing fields for playlist and index (no state needed)
@@ -44,6 +45,9 @@ object Player {
     @OptIn(UnstableApi::class)
     fun initialize(context: Context) {
         if (exoPlayer == null) {
+            if (!scope.isActive) {
+                scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+            }
             val appContext = context.applicationContext
             exoPlayer = ExoPlayer.Builder(appContext).build()
             exoPlayer?.addListener(object : Media3Player.Listener {

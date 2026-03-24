@@ -148,6 +148,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        startService(Intent(this, com.example.danceplayer.service.PlaybackService::class.java))
+    }
+
     override fun onDestroy() {
         super.onDestroy()
     }
@@ -300,6 +305,7 @@ fun BottomBar() {
     val position by Player.positionState
     val controlWidth = 100.dp
     val iconSize = 38.dp
+    val iconSize2 = 30.dp
 
     BottomAppBar(
         modifier = Modifier
@@ -319,26 +325,25 @@ fun BottomBar() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
-                    onClick = { Player.previous() },
+                    onClick = { MainActivity.addPage(QueuePage()) },
                     modifier = Modifier.size(iconSize),
+                    enabled = currentSong != null
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_queue_music),
+                        contentDescription = "Player Queue",
+                        modifier = Modifier.size(iconSize)
+                    )
+                }
+                IconButton(
+                    onClick = { Player.previous() },
+                    modifier = Modifier.size(200.dp),
                     enabled = currentSong != null
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_previous),
                         contentDescription = "Previous",
-                        modifier = Modifier.size(iconSize)
-                    )
-                }
-
-                IconButton(
-                    onClick = { MainActivity.addPage(QueuePage()) },
-                    modifier = Modifier.size(200.dp),
-                    enabled = currentSong != null
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_queue_music),
-                        contentDescription = "Back",
-                        modifier = Modifier.size(iconSize)
+                        modifier = Modifier.size(iconSize2)
                     )
                 }
             }
@@ -409,6 +414,17 @@ fun BottomBar() {
 
             ) {
                 IconButton(
+                    onClick = { Player.next() },
+                    modifier = Modifier.size(iconSize2),
+                    enabled = currentSong != null && Player.currentIndex < Player.getPlayList().size - 1
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_next),
+                        contentDescription = "Next",
+                        modifier = Modifier.size(iconSize2)
+                    )
+                }
+                IconButton(
                     onClick = {
                         if (isPlaying) Player.pause() else Player.play()
                     },
@@ -418,17 +434,6 @@ fun BottomBar() {
                     Icon(
                         painter = painterResource(id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
                         contentDescription = "Play/Pause",
-                        modifier = Modifier.size(iconSize)
-                    )
-                }
-                IconButton(
-                    onClick = { Player.next() },
-                    modifier = Modifier.size(iconSize),
-                    enabled = currentSong != null && Player.currentIndex < Player.getPlayList().size - 1
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_next),
-                        contentDescription = "Next",
                         modifier = Modifier.size(iconSize)
                     )
                 }
