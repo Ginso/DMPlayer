@@ -4,6 +4,7 @@ package com.example.danceplayer.util
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -27,6 +28,12 @@ object MusicLibrary {
         Tag(Song._BPM, Tag.Type.FLOAT)
     )
 
+    val calcTags = listOf(
+        Tag(Song._DURATION, Tag.Type.TIME),
+        Tag(Song._POSITION, Tag.Type.INT),
+        Tag(Song._PLAYING_AFTER, Tag.Type.TIME)
+    )
+
     val customTags = mutableStateOf<List<Tag>>(emptyList())
 
     val tags = derivedStateOf {
@@ -34,7 +41,7 @@ object MusicLibrary {
     }
 
     val allTags = derivedStateOf {
-        tags.value + Tag(Song._DURATION, Tag.Type.TIME)
+        tags.value + calcTags
     }
 
     val tagMap = derivedStateOf {
@@ -62,7 +69,6 @@ object MusicLibrary {
 
     var isInitializing = mutableStateOf(false)
 
-    val counter = mutableIntStateOf(0)
 
 
     suspend fun initialize(context: Context) {
@@ -72,6 +78,7 @@ object MusicLibrary {
         loadTagFile(context, uri) { /* ignore error */ }
         val result = getMusicFiles(context)
         isInitializing.value = false
+        MainActivity.isInitialized = true
         loadDuration()
         if(!result) {
             MainActivity.selectedPage.intValue = 2
@@ -80,24 +87,22 @@ object MusicLibrary {
     }
 
 
-    suspend fun loadTagFile(context: Context, uri: Uri, onError: (String) -> Unit): Boolean {
-        return withContext(Dispatchers.IO) {
-            try {
-                val resolver = context.contentResolver
-                val jsonString = resolver.openInputStream(uri)?.bufferedReader().use { it?.readText() }
-                if (jsonString == null) {
-                    onError("Could not read file.")
-                    return@withContext false
-                }
-
-
-                if (!loadJSON(jsonString, onError)) {
-                    return@withContext false
-                }
-                true
-            } catch (e: Exception) {
-                false
+    fun loadTagFile(context: Context, uri: Uri, onError: (String) -> Unit): Boolean {
+        return try {
+            val resolver = context.contentResolver
+            val jsonString = resolver.openInputStream(uri)?.bufferedReader().use { it?.readText() }
+            if (jsonString == null) {
+                onError("Could not read file.")
+                return false
             }
+
+
+            if (!loadJSON(jsonString, onError)) {
+                return false
+            }
+            true
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -115,15 +120,21 @@ object MusicLibrary {
     suspend fun getMusicFiles(context: Context): Boolean {
         val folderUri = PreferenceUtil.getCurrentProfile().folder
         if (folderUri == "") return false
-        val uri = folderUri.toUri()
-        val rootFolder = DocumentFile.fromTreeUri(context, uri) ?: return false
-        counter.intValue = 0
+        val treeUri = folderUri.toUri()
+        val rootFolder = DocumentFile.fromTreeUri(context, treeUri) ?: return false
+        val existingByPath = HashMap<String, Song>()
         allSongs.value = allSongs.value.filter { it.inFile } // keep only songs that were loaded from file
-        allSongs.value.forEach { song ->  song.file = null }
+        allSongs.value.forEach { song ->
+            song.file = null
+            val path = song.tags[Song._PATH] as? String ?: return@forEach
+           // existingByPath[path.lowercase()] = song
+        }
 
-        allSongs.value = searchMusicFiles(rootFolder, "")
+        allSongs.value = searchMusicFiles(context, rootFolder.uri, "", existingByPath)
         withContext(Dispatchers.Main) {
-            Player.load(songs.value.subList(0,1))
+            if (songs.value.isNotEmpty()) {
+                Player.load(songs.value.subList(0, 1))
+            }
         }
 
         allSongs.value = allSongs.value.toList()
@@ -138,21 +149,51 @@ object MusicLibrary {
         allSongs.value = allSongs.value.toList()
     }
 
-    private fun searchMusicFiles(folder: DocumentFile, pathPrefix: String):ArrayList<Song> {
+    private fun searchMusicFiles(
+        context: Context,
+        folderUri: Uri,
+        pathPrefix: String,
+        existingByPath: Map<String, Song>
+    ): ArrayList<Song> {
         val songList = ArrayList<Song>()
-        folder.listFiles().forEach { file ->
-            val path = pathPrefix + file.name
-            val pathLower = path.lowercase()
-            if(file.isDirectory) songList.addAll(searchMusicFiles(file, path + "/")) // Rekursiv in Unterordner
-            if (file.isFile && isAudioFile(file.name)) {
-                var songInfo = songMap.value[pathLower]
-                if (songInfo == null) {
-                    songInfo = Song(tags = mutableMapOf(Song._PATH to path))
+        val resolver = context.contentResolver
+        val projection = arrayOf(
+            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            DocumentsContract.Document.COLUMN_MIME_TYPE
+        )
+        val treeDocumentId = DocumentsContract.getDocumentId(folderUri)
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(folderUri, treeDocumentId)
+
+        resolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
+            val idCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+            val nameCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+            val mimeCol = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+
+            while (cursor.moveToNext()) {
+                if (idCol < 0 || nameCol < 0 || mimeCol < 0) continue
+                val documentId = cursor.getString(idCol) ?: continue
+                val name = cursor.getString(nameCol) ?: continue
+                val mimeType = cursor.getString(mimeCol)
+                val path = pathPrefix + name
+                val pathLower = path.lowercase()
+
+                if (DocumentsContract.Document.MIME_TYPE_DIR == mimeType) {
+                    val subFolderUri = DocumentsContract.buildDocumentUriUsingTree(folderUri, documentId)
+                    songList.addAll(searchMusicFiles(context, subFolderUri, path + "/", existingByPath))
+                    continue
                 }
-                songInfo.file = file.uri
-                songInfo.tags.put(Song._PATH, path) // make sure correct case is stored
-                songList.add(songInfo)
-                counter.intValue++
+
+                if (isAudioFile(name)) {
+                    val fileUri = DocumentsContract.buildDocumentUriUsingTree(folderUri, documentId)
+                    var songInfo = songMap.value[pathLower]
+                    if (songInfo == null) {
+                        songInfo = Song(tags = mutableMapOf(Song._PATH to path))
+                    }
+                    songInfo.file = fileUri
+                    songInfo.tags.put(Song._PATH, path) // make sure correct case is stored
+                    songList.add(songInfo)
+                }
             }
         }
         return songList

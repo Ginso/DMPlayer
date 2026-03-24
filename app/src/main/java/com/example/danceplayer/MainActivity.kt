@@ -82,6 +82,8 @@ import kotlinx.coroutines.withContext
 class MainActivity : ComponentActivity() {
     companion object {
 
+        var isInitialized = false
+
         val pageTitles = listOf(
             "Dances",
             "Playlists",
@@ -110,12 +112,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         startService(Intent(this, com.example.danceplayer.service.PlaybackService::class.java))
-        // suspend initialization: runs asynchronously
-        initMusicJob = lifecycleScope.launch {
-            PreferenceUtil.initialize(this@MainActivity)
-            Player.initialize(this@MainActivity)
-            withContext(Dispatchers.IO) {
-                MusicLibrary.initialize(this@MainActivity)
+
+        if(!isInitialized) {
+            // suspend initialization: runs asynchronously
+            initMusicJob = lifecycleScope.launch {
+                PreferenceUtil.initialize(this@MainActivity)
+                Player.initialize(this@MainActivity)
+                withContext(Dispatchers.IO) {
+                    MusicLibrary.initialize(this@MainActivity)
+                }
             }
         }
 
@@ -261,11 +266,6 @@ private fun LoadingScreen() {
             CircularProgressIndicator()
             Text(
                 text = "Musikbibliothek wird geladen...",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Text(
-                text = "${MusicLibrary.counter.intValue} Songs gefunden",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )

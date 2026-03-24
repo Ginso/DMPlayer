@@ -28,7 +28,15 @@ data class Tag(
                 DATETIME -> return "Date & Time"
                 DATE -> return "Date"
                 TIME -> return "Time"
-                else -> return ""
+            }
+        }
+
+        fun getDefault():Any {
+            when (this) {
+                STRING -> return ""
+                BOOL -> return false
+                FLOAT -> return 0f
+                else -> return 0
             }
         }
 

@@ -32,6 +32,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.lifecycle.lifecycleScope
+import com.example.danceplayer.MainActivity
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.ui.Fragment
@@ -50,15 +52,17 @@ class TagFilePage : Fragment() {
         val errorText = remember { mutableStateOf("") }
         val coroutineScope = rememberCoroutineScope()
         val isLoading = remember { mutableStateOf(false) }
+        val context = LocalContext.current
+        val activity = context as MainActivity
+
 
         Main {
-        
+
             Text("The tags that you defined and the values for every song are being stored in a file. Here you can set the location of that file(to export it) or choose an existing file to import.")
             HorizontalDivider()
             Text("Export", style = MaterialTheme.typography.titleLarge)
             Text("Specify the location where the file should be saved at. This file will be used from then on.")
             // launcher for creating or choosing a file location
-            val context = LocalContext.current
             val exportLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.CreateDocument("application/json")
             ) { uri -> export(context, uri, isLoading, errorText)}
@@ -68,7 +72,7 @@ class TagFilePage : Fragment() {
             val importLauncher = rememberLauncherForActivityResult(
                 ActivityResultContracts.OpenDocument()
             ) { uri ->
-                coroutineScope.launch {
+                activity.lifecycleScope.launch {
                     import(context, uri, isLoading, errorText)
                 }
             }
@@ -177,6 +181,7 @@ suspend fun import(context: Context, uri: Uri?, isLoading: MutableState<Boolean>
     uri?.let {
         val resolver = context.contentResolver
         isLoading.value = true
+
 
         val success = MusicLibrary.loadTagFile(context, it) { msg ->
             errorText.value = msg

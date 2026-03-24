@@ -47,12 +47,15 @@ data class Song(
             }
             for (key in json.keys()) {
                 val tagInfo = tags[key]
-                if (tagInfo == null) continue
+                if (tagInfo == null) {
+                    map.put(key, json.get(key))
+                    continue
+                }
                 try {
                     when (tagInfo.type) {
                         Tag.Type.STRING -> map.put(key, json.getString(key))
                         Tag.Type.INT -> map.put(key, json.getInt(key))
-                        Tag.Type.FLOAT -> map.put(key, json.getDouble(key))
+                        Tag.Type.FLOAT -> map.put(key, json.getDouble(key).toFloat())
                         Tag.Type.BOOL -> map.put(key, json.getBoolean(key))
                         Tag.Type.DATETIME, Tag.Type.DATE, Tag.Type.TIME -> map.put(key, json.getLong(key))
                         else -> {}
@@ -122,7 +125,7 @@ data class Song(
                         .withZone(ZoneId.systemDefault())
                         .format(Instant.ofEpochMilli(tags[tag.name] as? Long ?: 0L))
 
-                    else -> tags[tag.name] ?: ""
+                    else -> tags[tag.name] ?: tag.type.getDefault()
                 }
             }
         }

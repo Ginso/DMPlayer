@@ -47,19 +47,24 @@ class QueuePage : Fragment() {
             } else {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
+                        .fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    var ms = 0L
                     for((index, song) in queue.withIndex()) {
                         
                         SongItem(
                             song, 
                             itemLayout,
                             Modifier.fillMaxWidth(),
-                            contextEntries
+                            contextEntries,
+                            index,
+                            ms
                         ) {
                             Player.goTo(index)
+                        }
+                        if(index >= Player.currentIndex) {
+                            ms += song.getDuration()
                         }
                     }
                 }

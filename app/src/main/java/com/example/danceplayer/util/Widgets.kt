@@ -167,7 +167,13 @@ fun MyTextField(
 }
 
 @Composable
-fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, contextEntries: List<ContextItem> = emptyList(), onClick: () -> Unit = {}) {
+fun SongItem(song: Song, layout: JSONObject,
+             modifier: Modifier = Modifier,
+             contextEntries: List<ContextItem> = emptyList(),
+             index: Int = 0,
+             playingAfter: Long = 0L,
+             onClick: () -> Unit = {}
+) {
     val showContext = remember { mutableStateOf(false) }
     var textPosition by remember { mutableStateOf(Offset.Zero) }
     var textSize by remember { mutableStateOf(IntSize.Zero) }
@@ -184,7 +190,7 @@ fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, cont
             modifier = Modifier.padding(all=8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SongItemInner(song, layout, Modifier.weight(1f))
+            SongItemInner(song, layout, Modifier.weight(1f), index, playingAfter)
             
             Text("•••", modifier = Modifier
                 .clickable() {
@@ -244,7 +250,12 @@ fun SongItem(song: Song, layout: JSONObject, modifier: Modifier = Modifier, cont
 }
 
 @Composable
-private fun SongItemInner(song: Song, layout:JSONObject, modifier: Modifier = Modifier) {
+private fun SongItemInner(song: Song,
+                          layout:JSONObject,
+                          modifier: Modifier = Modifier,
+                          index: Int = 0,
+                          playingAfter: Long = 0L
+) {
     val type = layout.getInt("type")
     val items = layout.getJSONArray("items")
     Container(type,
@@ -254,7 +265,7 @@ private fun SongItemInner(song: Song, layout:JSONObject, modifier: Modifier = Mo
         for(i in 0..items.length()-1) {
             val item = items.getJSONObject(i)
             when(item.getInt("type")) {
-                ElementType.TAG -> TagWidget(song, item)
+                ElementType.TAG -> TagWidget(song, item, index, playingAfter)
                 ElementType.SPACE -> {
                     val size = item.getInt("size")
                     val modifier = if(size == 0) weight(Modifier) else if(type == ElementType.ROW) Modifier.width(size.dp) else Modifier.height(size.dp)
@@ -265,7 +276,7 @@ private fun SongItemInner(song: Song, layout:JSONObject, modifier: Modifier = Mo
                     if(item.optInt("width", 0) == 1) modifier = if(type == ElementType.ROW) weight(modifier) else modifier.fillMaxWidth()
                     if(item.optInt("height", 0) == 1) modifier = if(type == ElementType.ROW) modifier.fillMaxHeight() else weight(modifier)
 
-                    SongItemInner(song, item, modifier)
+                    SongItemInner(song, item, modifier, index, playingAfter)
                 }
             }
         }
@@ -273,7 +284,9 @@ private fun SongItemInner(song: Song, layout:JSONObject, modifier: Modifier = Mo
 }
 
 @Composable
-private fun TagWidget(song: Song, layout:JSONObject) {
+private fun TagWidget(song: Song, layout:JSONObject,
+                      index: Int = 0,
+                      playingAfter: Long = 0L) {
     Row {
         val tagName = layout.getString("tag")
         val tag = MusicLibrary.tagMap.value[tagName]
@@ -281,7 +294,11 @@ private fun TagWidget(song: Song, layout:JSONObject) {
             Text("Invalid tag: $tagName", color = Color.Red)
             return@Row
         }
-        val value = song.getTagValue(tag)
+        val value = when(tag.name) {
+            Song._POSITION -> index+1
+            Song._PLAYING_AFTER -> DateTimeUtil.formatDuration(playingAfter)
+            else -> song.getTagValue(tag)
+        }
 
         val prefix = layout.optString("prefix", "")
         val suffix = layout.optString("suffix", "")
