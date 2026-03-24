@@ -37,7 +37,7 @@ object MusicLibrary {
     val customTags = mutableStateOf<List<Tag>>(emptyList())
 
     val tags = derivedStateOf {
-        customTags.value + defaultTags
+        defaultTags + customTags.value
     }
 
     val allTags = derivedStateOf {

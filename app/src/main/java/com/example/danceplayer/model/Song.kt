@@ -8,6 +8,8 @@ import androidx.annotation.OptIn
 import androidx.documentfile.provider.DocumentFile
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
+import com.example.danceplayer.MainActivity
+import com.example.danceplayer.ui.subpages.EditSong
 import com.example.danceplayer.util.Player
 import com.example.danceplayer.util.PreferenceUtil.getAppContextOrNull
 import org.json.JSONObject
@@ -156,7 +158,7 @@ data class ContextItem(
         }
 
         val EDIT = ContextItem("Edit") { song ->
-            //TODO: implement edit functionality
+            MainActivity.addPage(EditSong(song))
         }
     }
 }

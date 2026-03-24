@@ -1,27 +1,34 @@
-package com.example.danceplayer.ui.pages
+package com.example.danceplayer.ui.subpages
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.example.danceplayer.util.Player
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.painterResource
 import com.example.danceplayer.R
 import com.example.danceplayer.ui.Fragment
+import com.example.danceplayer.util.Player
 import kotlin.math.roundToInt
 
 class PlayerPage : Fragment() {
@@ -53,67 +60,75 @@ class PlayerPage : Fragment() {
                 )
                 Text(
                     text = currentSong!!.getDance(),
-                    style = TextStyle(fontSize = 16.sp, fontStyle = FontStyle.Italic),
-                    modifier = Modifier
+                    style = TextStyle(fontSize = 16.sp, fontStyle = FontStyle.Companion.Italic),
+                    modifier = Modifier.Companion
                         .padding(horizontal = 8.dp, vertical = 2.dp),
-                    color = Color.LightGray
+                    color = Color.Companion.LightGray
                 )
 
                 //speed
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.Companion.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Companion.CenterVertically
                 ) {
-                    Text("-10%",
-                        modifier = Modifier
+                    Text(
+                        "-10%",
+                        modifier = Modifier.Companion
                             .clickable {
                                 Player.changeSpeed(-0.1f)
                             }
                     )
-                    Text("-1%",
-                        modifier = Modifier
+                    Text(
+                        "-1%",
+                        modifier = Modifier.Companion
                             .clickable {
                                 Player.changeSpeed(-0.01f)
                             }
                     )
                     Text(text = "${(speed * 100).toInt()}%", style = TextStyle(fontSize = 24.sp))
-                    Text("+1%",
-                        modifier = Modifier
+                    Text(
+                        "+1%",
+                        modifier = Modifier.Companion
                             .clickable {
                                 Player.changeSpeed(0.01f)
                             }
                     )
-                    Text("+10%",
-                        modifier = Modifier
+                    Text(
+                        "+10%",
+                        modifier = Modifier.Companion
                             .clickable {
                                 Player.changeSpeed(0.1f)
                             }
                     )
                 }
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.Companion.fillMaxWidth(),
+                    verticalAlignment = Alignment.Companion.CenterVertically
                 ) {
                     Text("25%")
                     Slider(
                         value = speed.toFloat(),
                         valueRange = 0.25f..1.5f,
                         onValueChange = { Player.setSpeed((it * 100).roundToInt() / 100f) },
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
+                        modifier = Modifier.Companion.weight(1f).padding(horizontal = 8.dp)
                     )
                     Text("150%")
                 }
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.Companion.height(16.dp))
 
                 Box(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .padding(horizontal = 4.dp, vertical = 2.dp)
-                        .border(1.dp, Color.Gray, shape = RoundedCornerShape(10.dp))
+                        .border(1.dp, Color.Companion.Gray, shape = RoundedCornerShape(10.dp))
                 ) {
                     Text(
-                        text = "${DateTimeUtil.formatDuration(position)} | ${DateTimeUtil.formatDuration(currentSong!!.getDuration())}",
-                        modifier = Modifier
+                        text = "${DateTimeUtil.formatDuration(position)} | ${
+                            DateTimeUtil.formatDuration(
+                                currentSong!!.getDuration()
+                            )
+                        }",
+                        modifier = Modifier.Companion
                             .padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                 }
@@ -122,45 +137,45 @@ class PlayerPage : Fragment() {
                     value = position.toFloat(),
                     valueRange = 0f..currentSong!!.getDuration().toFloat(),
                     onValueChange = { Player.seekTo(it.toLong()) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.Companion.fillMaxWidth()
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.Companion.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Companion.CenterVertically
                 ) {
                     IconButton(
                         onClick = { Player.previous() },
-                        modifier = Modifier.size(iconSize),
+                        modifier = Modifier.Companion.size(iconSize),
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_previous),
                             contentDescription = "Previous",
-                            modifier = Modifier.size(iconSize)
+                            modifier = Modifier.Companion.size(iconSize)
                         )
                     }
                     IconButton(
                         onClick = {
                             if (isPlaying) Player.pause() else Player.play()
                         },
-                        modifier = Modifier.size(iconSize),
+                        modifier = Modifier.Companion.size(iconSize),
                     ) {
                         Icon(
                             painter = painterResource(id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
                             contentDescription = "Play/Pause",
-                            modifier = Modifier.size(iconSize)
+                            modifier = Modifier.Companion.size(iconSize)
                         )
                     }
                     IconButton(
                         onClick = { Player.next() },
-                        modifier = Modifier.size(iconSize),
+                        modifier = Modifier.Companion.size(iconSize),
                         enabled = Player.currentIndex < Player.getPlayList().size - 1
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_next),
                             contentDescription = "Next",
-                            modifier = Modifier.size(iconSize)
+                            modifier = Modifier.Companion.size(iconSize)
                         )
                     }
                 }
