@@ -42,6 +42,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -91,6 +92,12 @@ class MainActivity : ComponentActivity() {
         var onDismissPopup: () -> Unit = {}
 
         fun addPage(page: Fragment) {
+            for (existingPage in pageStack.value) {
+                if (existingPage.sameType(page)) {
+                    pageStack.value = pageStack.value - existingPage + existingPage
+                    return
+                }
+            }
             pageStack.value = pageStack.value + page
         }
 
@@ -222,7 +229,9 @@ fun MainScreen() {
                 2 -> SettingsPage()
             }
             for (page in pageStack) {
-                page.Content()
+                key(page.getStackEntryId()) {
+                    page.Content()
+                }
             }
         }
     }

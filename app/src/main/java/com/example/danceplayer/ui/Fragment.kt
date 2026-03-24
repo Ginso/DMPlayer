@@ -28,9 +28,31 @@ import com.example.danceplayer.MainActivity
 
 abstract class Fragment {
 
+    companion object {
+        private var nextStackEntryId = 0L
+    }
+
+    private val stackEntryId = nextStackEntryId++
+
+    open val stackIdentity: Any
+        get() = javaClass
+
+
     abstract fun getTitle(): String
     @Composable
     abstract fun Content()
+
+    fun matchesStackEntry(other: Fragment): Boolean {
+        return javaClass == other.javaClass && stackIdentity == other.stackIdentity
+    }
+
+    fun getStackEntryId(): Long {
+        return stackEntryId
+    }
+
+    fun sameType(other: Fragment): Boolean {
+        return javaClass == other.javaClass
+    }
 
     @Composable
     fun Main(center:Boolean=false, content: @Composable () -> Unit) {

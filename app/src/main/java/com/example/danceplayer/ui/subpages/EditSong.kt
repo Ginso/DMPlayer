@@ -12,6 +12,10 @@ class EditSong(
         return "Edit Tags"
     }
 
+    override fun sameType(other: Fragment): Boolean {
+        return other is EditSong && other.song == song
+    }
+
     @Composable
     override fun Content() {
         val context = LocalContext.current
