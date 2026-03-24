@@ -323,6 +323,16 @@ fun BottomBar() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
+                    onClick = { MainActivity.addPage(QueuePage()) },
+                    modifier = Modifier.size(iconSize),
+                    enabled = currentSong != null
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.QueueMusic,
+                        contentDescription = "Back"
+                    )
+                }
+                IconButton(
                     onClick = { Player.previous() },
                     modifier = Modifier.size(iconSize),
                     enabled = currentSong != null
@@ -331,17 +341,6 @@ fun BottomBar() {
                         painter = painterResource(id = R.drawable.ic_previous),
                         contentDescription = "Previous",
                         modifier = Modifier.size(iconSize)
-                    )
-                }
-
-                IconButton(
-                    onClick = { MainActivity.addPage(QueuePage()) },
-                    modifier = Modifier.size(iconSize),
-                    enabled = currentSong != null
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.QueueMusic,
-                        contentDescription = "Back"
                     )
                 }
             }
@@ -412,6 +411,17 @@ fun BottomBar() {
 
             ) {
                 IconButton(
+                    onClick = { Player.next() },
+                    modifier = Modifier.size(iconSize),
+                    enabled = currentSong != null && Player.currentIndex < Player.getPlayList().size - 1
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_next),
+                        contentDescription = "Next",
+                        modifier = Modifier.size(iconSize)
+                    )
+                }
+                IconButton(
                     onClick = {
                         if (isPlaying) Player.pause() else Player.play()
                     },
@@ -421,17 +431,6 @@ fun BottomBar() {
                     Icon(
                         painter = painterResource(id = if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play),
                         contentDescription = "Play/Pause",
-                        modifier = Modifier.size(iconSize)
-                    )
-                }
-                IconButton(
-                    onClick = { Player.next() },
-                    modifier = Modifier.size(iconSize),
-                    enabled = currentSong != null && Player.currentIndex < Player.getPlayList().size - 1
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_next),
-                        contentDescription = "Next",
                         modifier = Modifier.size(iconSize)
                     )
                 }
