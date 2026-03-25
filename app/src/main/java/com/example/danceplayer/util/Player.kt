@@ -1,6 +1,7 @@
 package com.example.danceplayer.util
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.OptIn
@@ -13,8 +14,10 @@ import androidx.media3.session.MediaSession
 import com.example.danceplayer.model.Song
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
+import com.example.danceplayer.service.PlaybackService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -128,9 +131,16 @@ object Player {
     fun getCurrentSong(): Song? = currentSongState.value
 
     fun play(context: Context) {
-        if(exoPlayer == null) {
-            Toast.makeText(context, "Datei erstellt und gespeichert", Toast.LENGTH_SHORT).show()
+        ContextCompat.startForegroundService(
+            context.applicationContext,
+            Intent(context.applicationContext, PlaybackService::class.java)
+        )
+
+        if (exoPlayer == null) {
+            Toast.makeText(context, "Player ist nicht initialisiert", Toast.LENGTH_SHORT).show()
+            return
         }
+
         exoPlayer?.play()
         isPlayingState.value = true
         startPositionUpdater()
