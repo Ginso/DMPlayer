@@ -82,7 +82,8 @@ object MusicLibrary {
         val result = getMusicFiles(context)
         isInitializing.value = false
         Main.isInitialized = true
-        //loadDuration()
+        Log.d("MYTEST", "loading durations")
+        loadDuration(context)
         if(!result) {
             Main.selectedPage.intValue = 2
             return
@@ -145,14 +146,14 @@ object MusicLibrary {
         return true
     }
 
-    suspend fun loadDuration() {
+    suspend fun loadDuration(context: Context) {
         val uriToSong = HashMap<Uri, Song>()
         for (song in allSongs.value) {
             val fileUri = song.file ?: continue
             uriToSong[fileUri] = song
         }
 
-        val resolver = MainActivity.CONTEXT.contentResolver
+        val resolver = context.contentResolver
         val projection = arrayOf(
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.DURATION
@@ -178,6 +179,9 @@ object MusicLibrary {
                 val song = uriToSong[mediaUri] ?: continue
                 song.duration = duration
             }
+            Log.d("MYTEST", "finished loading durations")
+            val count = allSongs.value.count { song ->  song.duration != null }
+            Log.d("MYTEST", "resolved $count / ${allSongs.value.size} durations")
         }
 
         allSongs.value = allSongs.value.toList()
