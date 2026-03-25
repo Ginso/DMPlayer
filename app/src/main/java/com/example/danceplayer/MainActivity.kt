@@ -4,7 +4,6 @@ package com.example.danceplayer
 import DateTimeUtil
 import android.content.Intent
 import android.os.Bundle
-import androidx.core.content.ContextCompat
 import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -116,7 +115,7 @@ class MainActivity : ComponentActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ContextCompat.startForegroundService(this, Intent(this, com.example.danceplayer.service.PlaybackService::class.java))
+        startService(Intent(this, com.example.danceplayer.service.PlaybackService::class.java))
 
         if(!isInitialized) {
             // suspend initialization: runs asynchronously
