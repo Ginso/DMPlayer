@@ -82,8 +82,6 @@ object MusicLibrary {
         val result = getMusicFiles(context)
         isInitializing.value = false
         Main.isInitialized = true
-        Log.d("MYTEST", "loading durations")
-        loadDuration(context)
         if(!result) {
             Main.selectedPage.intValue = 2
             return
@@ -142,11 +140,13 @@ object MusicLibrary {
         }
 
         allSongs.value = allSongs.value.toList()
+        Log.d("MYTEST", "loading durations")
+        loadDuration(context, rootFolder.uri)
 
         return true
     }
 
-    suspend fun loadDuration(context: Context) {
+    suspend fun loadDuration(context: Context, folderUri: Uri) {
         val uriToSong = HashMap<Uri, Song>()
         for (song in allSongs.value) {
             val fileUri = song.file ?: continue
