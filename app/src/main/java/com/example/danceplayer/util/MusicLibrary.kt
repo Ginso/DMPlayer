@@ -159,11 +159,25 @@ object MusicLibrary {
             MediaStore.Audio.Media.DURATION
         )
 
+        val folderPath = DocumentsContract.getTreeDocumentId(folderUri)
+            .substringAfter(':', "")
+            .trim('/')
+        val selection = if (folderPath.isNotEmpty()) {
+            "${MediaStore.Audio.Media.DATA} LIKE ?"
+        } else {
+            null
+        }
+        val selectionArgs = if (folderPath.isNotEmpty()) {
+            arrayOf("%/$folderPath/%")
+        } else {
+            null
+        }
+
         resolver.query(
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             projection,
-            null,
-            null,
+            selection,
+            selectionArgs,
             null
         )?.use { cursor ->
             val idCol = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
