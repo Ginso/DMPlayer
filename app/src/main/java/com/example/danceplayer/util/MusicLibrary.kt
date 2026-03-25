@@ -186,7 +186,7 @@ object MusicLibrary {
                     continue
                 }
 
-                if (isAudioFile(name)) {
+                if (isAudioFile(mimeType)) {
                     val fileUri = DocumentsContract.buildDocumentUriUsingTree(folderUri, documentId)
                     var songInfo = songMap.value[pathLower]
                     if (songInfo == null) {
@@ -201,10 +201,9 @@ object MusicLibrary {
         return songList
     }
 
-    private fun isAudioFile(fileName: String?): Boolean {
-        if (fileName == null) return false
-        val extension = fileName.substringAfterLast(".").lowercase()
-        return extension in MUSIC_EXTENSIONS
+    private fun isAudioFile(mimeType: String?): Boolean {
+        if (mimeType == null) return false
+        return mimeType.startsWith("audio/")
     }
 
 
