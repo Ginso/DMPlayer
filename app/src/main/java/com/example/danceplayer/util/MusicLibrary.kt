@@ -5,6 +5,7 @@ package com.example.danceplayer.util
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.util.Log
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -145,9 +146,40 @@ object MusicLibrary {
     }
 
     suspend fun loadDuration() {
-        for(song in allSongs.value) {
-            song.getDuration() // cache duration for all songs
+        val uriToSong = HashMap<Uri, Song>()
+        for (song in allSongs.value) {
+            val fileUri = song.file ?: continue
+            uriToSong[fileUri] = song
         }
+
+        val resolver = MainActivity.CONTEXT.contentResolver
+        val projection = arrayOf(
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.DURATION
+        )
+
+        resolver.query(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            null,
+            null,
+            null
+        )?.use { cursor ->
+            val idCol = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
+            val durationCol = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
+
+            while (cursor.moveToNext()) {
+                if (idCol < 0 || durationCol < 0) continue
+                val id = cursor.getLong(idCol)
+                val duration = cursor.getLong(durationCol)
+                if (duration <= 0L) continue
+
+                val mediaUri = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id.toString())
+                val song = uriToSong[mediaUri] ?: continue
+                song.duration = duration
+            }
+        }
+
         allSongs.value = allSongs.value.toList()
     }
 
@@ -163,6 +195,7 @@ object MusicLibrary {
             DocumentsContract.Document.COLUMN_DOCUMENT_ID,
             DocumentsContract.Document.COLUMN_DISPLAY_NAME,
             DocumentsContract.Document.COLUMN_MIME_TYPE
+
         )
         val treeDocumentId = DocumentsContract.getDocumentId(folderUri)
         val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(folderUri, treeDocumentId)
