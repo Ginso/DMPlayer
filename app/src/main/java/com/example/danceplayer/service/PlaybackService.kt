@@ -34,32 +34,32 @@ class PlaybackService : MediaSessionService() {
         AppPlayer.initialize(applicationContext)
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        super.onStartCommand(intent, flags, startId)
-        // Ensure foreground immediately to avoid app-idle kill on some OEMs.
-        startForeground(NOTIFICATION_ID, buildBootstrapNotification())
-        return START_STICKY
-    }
-
-    private fun buildBootstrapNotification(): Notification {
-        val launchIntent = Intent(this, MainActivity::class.java)
-        val contentIntent = PendingIntent.getActivity(
-            this,
-            0,
-            launchIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_play)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText("Wiedergabe wird vorbereitet…")
-            .setContentIntent(contentIntent)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
-            .build()
-    }
+//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+//        super.onStartCommand(intent, flags, startId)
+//        // Ensure foreground immediately to avoid app-idle kill on some OEMs.
+//        startForeground(NOTIFICATION_ID, buildBootstrapNotification())
+//        return START_STICKY
+//    }
+//
+//    private fun buildBootstrapNotification(): Notification {
+//        val launchIntent = Intent(this, MainActivity::class.java)
+//        val contentIntent = PendingIntent.getActivity(
+//            this,
+//            0,
+//            launchIntent,
+//            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//        )
+//
+//        return NotificationCompat.Builder(this, CHANNEL_ID)
+//            .setSmallIcon(R.drawable.ic_play)
+//            .setContentTitle(getString(R.string.app_name))
+//            .setContentText("Wiedergabe wird vorbereitet…")
+//            .setContentIntent(contentIntent)
+//            .setOngoing(true)
+//            .setOnlyAlertOnce(true)
+//            .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
+//            .build()
+//    }
 
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
