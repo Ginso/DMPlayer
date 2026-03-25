@@ -155,7 +155,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        ContextCompat.startForegroundService(this, Intent(this, com.example.danceplayer.service.PlaybackService::class.java))
     }
 
     override fun onDestroy() {
