@@ -210,7 +210,8 @@ object MusicLibrary {
         val content = asJSON().toString()
         val path = PreferenceUtil.getTagFile()
         val uri = path.toUri()
-        context.contentResolver.openOutputStream(uri)?.use { out ->
+
+        context.contentResolver.openOutputStream(uri, "wt")?.use { out ->
             out.write(content.toByteArray())
         }
     }

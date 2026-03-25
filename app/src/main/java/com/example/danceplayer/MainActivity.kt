@@ -4,6 +4,7 @@ package com.example.danceplayer
 import DateTimeUtil
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -73,6 +74,8 @@ import com.example.danceplayer.util.PreferenceUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.system.measureTimeMillis
+import kotlin.time.measureTime
 
 class MainActivity : ComponentActivity() {
     companion object {
@@ -190,7 +193,7 @@ fun MainScreen() {
                 modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
             ) {
                 PageSelectionBar(
-                    selectedPage = selectedPage.value,
+                    selectedPage = selectedPage.intValue,
                     onPageSelected = { page ->
                         selectedPage.value = page
                         MainActivity.pageStack.value = emptyList()
@@ -199,7 +202,7 @@ fun MainScreen() {
                 TopAppBar(
                     windowInsets = WindowInsets(0, 0, 0, 0),
                     title = {
-                        Text(pageStack.lastOrNull()?.getTitle() ?: MainActivity.pageTitles[selectedPage.value])
+                        Text(pageStack.lastOrNull()?.getTitle() ?: MainActivity.pageTitles[selectedPage.intValue])
                     },
                     navigationIcon = {
                         if (pageStack.isNotEmpty()) {
@@ -223,7 +226,7 @@ fun MainScreen() {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            when (selectedPage.value) {
+            when (selectedPage.intValue) {
                 0 -> DancesPage()
                 1 -> PlaylistsPage()
                 2 -> SettingsPage()
@@ -261,7 +264,8 @@ fun MainScreen() {
 
     if(MainActivity.popupOverlay.value) {
         Box (
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .clickable {
                     MainActivity.popupOverlay.value = false
                     MainActivity.onDismissPopup()
@@ -269,6 +273,7 @@ fun MainScreen() {
                 }
         )
     }
+
 
 }
 

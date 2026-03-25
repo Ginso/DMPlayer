@@ -59,7 +59,7 @@ data class Tag(
     fun asJSON(): JSONObject {
         val json = JSONObject()
         json.put("name", name)
-        json.put("type", type)
+        json.put("type", type.id)
         return json
     }
 }

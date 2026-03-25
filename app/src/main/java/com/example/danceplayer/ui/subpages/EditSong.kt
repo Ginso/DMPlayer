@@ -53,6 +53,8 @@ class EditSong(
                 maxSize.width.toDp()
             }
 
+            Text(song.getPath())
+
             for (tag in tags) {
                 val value = song.getTagValue(tag)
                 Row(
@@ -60,9 +62,10 @@ class EditSong(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    var modifier: Modifier = Modifier
+                    if(maxSize.width != 0) modifier = modifier.width(widthDp)
                     Text(tag.name,
-                        modifier = Modifier
-                            .width(widthDp)
+                        modifier = modifier
                             .onGloballyPositioned {
                                 if(it.size.width > maxSize.width)
                                     maxSize = it.size

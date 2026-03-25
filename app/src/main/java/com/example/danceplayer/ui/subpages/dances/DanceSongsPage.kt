@@ -1,5 +1,6 @@
 package com.example.danceplayer.ui.subpages.dances
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +31,7 @@ import com.example.danceplayer.util.Player
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.SongItem
 import org.json.JSONArray
+import kotlin.system.measureTimeMillis
 
 class DanceSongsPage(
     val dance: String
@@ -52,6 +54,7 @@ class DanceSongsPage(
             derivedStateOf {
                 val songs = MusicLibrary.songs.value.filter { it.getDance() == dance }
                 applyFilters(songs, filterOptions.value, sorter.value)
+
             }
         }
         val contextEntries = listOf(
@@ -141,34 +144,39 @@ class DanceSongsPage(
     fun applyFilters(songs: List<Song>, filterOptions: JSONArray, sorter: String):List<Song> {
         var filtered = songs
         val tagMap = MusicLibrary.tagMap.value
-        for(i in 0 until filterOptions.length()) {
+        for (i in 0 until filterOptions.length()) {
             val row = filterOptions.getJSONArray(i)
-            for(j in 0 until row.length()) {
+            for (j in 0 until row.length()) {
                 val o = row.getJSONObject(j)
-                if(o.getBoolean("filter")) {
+                if (o.getBoolean("filter")) {
                     val tagName = o.getString("tag")
                     val tag = tagMap.get(tagName) ?: continue
                     val value1 = o.opt("value1")
                     val value2 = o.opt("value2")
-                    if(value1 == null && value2 == null) continue
+                    if (value1 == null && value2 == null) continue
                     filtered = filtered.filter { song ->
                         val songValue = song.getTagValue(tag)
-                        when(tag.type) {
+                        when (tag.type) {
                             Tag.Type.STRING -> {
                                 val strValue = songValue as? String ?: return@filter false
                                 strValue.contains(value1.toString(), ignoreCase = true)
                             }
+
                             Tag.Type.BOOL -> {
-                                if(value1 == 0) return@filter true
+                                if (value1 == 0) return@filter true
                                 val boolValue = songValue as? Boolean ?: return@filter false
                                 boolValue == (value1 == 1)
                             }
+
                             else -> {
-                                val numValue = (songValue as? Number)?.toDouble() ?: return@filter false
-                                val v1orMin = (value1 as? Number)?.toDouble() ?: -Double.MAX_VALUE
-                                val v1orMax = (value1 as? Number)?.toDouble() ?: Double.MAX_VALUE
+                                val numValue =
+                                    (songValue as? Number)?.toDouble() ?: return@filter false
+                                val v1orMin =
+                                    (value1 as? Number)?.toDouble() ?: -Double.MAX_VALUE
+                                val v1orMax =
+                                    (value1 as? Number)?.toDouble() ?: Double.MAX_VALUE
                                 val v2 = (value2 as? Number)?.toDouble() ?: Double.MAX_VALUE
-                                when(o.getJSONArray("type").getInt(1)) {
+                                when (o.getJSONArray("type").getInt(1)) {
                                     0 -> numValue <= v1orMax
                                     1 -> numValue >= v1orMin
                                     2 -> numValue < v1orMax
@@ -186,7 +194,8 @@ class DanceSongsPage(
             }
         }
         val tag = tagMap.get(sorter.trimStart('-'))
-        if(tag != null) filtered = applySorting(filtered, tag, if(sorter.startsWith("-")) 2 else 1)
+        if (tag != null) filtered =
+            applySorting(filtered, tag, if (sorter.startsWith("-")) 2 else 1)
         return filtered
     }
 }

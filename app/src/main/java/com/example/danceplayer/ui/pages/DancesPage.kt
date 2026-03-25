@@ -1,5 +1,6 @@
 package com.example.danceplayer.ui.pages
 
+import android.util.Log
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
