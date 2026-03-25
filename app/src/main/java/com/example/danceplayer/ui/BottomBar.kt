@@ -66,7 +66,7 @@ fun BottomBar() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(
-                    onClick = { MainActivity.addPage(QueuePage()) },
+                    onClick = { Main.addPage(QueuePage()) },
                     modifier = Modifier.size(iconSize),
                     enabled = currentSong != null
                 ) {
@@ -94,7 +94,7 @@ fun BottomBar() {
                 modifier = Modifier
                     .weight(1f)
                     .clickable() {
-                        MainActivity.addPage(PlayerPage())
+                        Main.addPage(PlayerPage())
                     },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

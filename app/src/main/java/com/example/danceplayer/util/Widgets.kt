@@ -64,6 +64,7 @@ import com.example.danceplayer.MainActivity
 import com.example.danceplayer.model.ContextItem
 import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
+import com.example.danceplayer.ui.Main
 import com.example.danceplayer.ui.subpages.settings.ElementType
 import com.google.common.base.Strings.padEnd
 import kotlinx.coroutines.delay
@@ -195,8 +196,8 @@ fun SongItem(song: Song, layout: JSONObject,
             Text("•••", modifier = Modifier
                 .clickable() {
                     showContext.value = true
-                    MainActivity.popupOverlay.value = true
-                    MainActivity.onDismissPopup = {
+                    Main.popupOverlay.value = true
+                    Main.onDismissPopup = {
                         showContext.value = false
                     }
                 }
@@ -216,8 +217,8 @@ fun SongItem(song: Song, layout: JSONObject,
                 ),
                 onDismissRequest = {
                     showContext.value = false
-                    MainActivity.popupOverlay.value = false
-                    MainActivity.onDismissPopup = {}
+                    Main.popupOverlay.value = false
+                    Main.onDismissPopup = {}
                 }
             ) {
                 Box(
@@ -236,8 +237,8 @@ fun SongItem(song: Song, layout: JSONObject,
                                     .clickable {
                                         entry.onClick(song)
                                         showContext.value = false
-                                        MainActivity.popupOverlay.value = false
-                                        MainActivity.onDismissPopup = {}
+                                        Main.popupOverlay.value = false
+                                        Main.onDismissPopup = {}
                                     }
                                     .padding(8.dp)
                             )

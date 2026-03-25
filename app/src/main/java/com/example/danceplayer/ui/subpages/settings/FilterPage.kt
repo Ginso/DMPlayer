@@ -38,6 +38,7 @@ import com.example.danceplayer.MainActivity
 import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.Fragment
+import com.example.danceplayer.ui.Main
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.MyTextField
 import com.example.danceplayer.util.PreferenceUtil
@@ -120,7 +121,7 @@ class FilterPage : Fragment() {
                     // save to profile
                     PreferenceUtil.getCurrentProfile().filterOptions = filterOptions.value
                     PreferenceUtil.saveProfile()
-                    MainActivity.popLastPage()
+                    Main.popLastPage()
                 }) {
                     Text("Save")
                 }

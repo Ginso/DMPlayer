@@ -17,6 +17,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import androidx.core.net.toUri
 import com.example.danceplayer.MainActivity
+import com.example.danceplayer.ui.Main
 
 object MusicLibrary {
     private val MUSIC_EXTENSIONS = setOf("mp3", "flac", "wav", "ogg", "aac", "m4a", "opus")
@@ -78,10 +79,10 @@ object MusicLibrary {
         loadTagFile(context, uri) { /* ignore error */ }
         val result = getMusicFiles(context)
         isInitializing.value = false
-        MainActivity.isInitialized = true
-        loadDuration()
+        Main.isInitialized = true
+        //loadDuration()
         if(!result) {
-            MainActivity.selectedPage.intValue = 2
+            Main.selectedPage.intValue = 2
             return
         }
     }

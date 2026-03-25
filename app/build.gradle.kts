@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.media)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

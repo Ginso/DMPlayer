@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.danceplayer.MainActivity
+import com.example.danceplayer.ui.Main
 import com.example.danceplayer.ui.subpages.dances.DanceSongsPage
 import com.example.danceplayer.util.ClickBox
 import com.example.danceplayer.util.MusicLibrary
@@ -57,7 +58,7 @@ fun DancesPage() {
                 
                 ClickBox(
                     onClick= {
-                            MainActivity.addPage(DanceSongsPage(dance))
+                            Main.addPage(DanceSongsPage(dance))
                         },
                     modifier = Modifier
                         .fillMaxWidth()

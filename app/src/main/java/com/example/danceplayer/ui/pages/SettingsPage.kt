@@ -40,6 +40,7 @@ import androidx.activity.ComponentActivity
 import androidx.compose.material3.Switch
 import androidx.compose.ui.graphics.Color
 import com.example.danceplayer.MainActivity
+import com.example.danceplayer.ui.Main
 import com.example.danceplayer.util.PreferenceUtil
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.ui.subpages.settings.CustomTagsPage
@@ -236,11 +237,11 @@ fun SettingsPage() {
                     onCheckedChange = { toggleKeepScreenOn() }
                 )
             }
-            SettingsRow(label = "Custom Tags") { MainActivity.addPage(CustomTagsPage()) }
-            SettingsRow(label = "Import/Export Tag Info") { MainActivity.addPage(TagFilePage()) }
-            SettingsRow(label = "Fill Tags from File Name/Path") { MainActivity.addPage(ParseTagsPage()) }
-            SettingsRow(label = "Configure Filter and Sort Options") { MainActivity.addPage(FilterPage()) }
-            SettingsRow(label = "Configure Layout of Song Items") { MainActivity.addPage(ItemLayoutsPage()) }
+            SettingsRow(label = "Custom Tags") { Main.addPage(CustomTagsPage()) }
+            SettingsRow(label = "Import/Export Tag Info") { Main.addPage(TagFilePage()) }
+            SettingsRow(label = "Fill Tags from File Name/Path") { Main.addPage(ParseTagsPage()) }
+            SettingsRow(label = "Configure Filter and Sort Options") { Main.addPage(FilterPage()) }
+            SettingsRow(label = "Configure Layout of Song Items") { Main.addPage(ItemLayoutsPage()) }
         }
 
 

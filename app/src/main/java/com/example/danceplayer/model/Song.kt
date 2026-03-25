@@ -9,6 +9,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import com.example.danceplayer.MainActivity
+import com.example.danceplayer.ui.Main
 import com.example.danceplayer.ui.subpages.EditSong
 import com.example.danceplayer.util.Player
 import com.example.danceplayer.util.PreferenceUtil.getAppContextOrNull
@@ -158,7 +159,7 @@ data class ContextItem(
         }
 
         val EDIT = ContextItem("Edit") { song ->
-            MainActivity.addPage(EditSong(song))
+            Main.addPage(EditSong(song))
         }
     }
 }

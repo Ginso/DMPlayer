@@ -29,7 +29,6 @@ import kotlinx.coroutines.launch
 
 object Player {
     private var exoPlayer: ExoPlayer? = null
-    private var mediaSession: MediaSession? = null
 
     // expose compose-friendly state holders
     val isPlayingState = mutableStateOf(false)
@@ -76,8 +75,6 @@ object Player {
                 }
             })
 
-            // Registers a media session so Bluetooth/headset buttons trigger transport commands.
-            mediaSession = MediaSession.Builder(appContext, exoPlayer!!).build()
         }
     }
 
@@ -104,8 +101,6 @@ object Player {
     fun release() {
         positionJob?.cancel()
         scope.cancel()
-        mediaSession?.release()
-        mediaSession = null
         exoPlayer?.release()
         exoPlayer = null
     }
@@ -128,19 +123,9 @@ object Player {
         currentSongState.value = if (currentIndex in playlist.indices) playlist[currentIndex] else null
     }
 
-    fun getCurrentSong(): Song? = currentSongState.value
-
     fun play(context: Context) {
-        ContextCompat.startForegroundService(
-            context.applicationContext,
-            Intent(context.applicationContext, PlaybackService::class.java)
-        )
-
-        if (exoPlayer == null) {
-            Toast.makeText(context, "Player ist nicht initialisiert", Toast.LENGTH_SHORT).show()
-            return
-        }
-
+//        val intent = Intent(context, PlaybackService::class.java)
+//        ContextCompat.startForegroundService(context, intent)
         exoPlayer?.play()
         isPlayingState.value = true
         startPositionUpdater()
@@ -234,7 +219,6 @@ object Player {
             .build())
     }
 
-    fun getMediaSession(): MediaSession? = mediaSession
 
     fun getExoPlayer(): ExoPlayer? = exoPlayer
 
