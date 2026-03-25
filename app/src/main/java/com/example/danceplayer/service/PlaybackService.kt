@@ -1,7 +1,9 @@
 package com.example.danceplayer.service
 
 import android.content.Intent
+import androidx.annotation.OptIn
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -14,6 +16,7 @@ class PlaybackService : MediaSessionService() {
         private const val CHANNEL_ID = "playback"
     }
 
+    @OptIn(UnstableApi::class)
     override fun onCreate() {
         setMediaNotificationProvider(
             DefaultMediaNotificationProvider.Builder(this)
