@@ -5,6 +5,7 @@ package com.example.danceplayer.util
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
+import android.util.Log
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -68,7 +69,7 @@ object MusicLibrary {
         map
     }
 
-    var isInitializing = mutableStateOf(false)
+    val isInitializing by lazy { mutableStateOf(false) }
 
 
 

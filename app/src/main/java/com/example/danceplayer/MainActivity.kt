@@ -75,6 +75,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onDestroy() {
+        controller?.release()
+        controller = null
+        super.onDestroy()
+    }
 
     fun initMusic() {
         initMusicJob?.cancel()
