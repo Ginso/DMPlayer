@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -45,6 +46,7 @@ fun BottomBar() {
     val controlWidth = 100.dp
     val iconSize = 38.dp
     val iconSize2 = 30.dp
+    val context = LocalContext.current
 
     BottomAppBar(
         modifier = Modifier
@@ -165,7 +167,7 @@ fun BottomBar() {
                 }
                 IconButton(
                     onClick = {
-                        if (isPlaying) Player.pause() else Player.play()
+                        if (isPlaying) Player.pause() else Player.play(context)
                     },
                     modifier = Modifier.size(iconSize),
                     enabled = currentSong != null

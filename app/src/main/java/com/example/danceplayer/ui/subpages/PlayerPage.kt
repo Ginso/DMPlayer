@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -42,6 +43,7 @@ class PlayerPage : Fragment() {
         val isPlaying by Player.isPlayingState
         val speed by Player.speedState
         val position by Player.positionState
+        val context = LocalContext.current
 
         val iconSize = 46.dp
         Main {
@@ -157,7 +159,7 @@ class PlayerPage : Fragment() {
                     }
                     IconButton(
                         onClick = {
-                            if (isPlaying) Player.pause() else Player.play()
+                            if (isPlaying) Player.pause() else Player.play(context)
                         },
                         modifier = Modifier.Companion.size(iconSize),
                     ) {

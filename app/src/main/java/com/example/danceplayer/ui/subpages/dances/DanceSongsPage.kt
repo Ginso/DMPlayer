@@ -20,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.danceplayer.model.ContextItem
 import com.example.danceplayer.model.Song
@@ -48,6 +49,7 @@ class DanceSongsPage(
     override fun Content() {
         val profile = PreferenceUtil.getCurrentProfile()
         val itemLayout = profile.itemLayoutBrowser
+        val context = LocalContext.current
         val sorter = remember {mutableStateOf("")}
         val filterOptions = remember { mutableStateOf(profile.filterOptions) }
         val filteredSongs = remember {
@@ -125,7 +127,7 @@ class DanceSongsPage(
                         contextEntries
                     ) {
                         Player.load(filteredSongs.value, index)
-                        Player.play()
+                        Player.play(context)
                     }
                 }
             }

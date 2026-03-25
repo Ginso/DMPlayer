@@ -2,6 +2,7 @@ package com.example.danceplayer.util
 
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -126,7 +127,10 @@ object Player {
 
     fun getCurrentSong(): Song? = currentSongState.value
 
-    fun play() {
+    fun play(context: Context) {
+        if(exoPlayer == null) {
+            Toast.makeText(context, "Datei erstellt und gespeichert", Toast.LENGTH_SHORT).show()
+        }
         exoPlayer?.play()
         isPlayingState.value = true
         startPositionUpdater()
