@@ -55,10 +55,10 @@ object Main {
         "Settings"
     )
 
-    val selectedPage = mutableIntStateOf(0)
+    val selectedPage by lazy { mutableIntStateOf(0) }
 
-    val pageStack = mutableStateOf<List<Fragment>>(emptyList())
-    val popupOverlay = mutableStateOf(false)
+    val pageStack by lazy { mutableStateOf<List<Fragment>>(emptyList()) }
+    val popupOverlay by lazy { mutableStateOf(false) }
     var onDismissPopup: () -> Unit = {}
 
     fun addPage(page: Fragment) {
