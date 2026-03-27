@@ -1,11 +1,14 @@
 package com.example.danceplayer
 
 // additional layout/imports used in BottomBar
+import android.Manifest
 import android.os.Bundle
+import android.content.pm.PackageManager
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.lifecycleScope
 import com.example.danceplayer.ui.Main
 import com.example.danceplayer.ui.MainScreen
@@ -31,6 +34,12 @@ class MainActivity : ComponentActivity() {
 
     }
     private var initMusicJob: kotlinx.coroutines.Job? = null
+    private val requestReadAudioPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                initMusic()
+            }
+        }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,13 +59,24 @@ class MainActivity : ComponentActivity() {
             ContextCompat.getMainExecutor(this)
         )
 
-        if(!Main.isInitialized) {
-            // suspend initialization: runs asynchronously
+        if (!Main.isInitialized) {
+            // Always initialize prefs/player; music scan depends on read permission.
             initMusicJob = lifecycleScope.launch {
                 PreferenceUtil.initialize(this@MainActivity)
                 Player.initialize(this@MainActivity)
-                withContext(Dispatchers.IO) {
-                    MusicLibrary.initialize(this@MainActivity)
+
+                val hasReadAudio =
+                    ContextCompat.checkSelfPermission(
+                        this@MainActivity,
+                        Manifest.permission.READ_MEDIA_AUDIO
+                    ) == PackageManager.PERMISSION_GRANTED
+
+                if (hasReadAudio) {
+                    withContext(Dispatchers.IO) {
+                        MusicLibrary.initialize(this@MainActivity)
+                    }
+                } else {
+                    requestReadAudioPermission.launch(Manifest.permission.READ_MEDIA_AUDIO)
                 }
             }
         }

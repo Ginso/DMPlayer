@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.max
 import com.example.danceplayer.model.Song
 import com.example.danceplayer.model.Tag
 import com.example.danceplayer.ui.Fragment
+import com.example.danceplayer.util.BPMCounter
 import com.example.danceplayer.util.MusicLibrary
 import com.example.danceplayer.util.MyTextField
 
@@ -154,6 +155,8 @@ class EditSong(
                     }
                 }
             }
+
+            BPMCounter(modifier = Modifier.align(Alignment.CenterHorizontally))
         }
 
     }

@@ -416,3 +416,49 @@ fun ClickBox(onClick: () -> Unit,
             content = content
         )
 }
+
+@Composable
+fun BPMCounter(modifier: Modifier = Modifier) {
+    var taps by remember { mutableStateOf(0) }
+    var startTimestamp by remember { mutableStateOf(0L) }
+
+    val bpm = if (startTimestamp == 0L) {
+        0.0
+    } else {
+        val currentTimestamp = System.currentTimeMillis()
+        val elapsedMs = currentTimestamp - startTimestamp
+        taps * 60000.0 / elapsedMs
+    }
+    Box(
+        modifier = modifier
+        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(16.dp))
+        .clickable {
+            if(startTimestamp == 0L) {
+                startTimestamp = System.currentTimeMillis()
+            } else {
+                taps++
+            }
+        }
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text("BPM Counter", style = TextStyle(fontSize = 28.sp))
+            if(startTimestamp == 0L) {
+                Text("Tap to every beat", style = TextStyle(fontSize = 24.sp))
+            } else {
+                Text(String.format(java.util.Locale.getDefault(), "%.2f BPM", bpm), style = TextStyle(fontSize = 24.sp))
+            }
+            OutlinedButton(onClick = {
+                startTimestamp = 0L
+                taps = 0
+            }, colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.onBackground
+            )) {
+                Text("Reset", style = TextStyle(fontSize = 20.sp))
+            }
+        }
+    }
+}

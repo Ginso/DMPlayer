@@ -3,6 +3,7 @@ package com.example.danceplayer.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -55,7 +56,7 @@ abstract class Fragment {
     }
 
     @Composable
-    fun Main(center:Boolean=false, content: @Composable () -> Unit) {
+    fun Main(center:Boolean=false, content: @Composable ColumnScope.() -> Unit) {
          
         Column(
 

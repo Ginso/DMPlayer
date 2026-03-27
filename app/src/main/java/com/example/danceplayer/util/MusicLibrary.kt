@@ -140,65 +140,73 @@ object MusicLibrary {
         }
 
         allSongs.value = allSongs.value.toList()
-        Log.d("MYTEST", "loading durations")
         loadDuration(context, rootFolder.uri)
 
         return true
     }
 
     suspend fun loadDuration(context: Context, folderUri: Uri) {
-        val uriToSong = HashMap<Uri, Song>()
-        for (song in allSongs.value) {
-            val fileUri = song.file ?: continue
-            uriToSong[fileUri] = song
-        }
+        // Fast path: resolve durations via MediaStore in one query (or a few queries for volumes).
+        withContext(Dispatchers.IO) {
+            val resolver = context.contentResolver
 
-        val resolver = context.contentResolver
-        val projection = arrayOf(
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.DURATION
-        )
-
-        val folderPath = DocumentsContract.getTreeDocumentId(folderUri)
-            .substringAfter(':', "")
-            .trim('/')
-        val selection = if (folderPath.isNotEmpty()) {
-            "${MediaStore.Audio.Media.DATA} LIKE ?"
-        } else {
-            null
-        }
-        val selectionArgs = if (folderPath.isNotEmpty()) {
-            arrayOf("%/$folderPath/%")
-        } else {
-            null
-        }
-
-        resolver.query(
-            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            selectionArgs,
-            null
-        )?.use { cursor ->
-            val idCol = cursor.getColumnIndex(MediaStore.Audio.Media._ID)
-            val durationCol = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
-
-            while (cursor.moveToNext()) {
-                if (idCol < 0 || durationCol < 0) continue
-                val id = cursor.getLong(idCol)
-                val duration = cursor.getLong(durationCol)
-                if (duration <= 0L) continue
-
-                val mediaUri = Uri.withAppendedPath(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id.toString())
-                val song = uriToSong[mediaUri] ?: continue
-                song.duration = duration
+            // Map by our stored relative path within the picked folder (case-insensitive).
+            val byPathLower = HashMap<String, Song>()
+            for (song in allSongs.value) {
+                val relPath = (song.tags[Song._PATH] as? String)?.trim('/') ?: continue
+                byPathLower[relPath.lowercase()] = song
             }
-            Log.d("MYTEST", "finished loading durations")
-            val count = allSongs.value.count { song ->  song.duration != null }
-            Log.d("MYTEST", "resolved $count / ${allSongs.value.size} durations")
-        }
 
-        allSongs.value = allSongs.value.toList()
+            val folderPath = DocumentsContract.getTreeDocumentId(folderUri)
+                .substringAfter(':', "")
+                .trim('/')
+            if (folderPath.isEmpty()) return@withContext
+
+            // MediaStore stores RELATIVE_PATH like "Music/Dance/" (no leading slash, usually trailing slash).
+            val folderPrefix = folderPath.trimEnd('/') + "/"
+
+            val projection = arrayOf(
+                MediaStore.Audio.Media.RELATIVE_PATH,
+                MediaStore.Audio.Media.DISPLAY_NAME,
+                MediaStore.Audio.Media.DURATION
+            )
+            val selection =
+                "${MediaStore.Audio.Media.IS_MUSIC}!=0 AND " +
+                    "${MediaStore.Audio.Media.DURATION}>0 AND " +
+                    "${MediaStore.Audio.Media.RELATIVE_PATH} LIKE ?"
+            val selectionArgs = arrayOf("$folderPrefix%")
+
+            var resolved = 0
+            val volumes = MediaStore.getExternalVolumeNames(context)
+            for (volume in volumes) {
+                val contentUri = MediaStore.Audio.Media.getContentUri(volume)
+                resolver.query(contentUri, projection, selection, selectionArgs, null)?.use { cursor ->
+                    val relCol = cursor.getColumnIndex(MediaStore.Audio.Media.RELATIVE_PATH)
+                    val nameCol = cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
+                    val durationCol = cursor.getColumnIndex(MediaStore.Audio.Media.DURATION)
+                    if (relCol < 0 || nameCol < 0 || durationCol < 0) return@use
+
+                    while (cursor.moveToNext()) {
+                        val rel = (cursor.getString(relCol) ?: "").trimStart('/')
+                        val name = cursor.getString(nameCol) ?: continue
+                        val duration = cursor.getLong(durationCol)
+                        if (duration <= 0L) continue
+
+                        // Convert absolute RELATIVE_PATH to path relative to the picked folder.
+                        if (!rel.startsWith(folderPrefix)) continue
+                        val relUnderFolder = rel.removePrefix(folderPrefix)
+                        val key = (relUnderFolder + name).trim('/').lowercase()
+                        val song = byPathLower[key] ?: continue
+                        if (song.duration == null) {
+                            song.duration = duration
+                            resolved++
+                        }
+                    }
+                }
+            }
+
+            allSongs.value = allSongs.value.toList()
+        }
     }
 
     private fun searchMusicFiles(
