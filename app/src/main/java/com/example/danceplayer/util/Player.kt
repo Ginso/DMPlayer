@@ -35,12 +35,13 @@ object Player {
     val positionState = mutableStateOf(0L)
     val speedState = mutableStateOf(1.0f)
     val currentSongState = mutableStateOf<Song?>(null)
+    val playerModeState = mutableStateOf(ExoPlayer.REPEAT_MODE_OFF)
 
     private var scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var positionJob: Job? = null
 
     // internal backing fields for playlist and index (no state needed)
-    private var playlist: List<Song> = emptyList()
+    private var playlist: List<PlaylistEntry> = emptyList()
     var currentIndex: Int = 0
         private set
 
@@ -60,26 +61,45 @@ object Player {
                 }
                 override fun onPlaybackStateChanged(state: Int) {
                     positionState.value = exoPlayer?.currentPosition ?: 0L
+                    checkCustomEnd()
                 }
                 override fun onPositionDiscontinuity(reason: Int) {
                     positionState.value = exoPlayer?.currentPosition ?: 0L
+                    checkCustomEnd()
                 }
                 override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                     currentIndex = exoPlayer?.currentMediaItemIndex ?: currentIndex
                     positionState.value = exoPlayer?.currentPosition ?: 0L
                     updateCurrentSong()
+                    val currentEntry = playlist.getOrNull(currentIndex) ?: return
+                    val startTime = currentEntry.startTime ?: 0
+                    if (startTime > 0) {
+                        seekTo(startTime * 1000L)
+                    }
+                    val speed = currentEntry.speed ?: 1.0f
+                    if (speed != speedState.value) {
+                        setSpeed(speed)
+                    }
                 }
                 override fun onPlayerError(error: PlaybackException) {
                     Log.e("Player", "Playback error", error)
                     // ggf. Toast o.ä. anzeigen
                 }
             })
+            setPlayerMode(PreferenceUtil.getPlayerMode(), savePreference = false)
+        }
+    }
 
+    fun checkCustomEnd() {
+        val currentEntry = playlist.getOrNull(currentIndex) ?: return
+        val endTime = currentEntry.endTime ?: return
+        if (positionState.value >= endTime * 1000L) {
+            next()
         }
     }
 
     fun load(songs: List<Song>, index: Int = 0) {
-        playlist = songs
+        playlist = songs.map { PlaylistEntry(song = it) }
         currentIndex = index
         val mediaItems = songs.map { song ->
             MediaItem.Builder()
@@ -96,6 +116,41 @@ object Player {
         exoPlayer?.prepare()                 // <<< wichtig
         seekTo(0L)
         updateCurrentSong()
+    }
+
+    fun load(list: List<PlaylistEntry>, index: Int = 0) {
+        playlist = list
+        currentIndex = index
+        val mediaItems = list.map { entry ->
+        val song = entry.song ?: return@map null
+            MediaItem.Builder()
+                .setUri(song.file!!)
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setTitle(song.getTitle())
+                        .setArtist(song.getArtist())
+                        .build()
+                )
+                .build()
+        }
+        val entry = list[index]
+        val pos = entry.startTime?.times(1000L) ?: 0L
+        val speed = entry.speed ?: 1.0f
+        if (speed != speedState.value) {
+            setSpeed(speed)
+        }
+        exoPlayer?.setMediaItems(mediaItems, index, pos)
+        exoPlayer?.prepare()                 // <<< wichtig
+        seekTo(pos)
+        updateCurrentSong()
+    }
+
+    fun setPlayerMode(mode: Int, savePreference: Boolean = true) {
+        playerModeState.value = mode
+        if (savePreference) {
+            PreferenceUtil.setPlayerMode(mode)
+        }
+        exoPlayer?.repeatMode = mode
     }
 
     fun release() {

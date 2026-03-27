@@ -70,6 +70,8 @@ object MusicLibrary {
         map
     }
 
+    val playlists = mutableStateOf<List<Playlist>>(emptyList())
+
     val isInitializing by lazy { mutableStateOf(false) }
 
 
@@ -131,8 +133,11 @@ object MusicLibrary {
             val path = song.tags[Song._PATH] as? String ?: return@forEach
            // existingByPath[path.lowercase()] = song
         }
-
-        allSongs.value = searchMusicFiles(context, rootFolder.uri, "", existingByPath)
+        val songList = ArrayList<Song>()
+        val playlistsList = ArrayList<Playlist>()
+        searchMusicFiles(context, rootFolder.uri, "", existingByPath, songList, playlistsList)
+        allSongs.value = songList
+        playlists.value = playlistsList
         withContext(Dispatchers.Main) {
             if (songs.value.isNotEmpty()) {
                 Player.load(songs.value.subList(0, 1))
@@ -213,9 +218,10 @@ object MusicLibrary {
         context: Context,
         folderUri: Uri,
         pathPrefix: String,
-        existingByPath: Map<String, Song>
-    ): ArrayList<Song> {
-        val songList = ArrayList<Song>()
+        existingByPath: Map<String, Song>,
+        songList: ArrayList<Song>,
+        playlistsList: ArrayList<Playlist>
+    ) {
         val resolver = context.contentResolver
         val projection = arrayOf(
             DocumentsContract.Document.COLUMN_DOCUMENT_ID,
@@ -241,7 +247,7 @@ object MusicLibrary {
 
                 if (DocumentsContract.Document.MIME_TYPE_DIR == mimeType) {
                     val subFolderUri = DocumentsContract.buildDocumentUriUsingTree(folderUri, documentId)
-                    songList.addAll(searchMusicFiles(context, subFolderUri, path + "/", existingByPath))
+                    searchMusicFiles(context, subFolderUri, path + "/", existingByPath, songList, playlistsList)
                     continue
                 }
 
@@ -254,10 +260,19 @@ object MusicLibrary {
                     songInfo.file = fileUri
                     songInfo.tags.put(Song._PATH, path) // make sure correct case is stored
                     songList.add(songInfo)
+                    continue
                 }
+
+                val ext = name.substringAfterLast('.', "").lowercase()
+                if (ext == "m3u" || ext == "m3u8") {
+                    val fileUri = DocumentsContract.buildDocumentUriUsingTree(folderUri, documentId)
+                    val playlist = Playlist(name.substringBeforeLast('.'), fileUri)
+                    playlist.load(context)
+                    playlistsList.add(playlist)
+                }
+                
             }
         }
-        return songList
     }
 
     private fun isAudioFile(mimeType: String?): Boolean {

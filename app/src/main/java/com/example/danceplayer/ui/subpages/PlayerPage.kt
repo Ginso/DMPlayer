@@ -46,7 +46,7 @@ class PlayerPage : Fragment() {
         val context = LocalContext.current
 
         val iconSize = 46.dp
-        Main {
+        Main(center = true) {
 
             if(currentSong == null) {
                 Text("No song is currently playing", style = MaterialTheme.typography.titleLarge)
@@ -180,6 +180,29 @@ class PlayerPage : Fragment() {
                             modifier = Modifier.Companion.size(iconSize)
                         )
                     }
+                }
+
+                val playerMode by Player.playerModeState
+                // material-icons-extended
+                val modes = listOf(
+                    Triple(ExoPlayer.REPEAT_MODE_OFF, Icons.Default.Repeat, Color.Gray),
+                    Triple(ExoPlayer.REPEAT_MODE_ALL, Icons.Default.Repeat, MaterialTheme.colorScheme.onBackground),
+                    Triple(ExoPlayer.REPEAT_MODE_ONE, Icons.Default.RepeatOne, MaterialTheme.colorScheme.onBackground)
+                )
+                val idx = modes.indexOfFirst { it.first == playerMode }
+                IconButton(
+                    onClick = {
+                        val nextMode = modes[(idx + 1) % modes.size].first
+                        Player.setPlayerMode(nextMode)
+                    },
+                    modifier = Modifier.Companion.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = modes[idx].second,
+                        contentDescription = "Player Mode",
+                        tint = modes[idx].third,
+                        modifier = Modifier.Companion.size(24.dp)
+                    )
                 }
             }
 

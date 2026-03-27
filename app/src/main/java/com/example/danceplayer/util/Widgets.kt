@@ -173,6 +173,7 @@ fun SongItem(song: Song, layout: JSONObject,
              contextEntries: List<ContextItem> = emptyList(),
              index: Int = 0,
              playingAfter: Long = 0L,
+             info: PlaylistEntry? = null,
              onClick: () -> Unit = {}
 ) {
     val showContext = remember { mutableStateOf(false) }
@@ -191,7 +192,16 @@ fun SongItem(song: Song, layout: JSONObject,
             modifier = Modifier.padding(all=8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SongItemInner(song, layout, Modifier.weight(1f), index, playingAfter)
+            Column(modifier = Modifier.weight(1f)) {
+                SongItemInner(song, layout, Modifier.fillMaxWidth(), index, playingAfter)
+                if(info?.startTime != null || info?.endTime != null || info?.speed != null) {
+                    Row {
+                        if(info.startTime != null) Text("Start: ${DateTimeUtil.formatDuration(info.startTime*1000)}", style = TextStyle(fontSize = 12.sp, color = Color.Gray))
+                        if(info.endTime != null) Text("End: ${DateTimeUtil.formatDuration(info.endTime*1000)}", style = TextStyle(fontSize = 12.sp, color = Color.Gray).copy(textDecoration = TextDecoration.LineThrough), modifier = Modifier.padding(start=8.dp))
+                        if(info.speed != null) Text("Speed: ${String.format("%d", (info.speed*100).toInt())}%", style = TextStyle(fontSize = 12.sp, color = Color.Gray), modifier = Modifier.padding(start=8.dp))
+                    }
+                }
+            }
             
             Text("•••", modifier = Modifier
                 .clickable() {

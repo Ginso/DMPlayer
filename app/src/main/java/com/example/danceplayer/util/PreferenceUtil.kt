@@ -14,6 +14,10 @@ object PreferenceUtil {
     private const val PREFS_NAME = "dm_player_profiles"
     private const val CURRENT_PROFILE_KEY = "current_profile_key"
     private const val TAG_FILE = "TAG_FILE"
+    private const val PLAYER_MODE = "PLAYER_MODE"
+
+
+
     private const val DEFAULT_TAG_FILE_NAME = "DancePlayerTags.json"
 
     private lateinit var sharedPreferences: SharedPreferences
@@ -113,6 +117,14 @@ object PreferenceUtil {
     private fun saveProfilToPreferences(key: String, profile: Profile) {
         val json = profile.serialize()
         sharedPreferences.edit { putString("profile_$key", json) }
+    }
+
+    fun setPlayerMode(mode: Int) {
+        sharedPreferences.edit { putInt(PLAYER_MODE, mode) }
+    }
+
+    fun getPlayerMode(): Int {
+        return sharedPreferences.getInt(PLAYER_MODE, ExoPlayer.REPEAT_MODE_OFF)
     }
 
     
